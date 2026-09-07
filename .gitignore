@@ -75,3 +75,9 @@ Thumbs.db
 
 # Documentation
 /docs
+.vercel
+.env*.local
+
+
+
+/ogura-handoff

@@ -1,20 +1,25 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useSearchParams, Link, useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { DesignCard } from "@/components/Cards";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { CANONICAL_TAXONOMY, DesignVM } from "@/lib/adapters/productAdapter";
+import { Filter, X, Check, ChevronDown } from "lucide-react";
 
 export default function Collections() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { category: routeCategory } = useParams();
   const { data: catalogData, isLoading } = useCatalogProducts();
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   const activeCategory = searchParams.get("category") || routeCategory || "";
+  const activeAtelier = searchParams.get("atelier") || "";
   const activeAvailability = searchParams.get("availability") || "";
   const activePrice = searchParams.get("price") || "";
-  const activeSort = searchParams.get("sort") === "high" ? "high" : "low";
+  const activeCity = searchParams.get("city") || "";
+  const activeSort = searchParams.get("sort") || "low";
+  const searchQuery = searchParams.get("q") || "";
 
   const toggleParam = (key: string, value: string) => {
     const next = new URLSearchParams(searchParams);
@@ -26,12 +31,12 @@ export default function Collections() {
     setSearchParams(next);
   };
 
-  const setSort = (sortVal: "low" | "high") => {
+  const setParam = (key: string, value: string) => {
     const next = new URLSearchParams(searchParams);
-    if (sortVal === "low") {
-      next.delete("sort");
+    if (!value) {
+      next.delete(key);
     } else {
-      next.set("sort", sortVal);
+      next.set(key, value);
     }
     setSearchParams(next);
   };
@@ -40,13 +45,60 @@ export default function Collections() {
     setSearchParams(new URLSearchParams());
   };
 
-  const hasActiveFilters = Boolean(activeCategory || activeAvailability || activePrice);
+  const allDesigns = useMemo(() => catalogData?.designs || [], [catalogData]);
 
+  // Compute facet counts dynamically based on current catalog
+  const facetCounts = useMemo(() => {
+    const counts = {
+      availability: { stock: 0, order: 0 },
+      price: { under12: 0, "12to14": 0, over14: 0 },
+      categories: {} as Record<string, number>,
+      ateliers: {} as Record<string, number>,
+      cities: {} as Record<string, number>,
+    };
+
+    allDesigns.forEach((d) => {
+      // Availability
+      if (d.readyStock) counts.availability.stock++;
+      else counts.availability.order++;
+
+      // Price
+      if (d.price < 12000) counts.price.under12++;
+      else if (d.price <= 14000) counts.price["12to14"]++;
+      else counts.price.over14++;
+
+      // Category
+      if (d.category) {
+        counts.categories[d.category] = (counts.categories[d.category] || 0) + 1;
+      }
+
+      // Atelier
+      if (d.boutique) {
+        counts.ateliers[d.boutique] = (counts.ateliers[d.boutique] || 0) + 1;
+      }
+
+      // City
+      if (d.city) {
+        counts.cities[d.city] = (counts.cities[d.city] || 0) + 1;
+      }
+    });
+
+    return counts;
+  }, [allDesigns]);
+
+  // Filtered and sorted designs
   const filteredDesigns = useMemo(() => {
-    const list = catalogData?.designs || [];
-
-    return list
+    return allDesigns
       .filter((d: DesignVM) => {
+        // Search query filter
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          const matchTitle = d.title.toLowerCase().includes(q);
+          const matchBrand = d.boutique.toLowerCase().includes(q);
+          const matchCategory = d.category.toLowerCase().includes(q);
+          if (!matchTitle && !matchBrand && !matchCategory) return false;
+        }
+
         // Category filter
         if (activeCategory) {
           const normActive = activeCategory.toLowerCase();
@@ -54,209 +106,545 @@ export default function Collections() {
           if (normActive !== normItem) return false;
         }
 
+        // Atelier filter
+        if (activeAtelier && d.boutique.toLowerCase() !== activeAtelier.toLowerCase()) {
+          return false;
+        }
+
+        // City filter
+        if (activeCity && d.city.toLowerCase() !== activeCity.toLowerCase()) {
+          return false;
+        }
+
         // Availability filter
         if (activeAvailability === "stock" && !d.readyStock) return false;
         if (activeAvailability === "order" && d.readyStock) return false;
 
         // Price filter
-        if (activePrice === "under3" && d.price >= 3000) return false;
-        if (activePrice === "3to7" && (d.price < 3000 || d.price > 7000)) return false;
-        if (activePrice === "over7" && d.price <= 7000) return false;
+        if (activePrice === "under12" && d.price >= 12000) return false;
+        if (activePrice === "12to14" && (d.price < 12000 || d.price > 14000)) return false;
+        if (activePrice === "over14" && d.price <= 14000) return false;
 
         return true;
       })
-      .sort((a, b) => (activeSort === "high" ? b.price - a.price : a.price - b.price));
-  }, [catalogData, activeCategory, activeAvailability, activePrice, activeSort]);
+      .sort((a, b) => {
+        if (activeSort === "high") return b.price - a.price;
+        if (activeSort === "new") return b.title.localeCompare(a.title);
+        // Default: Price low to high
+        return a.price - b.price;
+      });
+  }, [allDesigns, activeCategory, activeAtelier, activeAvailability, activePrice, activeCity, activeSort, searchQuery]);
+
+  // Count distinct ateliers represented in filtered results
+  const distinctAteliersCount = useMemo(() => {
+    const s = new Set<string>();
+    filteredDesigns.forEach((d) => s.add(d.boutique));
+    return s.size;
+  }, [filteredDesigns]);
+
+  const hasActiveFilters = Boolean(
+    activeCategory || activeAtelier || activeAvailability || activePrice || activeCity || searchQuery
+  );
 
   return (
-    <div className="min-h-screen bg-ivory text-ink grain flex flex-col selection:bg-clay selection:text-white">
+    <div className="min-h-screen bg-paper text-ink flex flex-col selection:bg-rose selection:text-white">
       <Header />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-5 py-10 sm:py-14">
-        {/* Page Title & Philosophy */}
-        <div className="max-w-3xl">
-          <span className="text-xs uppercase tracking-[0.2em] font-semibold text-clay">
-            Boutique Catalog
+      <main className="flex-1 max-w-[1320px] mx-auto w-full px-4 sm:px-8 py-6 sm:py-8">
+        {/* Breadcrumbs (.crumbs) */}
+        <p className="text-xs text-grey-muted mb-3">
+          <Link to="/" className="hover:text-ink transition">
+            Home
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-ink font-medium">
+            {activeCategory || (searchQuery ? `Search: "${searchQuery}"` : "All Creations")}
           </span>
-          <h1 className="mt-2 font-display text-4xl sm:text-5xl font-normal tracking-tight">
-            The collection
-          </h1>
-          <p className="mt-3 text-base sm:text-lg text-ink-soft leading-relaxed">
-            Browse real pieces from independent Indian boutiques. Filter by studio stock to see what ships this week, or commission a piece made to your exact measurements.
-          </p>
-        </div>
+        </p>
 
-        {/* Faceted Sticky Filter Rail */}
-        <div className="sticky top-[75px] z-30 mt-8 rounded-2xl border border-black/5 bg-ivory/95 p-4 backdrop-blur-md shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* Category Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-none">
-              <button
-                type="button"
-                onClick={() => toggleParam("category", "")}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
-                  !activeCategory
-                    ? "bg-ink text-ivory"
-                    : "border border-ink/15 bg-white/60 text-ink hover:border-ink/40"
-                }`}
-              >
-                All Categories
-              </button>
-              {CANONICAL_TAXONOMY.map((cat) => {
-                const isActive = activeCategory.toLowerCase() === cat.toLowerCase();
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => toggleParam("category", cat)}
-                    className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
-                      isActive
-                        ? "bg-clay text-white"
-                        : "border border-ink/15 bg-white/60 text-ink hover:border-clay hover:text-clay"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Secondary Facets: Availability, Price, Sort */}
-            <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t border-black/5 w-full sm:border-t-0 sm:pt-0 sm:w-auto">
-              {/* Availability */}
-              <button
-                type="button"
-                onClick={() => toggleParam("availability", "stock")}
-                className={`rounded-full px-3 py-1 font-medium transition ${
-                  activeAvailability === "stock"
-                    ? "bg-forest text-white"
-                    : "border border-ink/15 text-ink-soft hover:text-ink"
-                }`}
-              >
-                Studio Stock
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleParam("availability", "order")}
-                className={`rounded-full px-3 py-1 font-medium transition ${
-                  activeAvailability === "order"
-                    ? "bg-ink text-white"
-                    : "border border-ink/15 text-ink-soft hover:text-ink"
-                }`}
-              >
-                Made on Order
-              </button>
-
-              {/* Price Band */}
-              <button
-                type="button"
-                onClick={() => toggleParam("price", "under3")}
-                className={`rounded-full px-3 py-1 font-medium transition ${
-                  activePrice === "under3"
-                    ? "bg-clay text-white"
-                    : "border border-ink/15 text-ink-soft hover:text-ink"
-                }`}
-              >
-                &lt; ₹3k
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleParam("price", "3to7")}
-                className={`rounded-full px-3 py-1 font-medium transition ${
-                  activePrice === "3to7"
-                    ? "bg-clay text-white"
-                    : "border border-ink/15 text-ink-soft hover:text-ink"
-                }`}
-              >
-                ₹3k–₹7k
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleParam("price", "over7")}
-                className={`rounded-full px-3 py-1 font-medium transition ${
-                  activePrice === "over7"
-                    ? "bg-clay text-white"
-                    : "border border-ink/15 text-ink-soft hover:text-ink"
-                }`}
-              >
-                &gt; ₹7k
-              </button>
-
-              {/* Sort toggle */}
-              <button
-                type="button"
-                onClick={() => setSort(activeSort === "high" ? "low" : "high")}
-                className="rounded-full border border-ink/15 px-3 py-1 text-ink font-medium hover:bg-parchment transition ml-auto sm:ml-0"
-              >
-                Price: {activeSort === "high" ? "High → Low" : "Low → High"}
-              </button>
-
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={clearAllFilters}
-                  className="text-xs text-clay underline font-medium hover:text-ink transition ml-2"
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Results Info */}
-        <div className="mt-8 flex items-center justify-between text-xs text-ink-soft">
-          <p>
-            Showing <span className="font-semibold text-ink">{filteredDesigns.length}</span> designs
-            {activeCategory && (
-              <span> in <span className="font-semibold text-ink">{activeCategory}</span></span>
-            )}
-          </p>
-        </div>
-
-        {/* Designs Grid */}
-        {isLoading ? (
-          <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="animate-pulse space-y-3">
-                <div className="aspect-[4/5] rounded-lg bg-parchment" />
-                <div className="h-4 w-3/4 rounded bg-parchment" />
-                <div className="h-3 w-1/2 rounded bg-parchment" />
-              </div>
-            ))}
-          </div>
-        ) : filteredDesigns.length > 0 ? (
-          <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-            {filteredDesigns.map((d: DesignVM) => (
-              <DesignCard key={d.slug} design={d} />
-            ))}
-          </div>
-        ) : (
-          <div className="mt-16 rounded-2xl border border-dashed border-ink/20 p-12 text-center max-w-xl mx-auto bg-parchment/30">
-            <h3 className="font-display text-2xl font-normal">No pieces found in this view</h3>
-            <p className="mt-2 text-sm text-ink-soft leading-relaxed">
-              This atelier collection is currently being curated, or no pieces match that filter combination. Clear the filters or request a call with our styling concierge to commission a custom creation.
+        {/* Listing Header (.lhead) */}
+        <div className="flex flex-wrap items-baseline justify-between gap-4 pb-4 border-b border-line">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink font-sans">
+              {activeCategory || (searchQuery ? `Search results for "${searchQuery}"` : "All Creations")}
+            </h1>
+            <p className="text-xs text-grey-soft mt-1">
+              <b>{filteredDesigns.length}</b> {filteredDesigns.length === 1 ? "piece" : "pieces"} from{" "}
+              <b>{distinctAteliersCount}</b> {distinctAteliersCount === 1 ? "atelier" : "ateliers"}
             </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
+          </div>
+
+          {/* Sort Selector and Filter Trigger */}
+          <div className="flex items-center gap-2 text-xs">
+            {/* Mobile Filter Button */}
+            <button
+              type="button"
+              onClick={() => setIsMobileFilterOpen(true)}
+              className="lg:hidden flex items-center gap-1.5 border border-line bg-white px-3 py-2 rounded-sm text-grey-soft hover:text-ink transition"
+            >
+              <Filter className="h-3.5 w-3.5" />
+              <span>Filters</span>
               {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={clearAllFilters}
-                  className="rounded-full bg-ink px-6 py-2.5 text-xs font-medium text-ivory hover:bg-clay transition"
-                >
-                  Reset All Filters
-                </button>
+                <span className="h-2 w-2 rounded-full bg-rose" />
               )}
-              <Link
-                to="/how-it-works"
-                className="rounded-full border border-ink/20 px-6 py-2.5 text-xs font-medium text-ink hover:bg-parchment transition"
+            </button>
+
+            {/* Sort Select (.sel) */}
+            <div className="relative inline-block">
+              <select
+                value={activeSort}
+                onChange={(e) => setParam("sort", e.target.value)}
+                className="appearance-none border border-line bg-white px-3 py-2 pr-7 rounded-sm text-grey-soft hover:border-ink focus:outline-none transition cursor-pointer text-xs font-medium"
               >
-                Learn How to Commission
-              </Link>
+                <option value="low">Sort: Price low to high</option>
+                <option value="high">Sort: Price high to low</option>
+                <option value="new">Sort: Newly added</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-grey-muted pointer-events-none" />
             </div>
+          </div>
+        </div>
+
+        {/* Active Filter Tags Bar (.sortbar) */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 py-3 border-b border-line text-xs">
+            <span className="text-grey-muted font-medium text-[11px] uppercase tracking-wider">
+              Active:
+            </span>
+
+            {activeCategory && (
+              <button
+                type="button"
+                onClick={() => setParam("category", "")}
+                className="inline-flex items-center gap-1 border border-rose text-rose bg-white px-2.5 py-1 rounded-sm text-xs hover:bg-rose/5 transition"
+              >
+                <span>Category: {activeCategory}</span>
+                <X className="h-3 w-3" />
+              </button>
+            )}
+
+            {activeAvailability && (
+              <button
+                type="button"
+                onClick={() => setParam("availability", "")}
+                className="inline-flex items-center gap-1 border border-rose text-rose bg-white px-2.5 py-1 rounded-sm text-xs hover:bg-rose/5 transition"
+              >
+                <span>{activeAvailability === "stock" ? "In studio" : "Made on order"}</span>
+                <X className="h-3 w-3" />
+              </button>
+            )}
+
+            {activePrice && (
+              <button
+                type="button"
+                onClick={() => setParam("price", "")}
+                className="inline-flex items-center gap-1 border border-rose text-rose bg-white px-2.5 py-1 rounded-sm text-xs hover:bg-rose/5 transition"
+              >
+                <span>
+                  {activePrice === "under12"
+                    ? "Under ₹12,000"
+                    : activePrice === "12to14"
+                    ? "₹12,000–₹14,000"
+                    : "Over ₹14,000"}
+                </span>
+                <X className="h-3 w-3" />
+              </button>
+            )}
+
+            {activeAtelier && (
+              <button
+                type="button"
+                onClick={() => setParam("atelier", "")}
+                className="inline-flex items-center gap-1 border border-rose text-rose bg-white px-2.5 py-1 rounded-sm text-xs hover:bg-rose/5 transition"
+              >
+                <span>Atelier: {activeAtelier}</span>
+                <X className="h-3 w-3" />
+              </button>
+            )}
+
+            {activeCity && (
+              <button
+                type="button"
+                onClick={() => setParam("city", "")}
+                className="inline-flex items-center gap-1 border border-rose text-rose bg-white px-2.5 py-1 rounded-sm text-xs hover:bg-rose/5 transition"
+              >
+                <span>City: {activeCity}</span>
+                <X className="h-3 w-3" />
+              </button>
+            )}
+
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setParam("q", "")}
+                className="inline-flex items-center gap-1 border border-rose text-rose bg-white px-2.5 py-1 rounded-sm text-xs hover:bg-rose/5 transition"
+              >
+                <span>Query: &ldquo;{searchQuery}&rdquo;</span>
+                <X className="h-3 w-3" />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="text-grey-soft hover:text-ink underline text-[11px] ml-1 transition"
+            >
+              Clear all
+            </button>
           </div>
         )}
+
+        {/* 2-Column Listing Layout (.listing) */}
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-[212px_1fr] gap-8 items-start">
+          {/* Left Filter Rail (.rail) */}
+          <aside className="hidden lg:block space-y-5 text-xs text-grey-soft">
+            {/* Availability */}
+            <div className="border-b border-line pb-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-grey-soft mb-2.5">
+                Availability
+              </h4>
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => toggleParam("availability", "stock")}
+                  className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
+                    activeAvailability === "stock" ? "font-bold text-ink" : ""
+                  }`}
+                >
+                  <span
+                    className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
+                      activeAvailability === "stock"
+                        ? "bg-ink border-ink text-white"
+                        : "border-line"
+                    }`}
+                  >
+                    {activeAvailability === "stock" && <Check className="h-2.5 w-2.5" />}
+                  </span>
+                  <span>In studio ({facetCounts.availability.stock})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => toggleParam("availability", "order")}
+                  className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
+                    activeAvailability === "order" ? "font-bold text-ink" : ""
+                  }`}
+                >
+                  <span
+                    className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
+                      activeAvailability === "order"
+                        ? "bg-ink border-ink text-white"
+                        : "border-line"
+                    }`}
+                  >
+                    {activeAvailability === "order" && <Check className="h-2.5 w-2.5" />}
+                  </span>
+                  <span>Made on order ({facetCounts.availability.order})</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Price Filter */}
+            <div className="border-b border-line pb-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-grey-soft mb-2.5">
+                Price
+              </h4>
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => toggleParam("price", "under12")}
+                  className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
+                    activePrice === "under12" ? "font-bold text-ink" : ""
+                  }`}
+                >
+                  <span
+                    className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
+                      activePrice === "under12"
+                        ? "bg-ink border-ink text-white"
+                        : "border-line"
+                    }`}
+                  >
+                    {activePrice === "under12" && <Check className="h-2.5 w-2.5" />}
+                  </span>
+                  <span>Under ₹12,000 ({facetCounts.price.under12})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => toggleParam("price", "12to14")}
+                  className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
+                    activePrice === "12to14" ? "font-bold text-ink" : ""
+                  }`}
+                >
+                  <span
+                    className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
+                      activePrice === "12to14"
+                        ? "bg-ink border-ink text-white"
+                        : "border-line"
+                    }`}
+                  >
+                    {activePrice === "12to14" && <Check className="h-2.5 w-2.5" />}
+                  </span>
+                  <span>₹12,000–₹14,000 ({facetCounts.price["12to14"]})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => toggleParam("price", "over14")}
+                  className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
+                    activePrice === "over14" ? "font-bold text-ink" : ""
+                  }`}
+                >
+                  <span
+                    className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
+                      activePrice === "over14"
+                        ? "bg-ink border-ink text-white"
+                        : "border-line"
+                    }`}
+                  >
+                    {activePrice === "over14" && <Check className="h-2.5 w-2.5" />}
+                  </span>
+                  <span>Over ₹14,000 ({facetCounts.price.over14})</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Category Filter */}
+            <div className="border-b border-line pb-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-grey-soft mb-2.5">
+                Category
+              </h4>
+              <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                {CANONICAL_TAXONOMY.map((cat) => {
+                  const isSelected = activeCategory.toLowerCase() === cat.toLowerCase();
+                  const count = facetCounts.categories[cat] || 0;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => toggleParam("category", cat)}
+                      className={`flex items-center justify-between w-full text-left py-1 hover:text-ink transition ${
+                        isSelected ? "font-bold text-ink" : ""
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
+                            isSelected ? "bg-ink border-ink text-white" : "border-line"
+                          }`}
+                        >
+                          {isSelected && <Check className="h-2.5 w-2.5" />}
+                        </span>
+                        <span>{cat}</span>
+                      </span>
+                      <span className="text-[11px] text-grey-muted">({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Atelier Filter */}
+            <div className="border-b border-line pb-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-grey-soft mb-2.5">
+                Atelier
+              </h4>
+              <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                {Object.entries(facetCounts.ateliers)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 10)
+                  .map(([name, count]) => {
+                    const isSelected = activeAtelier.toLowerCase() === name.toLowerCase();
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => toggleParam("atelier", name)}
+                        className={`flex items-center justify-between w-full text-left py-1 hover:text-ink transition ${
+                          isSelected ? "font-bold text-ink" : ""
+                        }`}
+                      >
+                        <span className="flex items-center gap-2 truncate">
+                          <span
+                            className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
+                              isSelected ? "bg-ink border-ink text-white" : "border-line"
+                            }`}
+                          >
+                            {isSelected && <Check className="h-2.5 w-2.5" />}
+                          </span>
+                          <span className="truncate">{name}</span>
+                        </span>
+                        <span className="text-[11px] text-grey-muted ml-1">({count})</span>
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* City Filter */}
+            <div className="pb-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-grey-soft mb-2.5">
+                Atelier City
+              </h4>
+              <div className="space-y-1.5">
+                {Object.entries(facetCounts.cities)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 6)
+                  .map(([city, count]) => {
+                    const isSelected = activeCity.toLowerCase() === city.toLowerCase();
+                    return (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => toggleParam("city", city)}
+                        className={`flex items-center justify-between w-full text-left py-1 hover:text-ink transition ${
+                          isSelected ? "font-bold text-ink" : ""
+                        }`}
+                      >
+                        <span className="flex items-center gap-2 truncate">
+                          <span
+                            className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
+                              isSelected ? "bg-ink border-ink text-white" : "border-line"
+                            }`}
+                          >
+                            {isSelected && <Check className="h-2.5 w-2.5" />}
+                          </span>
+                          <span>{city}</span>
+                        </span>
+                        <span className="text-[11px] text-grey-muted">({count})</span>
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          </aside>
+
+          {/* Right Product Grid (.grid) */}
+          <div className="w-full">
+            {filteredDesigns.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                {filteredDesigns.map((d) => (
+                  <DesignCard key={d.slug} design={d} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 bg-wash rounded-sm border border-line p-8">
+                <h3 className="text-lg font-serif italic font-normal text-ink">
+                  No pieces matched your selected filters
+                </h3>
+                <p className="text-xs text-grey-soft mt-1.5 max-w-sm mx-auto">
+                  Try clearing active filter tags or searching for a different style or atelier.
+                </p>
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="mt-4 rounded-sm bg-ink px-6 py-2.5 text-xs font-semibold text-white hover:bg-rose transition"
+                >
+                  Reset all filters
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </main>
+
+      {/* Mobile Filter Drawer */}
+      {isMobileFilterOpen && (
+        <div className="fixed inset-0 z-50 flex bg-black/40 backdrop-blur-sm lg:hidden">
+          <div className="ml-auto w-full max-w-xs bg-paper h-full p-5 overflow-y-auto flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-line">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-ink">
+                  Filters
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="p-1 text-grey-soft hover:text-ink"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Mobile Availability */}
+              <div className="py-3 border-b border-line text-xs">
+                <h4 className="font-bold text-ink mb-2">Availability</h4>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleParam("availability", "stock")}
+                    className="flex items-center gap-2 w-full text-left"
+                  >
+                    <span
+                      className={`h-4 w-4 border rounded-sm flex items-center justify-center ${
+                        activeAvailability === "stock" ? "bg-ink border-ink text-white" : "border-line"
+                      }`}
+                    >
+                      {activeAvailability === "stock" && <Check className="h-3 w-3" />}
+                    </span>
+                    <span>In studio</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleParam("availability", "order")}
+                    className="flex items-center gap-2 w-full text-left"
+                  >
+                    <span
+                      className={`h-4 w-4 border rounded-sm flex items-center justify-center ${
+                        activeAvailability === "order" ? "bg-ink border-ink text-white" : "border-line"
+                      }`}
+                    >
+                      {activeAvailability === "order" && <Check className="h-3 w-3" />}
+                    </span>
+                    <span>Made on order</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile Category */}
+              <div className="py-3 border-b border-line text-xs">
+                <h4 className="font-bold text-ink mb-2">Category</h4>
+                <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                  {CANONICAL_TAXONOMY.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => toggleParam("category", cat)}
+                      className={`block w-full text-left py-1 ${
+                        activeCategory.toLowerCase() === cat.toLowerCase()
+                          ? "font-bold text-rose"
+                          : "text-grey-soft"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-line flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  clearAllFilters();
+                  setIsMobileFilterOpen(false);
+                }}
+                className="flex-1 py-2.5 border border-line text-xs font-semibold rounded-sm text-grey-soft"
+              >
+                Clear all
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="flex-1 py-2.5 bg-ink text-white text-xs font-semibold rounded-sm hover:bg-rose"
+              >
+                Apply ({filteredDesigns.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

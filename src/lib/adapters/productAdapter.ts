@@ -3,6 +3,7 @@ import { Product } from "@/types";
 export interface DesignVM {
   slug: string;
   boutique: string;
+  city: string;
   title: string;
   subtitle: string;
   category: string;
@@ -18,6 +19,10 @@ export interface DesignVM {
   note: string;
   palette: { from: string; to: string; accent: string };
   image: string;
+  altImage: string;
+  rating: number;
+  reviewCount: number;
+  replyTime: string;
   rawProduct: Product;
 }
 
@@ -37,24 +42,24 @@ export const CANONICAL_TAXONOMY = [
 
 export type CanonicalCategory = typeof CANONICAL_TAXONOMY[number];
 
-export function mapCategoryToNewTaxonomy(rawCategory?: string): CanonicalCategory {
+export function mapCategoryToNewTaxonomy(rawCategory?: string): CanonicalCategory | null {
   const normalized = (rawCategory || "").toLowerCase().trim();
   
-  if (normalized.includes("lehenga")) return "Lehengas";
+  if (normalized.includes("lehenga") || normalized.includes("ghagra")) return "Lehengas";
   if (normalized.includes("saree") || normalized.includes("sari")) return "Sarees";
   if (normalized.includes("indo-western") || normalized.includes("indowestern") || normalized.includes("fusion")) return "Indo-Western";
-  if (normalized.includes("indian co-ord") || normalized.includes("kurta set") || normalized.includes("ethnic set")) return "Indian Co-ords";
-  if (normalized.includes("western co-ord")) return "Western Co-ords";
+  if (normalized.includes("indian co-ord") || normalized.includes("kurta set") || normalized.includes("ethnic set") || normalized.includes("anarkali set")) return "Indian Co-ords";
+  if (normalized.includes("western co-ord") || normalized.includes("pant suit")) return "Western Co-ords";
   if (normalized.includes("co-ord") || normalized.includes("coord")) return "Indian Co-ords";
-  if (normalized.includes("jumpsuit")) return "Jumpsuits";
-  if (normalized.includes("dress") || normalized.includes("gown") || normalized.includes("maxi")) return "Western Dresses";
-  if (normalized.includes("top") || normalized.includes("shirt") || normalized.includes("blouse") || normalized.includes("tunic")) return "Tops";
-  if (normalized.includes("bottom") || normalized.includes("pant") || normalized.includes("trouser") || normalized.includes("skirt")) return "Bottoms";
-  if (normalized.includes("bag") || normalized.includes("clutch") || normalized.includes("potli") || normalized.includes("accessory")) return "Bags";
-  if (normalized.includes("shoe") || normalized.includes("footwear") || normalized.includes("juttis") || normalized.includes("sandals") || normalized.includes("heels")) return "Shoes";
+  if (normalized.includes("jumpsuit") || normalized.includes("playsuit") || normalized.includes("romper")) return "Jumpsuits";
+  if (normalized.includes("dress") || normalized.includes("gown") || normalized.includes("maxi") || normalized.includes("midi dress")) return "Western Dresses";
+  if (normalized.includes("top") || normalized.includes("shirt") || normalized.includes("blouse") || normalized.includes("tunic") || normalized.includes("corset")) return "Tops";
+  if (normalized.includes("bottom") || normalized.includes("pant") || normalized.includes("trouser") || normalized.includes("skirt") || normalized.includes("palazzo")) return "Bottoms";
+  if (normalized.includes("bag") || normalized.includes("clutch") || normalized.includes("potli") || normalized.includes("tote") || normalized.includes("handbag")) return "Bags";
+  if (normalized.includes("shoe") || normalized.includes("footwear") || normalized.includes("juttis") || normalized.includes("sandals") || normalized.includes("heels") || normalized.includes("mojri")) return "Shoes";
   
-  // Default to Western Dresses if unmapped, preserving honest presentation
-  return "Western Dresses";
+  // Anti-corruption: Do NOT map general "accessories" to "Bags", and do NOT default to "Western Dresses"
+  return null;
 }
 
 const PALETTES = [
@@ -65,19 +70,6 @@ const PALETTES = [
   { from: "#5c2a2a", to: "#9c5252", accent: "#e2a76f" },
 ];
 
-export function getUniformProductPrice(id: string): number {
-  let hash = 0;
-  const str = id || "ogura-piece";
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  const positive = Math.abs(hash);
-  // Range: 1,200 to 12,000 (span: 10,800) in realistic steps of 50
-  const steps = 216;
-  const step = positive % (steps + 1);
-  return 1200 + step * 50;
-}
 
 export interface ColorObject {
   name: string;
@@ -201,21 +193,77 @@ export function normalizeProductSizes(rawSizes: any): string[] {
   return result.length > 0 ? result : ["XS", "S", "M", "L", "XL", "Free Size"];
 }
 
+export const CATEGORY_IMAGE_MAP: Record<string, { primary: string; alt: string }> = {
+  "Lehengas": { primary: "/mockup-assets/lengha-03.jpg", alt: "/mockup-assets/lengha-12.jpg" },
+  "Sarees": { primary: "/mockup-assets/saree-02.jpg", alt: "/mockup-assets/saree-09.jpg" },
+  "Indo-Western": { primary: "/mockup-assets/indowesteern-03.jpg", alt: "/mockup-assets/dresses-western-11.jpg" },
+  "Indian Co-ords": { primary: "/mockup-assets/coord-indian-04.jpg", alt: "/mockup-assets/coord-western-02.jpg" },
+  "Western Dresses": { primary: "/mockup-assets/dresses-western-04.jpg", alt: "/mockup-assets/dresses-western-19.jpg" },
+  "Western Co-ords": { primary: "/mockup-assets/coord-western-02.jpg", alt: "/mockup-assets/coord-indian-04.jpg" },
+  "Tops": { primary: "/mockup-assets/tops-western-09.jpg", alt: "/mockup-assets/tops-western-01.jpg" },
+  "Bottoms": { primary: "/mockup-assets/bottoms-03.jpg", alt: "/mockup-assets/coord-western-02.jpg" },
+  "Jumpsuits": { primary: "/mockup-assets/jumpsuits-02.jpg", alt: "/mockup-assets/dresses-western-25.jpg" },
+  "Bags": { primary: "/mockup-assets/bags-14.jpg", alt: "/mockup-assets/bags-07.jpg" },
+  "Shoes": { primary: "/mockup-assets/shoes-05.jpg", alt: "/mockup-assets/shoes-14.jpg" },
+};
+
+export function getAtelierCity(brandName?: string): string {
+  const norm = (brandName || "").toLowerCase();
+  if (norm.includes("naayra")) return "Delhi";
+  if (norm.includes("riwaana")) return "Mumbai";
+  if (norm.includes("navira")) return "Jaipur";
+  if (norm.includes("vindhya")) return "Hyderabad";
+  if (norm.includes("kamala")) return "Chennai";
+  if (norm.includes("noor")) return "Lucknow";
+  if (norm.includes("ruh")) return "Goa";
+  if (norm.includes("thaila")) return "Jaipur";
+  if (norm.includes("juti") || norm.includes("jutti")) return "Amritsar";
+  if (norm.includes("saanjh")) return "Bengaluru";
+  if (norm.includes("rangreza")) return "Jaipur";
+  if (norm.includes("taant")) return "Kolkata";
+  if (norm.includes("punit")) return "Jaipur";
+  if (norm.includes("gauri")) return "Delhi";
+  if (norm.includes("roshi")) return "Mumbai";
+  return "Jaipur";
+}
+
 export function transformProductToDesignStrict(product: Product): DesignVM {
   const isReady = Boolean(product.inStock);
   const paletteIndex = Math.abs((product.id || "").split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)) % PALETTES.length;
   const palette = PALETTES[paletteIndex];
-  const price = getUniformProductPrice(product.id || product.name);
+  
+  // Authoritative DB price preservation: DB is sole commercial truth
+  const price = typeof product.price === "number" && product.price > 0 ? product.price : 0;
+
   const normalizedColors = normalizeProductColors(product.colors);
   const normalizedSizes = normalizeProductSizes(product.sizes);
   const normalizedRaw = { ...product, price, colors: normalizedColors, sizes: normalizedSizes };
 
+  const mappedCat = mapCategoryToNewTaxonomy(product.category) || (product.category as any) || "Lehengas";
+  const catDefaults = CATEGORY_IMAGE_MAP[mappedCat] || CATEGORY_IMAGE_MAP["Lehengas"];
+
+  const rawImages = Array.isArray(product.images) && product.images.length > 0 
+    ? product.images.filter(Boolean) 
+    : [];
+
+  const primaryImage = (rawImages[0] && !rawImages[0].includes("placeholder")) 
+    ? rawImages[0] 
+    : catDefaults.primary;
+
+  const altImage = (rawImages[1] && !rawImages[1].includes("placeholder"))
+    ? rawImages[1]
+    : catDefaults.alt;
+
+  const boutique = product.brand || "OGURA Atelier";
+  const city = getAtelierCity(boutique);
+
   return {
     slug: product.id,
-    boutique: product.brand || "OGURA Atelier",
+    boutique,
+    city,
     title: product.name,
     subtitle: product.description ? product.description.slice(0, 60) + (product.description.length > 60 ? "..." : "") : "",
-    category: mapCategoryToNewTaxonomy(product.category),
+    category: mappedCat,
     price,
     originalPrice: product.originalPrice ? Math.round(price * 1.3) : undefined,
     fabric: product.material || "Artisanal Fabric",
@@ -227,7 +275,11 @@ export function transformProductToDesignStrict(product: Product): DesignVM {
     leadTimeDays: 10,
     note: product.description || "",
     palette,
-    image: Array.isArray(product.images) && product.images.length > 0 && product.images[0] ? product.images[0] : "",
+    image: primaryImage,
+    altImage,
+    rating: product.rating || 4.8,
+    reviewCount: product.reviews || 96,
+    replyTime: "2h",
     rawProduct: normalizedRaw,
   };
 }

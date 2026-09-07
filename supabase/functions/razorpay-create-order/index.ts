@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,6 +15,8 @@ serve(async (req) => {
   try {
     const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID');
     const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET');
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
       return new Response(
@@ -25,17 +28,49 @@ serve(async (req) => {
       );
     }
 
-    const { amount, currency = 'INR', receipt, notes } = await req.json();
+    const { amount, currency = 'INR', receipt, notes, items } = await req.json();
 
-    if (!amount || amount <= 0) {
+    let finalChargeAmount = Number(amount);
+
+    // Rule 1 Enforcement: Reconstruct authoritative amount from database if items provided
+    if (Array.isArray(items) && items.length > 0 && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const productIds = items.map((it: any) => it.product_id);
+        const { data: dbProducts } = await supabase
+          .from('products')
+          .select('id, price, is_available')
+          .in('id', productIds);
+
+        if (dbProducts && dbProducts.length > 0) {
+          const pMap = new Map(dbProducts.map((p: any) => [p.id, p.price]));
+          let computedSubtotal = 0;
+          for (const it of items) {
+            const pPrice = Number(pMap.get(it.product_id) || 0);
+            computedSubtotal += pPrice * Math.max(1, parseInt(it.quantity) || 1);
+          }
+          const deliveryFee = Number(notes?.deliveryFee || 0);
+          const discount = Number(notes?.discount || 0);
+          const authoritativeTotal = Math.max(0, computedSubtotal + deliveryFee - discount);
+          
+          if (authoritativeTotal > 0) {
+            finalChargeAmount = authoritativeTotal;
+          }
+        }
+      } catch (err: any) {
+        console.warn('[CreateOrder] Server-side price check fallback to client amount:', err.message);
+      }
+    }
+
+    if (!finalChargeAmount || finalChargeAmount <= 0) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Invalid amount' }),
+        JSON.stringify({ success: false, error: 'Invalid order amount' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
     // Razorpay expects amount in paise (smallest currency unit)
-    const amountInPaise = Math.round(amount * 100);
+    const amountInPaise = Math.round(finalChargeAmount * 100);
 
     const orderPayload = {
       amount: amountInPaise,
@@ -58,7 +93,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Razorpay order creation failed:', errorData);
+      console.error('[CreateOrder] Razorpay order creation failed:', errorData);
       return new Response(
         JSON.stringify({ success: false, error: errorData.error?.description || 'Failed to create order' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -78,8 +113,8 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
-    console.error('Error creating Razorpay order:', error);
+  } catch (error: any) {
+    console.error('[CreateOrder] Error creating Razorpay order:', error);
     return new Response(
       JSON.stringify({ success: false, error: 'Internal server error' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }

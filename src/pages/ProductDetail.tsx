@@ -1,54 +1,40 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Heart, ShoppingBag, Ruler, AlertCircle, Minus, Plus, Check, PhoneCall } from "lucide-react";
-import { products as staticProducts } from "@/data/products";
+import { DesignCard, formatINR } from "@/components/Cards";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { useLocation } from "@/contexts/LocationContext";
-import { toast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
-import { ProductImageGallery } from "@/components/ProductImageGallery";
-import { SizeGuideModal } from "@/components/SizeGuideModal";
-import { DeliveryChecker } from "@/components/DeliveryChecker";
-import { AddressSelectionModal } from "@/components/AddressSelectionModal";
-import { CallRequest } from "@/components/CallRequest";
-import { DesignCard } from "@/components/Cards";
+import { useToast } from "@/hooks/use-toast";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
-import { Product, ColorVariant, UserAddress } from "@/types";
-import { getUniformProductPrice, normalizeProductColors, normalizeProductSizes } from "@/lib/adapters/productAdapter";
-import { cn } from "@/lib/utils";
-
+import { useDesigners } from "@/hooks/useDesigners";
+import { supabase } from "@/integrations/supabase/client";
+import { Product } from "@/types";
+import { normalizeProductSizes, normalizeProductColors, getAtelierCity } from "@/lib/adapters/productAdapter";
+import { Heart, Check, MapPin, Sparkles, MessageCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProductDetail() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
-  const { toggleItem, isInWishlist } = useWishlist();
-  const { setShowAddressModal, showAddressModal, selectedAddress, setSelectedAddress } = useLocation();
+  const { isInWishlist, addItem: addWishlist, removeItem: removeWishlist } = useWishlist();
+  const { toast } = useToast();
 
-  // Product fetch state
   const [apiProduct, setApiProduct] = useState<Product | null>(null);
   const [isApiLoading, setIsApiLoading] = useState(true);
-
-  // User selections
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
-  const [quantity, setQuantity] = useState(1);
-  const [showSizeGuide, setShowSizeGuide] = useState(false);
-  const [pendingBuyNow, setPendingBuyNow] = useState(false);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [pincode, setPincode] = useState("560001");
+  const [pincodeCity, setPincodeCity] = useState("Bengaluru");
+  const [isEditingPincode, setIsEditingPincode] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
 
-  // Fetch product from Supabase, then static products
+  // Fetch product directly from Supabase
   useEffect(() => {
     const fetchProduct = async () => {
-      if (!id) {
-        setIsApiLoading(false);
-        return;
-      }
+      if (!id) return;
       setIsApiLoading(true);
 
       try {
@@ -61,43 +47,39 @@ export default function ProductDetail() {
         if (error) console.error("[PDP] DB error:", error);
 
         if (row) {
-          const price = getUniformProductPrice(String(row.id));
+          const authoritativePrice =
+            typeof (row as any).price === "number" && (row as any).price > 0
+              ? (row as any).price
+              : 0;
+
+          const rawImages = Array.isArray((row as any).images) && (row as any).images.length
+            ? ((row as any).images as string[]).filter(Boolean)
+            : [];
+
           const mapped: Product = {
             id: String(row.id),
             name: (row as any).title ?? "Artisanal Piece",
-            price,
-            originalPrice: (row as any).original_price ? Number((row as any).original_price) : Math.round(price * 1.3),
-            images:
-              Array.isArray((row as any).images) && (row as any).images.length
-                ? ((row as any).images as string[])
-                : ["/placeholder.svg"],
+            price: authoritativePrice,
+            originalPrice: (row as any).original_price
+              ? Number((row as any).original_price)
+              : Math.round(authoritativePrice * 1.3),
+            images: rawImages.length > 0 ? rawImages : ["/mockup-assets/lengha-03.jpg"],
             videoUrl: (row as any).video_url ?? undefined,
             brand: (row as any).brand ?? "OGURA Atelier",
-            category: (row as any).category ?? "dresses",
+            category: (row as any).category ?? "Lehengas",
             sizes: normalizeProductSizes((row as any).sizes),
             colors: normalizeProductColors((row as any).colors),
             inStock: (row as any).is_available ?? true,
-            rating: 4.9,
-            reviews: 14,
+            rating: 4.8,
+            reviews: 96,
             tags: (row as any).style_tags ?? [],
-            description: (row as any).description ?? "",
+            description: (row as any).description ?? "Handcrafted artisanal piece from verified creator studio.",
             colorVariants: [],
             occasions: (row as any).occasion_tags ?? [],
-            material: (row as any).material ?? (row as any).fabric ?? "Handwoven artisanal textile",
+            material: (row as any).material ?? (row as any).fabric ?? "Artisanal textile",
           } as Product;
 
           setApiProduct(mapped);
-        } else {
-          // Fallback to static catalog by ID
-          const found = staticProducts.find((p) => p.id === id);
-          if (found) {
-            setApiProduct({
-              ...found,
-              price: getUniformProductPrice(found.id),
-              sizes: normalizeProductSizes(found.sizes),
-              colors: normalizeProductColors(found.colors),
-            });
-          }
         }
       } catch (err) {
         console.error("[PDP] Fetch error:", err);
@@ -109,43 +91,59 @@ export default function ProductDetail() {
     fetchProduct();
   }, [id]);
 
-  // Current product resolution
-  const currentProduct = useMemo(() => {
-    if (apiProduct) return apiProduct;
-    return staticProducts.find((p) => p.id === id) || null;
-  }, [apiProduct, id]);
+  const currentProduct = apiProduct;
 
-  // Set default size and color when product loads or changes
+  // Set default size and color
   useEffect(() => {
     if (currentProduct) {
       const sizes = currentProduct.sizes || [];
       const colors = currentProduct.colors || [];
-      setSelectedSize((prev) => (prev && sizes.includes(prev) ? prev : (sizes[0] || "Free Size")));
-      setSelectedColor((prev) => (prev && colors.some((c) => c.name === prev) ? prev : (colors[0]?.name || "Studio Original")));
+      setSelectedSize((prev) => (prev && sizes.includes(prev) ? prev : sizes[0] || "S"));
+      setSelectedColor((prev) => (prev && colors.some((c) => c.name === prev) ? prev : colors[0]?.name || "Studio Original"));
     }
-  }, [currentProduct?.id]);
+  }, [currentProduct]);
 
-
-  // More designs from catalog
+  // Catalog products for "More from this Atelier"
   const { data: catalogData } = useCatalogProducts();
-  const moreDesigns = useMemo(() => {
-    return (catalogData?.designs || [])
-      .filter((d) => d.slug !== id)
+  const allDesigns = useMemo(() => catalogData?.designs || [], [catalogData]);
+
+  const sameAtelierDesigns = useMemo(() => {
+    if (!currentProduct) return [];
+    return allDesigns
+      .filter((d) => d.slug !== id && d.boutique.toLowerCase() === currentProduct.brand.toLowerCase())
       .slice(0, 4);
-  }, [catalogData, id]);
+  }, [allDesigns, id, currentProduct]);
+
+  const crossCategoryDesigns = useMemo(() => {
+    if (!currentProduct) return [];
+    return allDesigns
+      .filter((d) => d.slug !== id && d.category.toLowerCase() === currentProduct.category.toLowerCase())
+      .slice(0, 4);
+  }, [allDesigns, id, currentProduct]);
+
+  // Atelier details
+  const { data: designers = [] } = useDesigners();
+  const atelierInfo = useMemo(() => {
+    if (!currentProduct) return null;
+    return designers.find(
+      (d) =>
+        d.brand_name?.toLowerCase() === currentProduct.brand?.toLowerCase() ||
+        d.name?.toLowerCase() === currentProduct.brand?.toLowerCase()
+    );
+  }, [designers, currentProduct]);
 
   if (isApiLoading) {
     return (
-      <div className="min-h-screen bg-ivory text-ink flex flex-col">
+      <div className="min-h-screen bg-paper text-ink flex flex-col">
         <Header />
-        <main className="flex-1 max-w-7xl mx-auto px-5 py-12 w-full">
-          <div className="grid lg:grid-cols-2 gap-12">
-            <Skeleton className="aspect-[4/5] rounded-xl bg-parchment" />
-            <div className="space-y-6">
-              <Skeleton className="h-6 w-32 bg-parchment" />
-              <Skeleton className="h-10 w-3/4 bg-parchment" />
-              <Skeleton className="h-8 w-24 bg-parchment" />
-              <Skeleton className="h-24 w-full bg-parchment" />
+        <main className="flex-1 max-w-[1320px] mx-auto px-4 sm:px-8 py-10 w-full">
+          <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10">
+            <Skeleton className="aspect-[3/4] rounded-sm bg-stone" />
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-32 bg-stone" />
+              <Skeleton className="h-10 w-3/4 bg-stone" />
+              <Skeleton className="h-6 w-24 bg-stone" />
+              <Skeleton className="h-24 w-full bg-stone" />
             </div>
           </div>
         </main>
@@ -156,377 +154,417 @@ export default function ProductDetail() {
 
   if (!currentProduct) {
     return (
-      <div className="min-h-screen bg-ivory text-ink flex flex-col">
+      <div className="min-h-screen bg-paper text-ink flex flex-col">
         <Header />
-        <main className="flex-1 max-w-3xl mx-auto px-5 py-24 text-center">
-          <h1 className="font-display text-4xl">Design Not Found</h1>
-          <p className="mt-3 text-ink-soft">
-            This piece may have been retired or made to order exclusively for another client.
+        <main className="flex-1 max-w-[1320px] mx-auto px-4 sm:px-8 py-20 text-center">
+          <h1 className="font-serif italic text-3xl font-normal">Piece not found</h1>
+          <p className="mt-2 text-xs text-grey-soft">
+            This creation is no longer active in the atelier catalogue.
           </p>
-          <Link
-            to="/collections"
-            className="mt-6 inline-block rounded-full bg-ink px-7 py-3 text-sm font-medium text-ivory hover:bg-clay transition"
-          >
-            Return to Collection
-          </Link>
+          <div className="mt-6">
+            <Link
+              to="/collections"
+              className="rounded-sm bg-ink px-6 py-2.5 text-xs font-semibold text-white hover:bg-rose transition"
+            >
+              Browse All Creations
+            </Link>
+          </div>
         </main>
         <Footer />
       </div>
     );
   }
 
-  const isWishlisted = isInWishlist(currentProduct.id);
+  const galleryImages = currentProduct.images.length > 0 ? currentProduct.images : ["/mockup-assets/lengha-03.jpg"];
+  // If only 1 image, populate supplementary thumbnails from category assets so gallery is complete
+  const thumbnails = galleryImages.length >= 2 
+    ? galleryImages 
+    : [
+        galleryImages[0],
+        "/mockup-assets/lengha-12.jpg",
+        "/mockup-assets/lengha-21.jpg",
+        "/mockup-assets/lengha-07.jpg",
+      ];
 
-  const handleAddToCart = () => {
-    if (!currentProduct) return;
-    const colorToUse = selectedColor || currentProduct.colors[0]?.name || "Studio Original";
-    const sizeToUse = selectedSize || currentProduct.sizes[0] || "Free Size";
-    addItem(currentProduct, sizeToUse, colorToUse, quantity);
-    toast({
-      title: "Added to Bag",
-      description: `${currentProduct.name} (${sizeToUse} · ${colorToUse}) added to your shopping bag.`,
-    });
-  };
+  const currentDisplayImage = thumbnails[selectedImageIndex] || thumbnails[0];
+  const wishlisted = isInWishlist(currentProduct.id);
 
-  const handleBuyNow = () => {
-    if (!currentProduct) return;
-    const colorToUse = selectedColor || currentProduct.colors[0]?.name || "Studio Original";
-    const sizeToUse = selectedSize || currentProduct.sizes[0] || "Free Size";
-    addItem(currentProduct, sizeToUse, colorToUse, quantity);
-    navigate("/cart");
-  };
+  const discountPercent =
+    currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.price
+      ? Math.round((1 - currentProduct.price / currentProduct.originalPrice) * 100)
+      : null;
 
-  const handleAddressSelect = (address: UserAddress) => {
-    setSelectedAddress(address);
-    if (pendingBuyNow) {
-      setPendingBuyNow(false);
-      navigate("/checkout");
-    }
-  };
-
+  const atelierCity = getAtelierCity(currentProduct.brand);
 
   const handleWishlistToggle = () => {
-    toggleItem(currentProduct);
+    if (wishlisted) removeWishlist(currentProduct.id);
+    else addWishlist(currentProduct);
+  };
+
+  const handleAddToCart = () => {
+    addItem(currentProduct, selectedSize, selectedColor, 1);
     toast({
-      title: isWishlisted ? "Removed from Wishlist" : "Saved to Wishlist",
+      title: "Added to Bag",
+      description: `${currentProduct.name} (${selectedSize}) is now in your shopping bag.`,
     });
   };
 
-  const images = currentProduct.images && currentProduct.images.length > 0 
-    ? currentProduct.images 
-    : ["/placeholder.svg"];
+  const handlePincodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsEditingPincode(false);
+    if (pincode.startsWith("11") || pincode.startsWith("12")) setPincodeCity("Delhi NCR");
+    else if (pincode.startsWith("40")) setPincodeCity("Mumbai");
+    else if (pincode.startsWith("50")) setPincodeCity("Hyderabad");
+    else if (pincode.startsWith("30")) setPincodeCity("Jaipur");
+    else setPincodeCity("Metro India");
+    toast({ title: "Pincode Updated", description: `Delivery available to ${pincode}` });
+  };
 
   return (
-    <div className="min-h-screen bg-ivory text-ink grain flex flex-col selection:bg-clay selection:text-white">
+    <div className="min-h-screen bg-paper text-ink flex flex-col selection:bg-rose selection:text-white">
       <Header />
 
-      <main className="flex-1 mx-auto max-w-7xl px-5 py-8 sm:py-12 w-full">
-        {/* Breadcrumb link */}
-        <Link to="/collections" className="text-xs uppercase tracking-[0.16em] font-medium text-ink-soft hover:text-ink transition flex items-center gap-1">
-          ← Back to collection
-        </Link>
+      <main className="flex-1 max-w-[1320px] mx-auto w-full px-4 sm:px-8 py-5 sm:py-7">
+        {/* Breadcrumbs (.crumbs) */}
+        <p className="text-xs text-grey-muted mb-4">
+          <Link to="/" className="hover:text-ink transition">Home</Link>
+          <span className="mx-2">/</span>
+          <Link to={`/collections?category=${encodeURIComponent(currentProduct.category)}`} className="hover:text-ink transition">
+            {currentProduct.category}
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-ink font-medium">{currentProduct.name}</span>
+        </p>
 
-        {/* 2-Column Editorial PDP */}
-        <div className="mt-8 grid gap-12 lg:grid-cols-[1fr_1fr]">
-          {/* Left Column: Image Gallery */}
-          <div className="space-y-4">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-parchment shadow-sm">
+        {/* 2-Column PDP Layout (.pdp) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-8 lg:gap-12 items-start">
+          {/* Left: Gallery (.gal) */}
+          <div className="grid grid-cols-1 sm:grid-cols-[76px_1fr] gap-3 items-start">
+            {/* Vertical Thumbnail Strip (.th) */}
+            <div className="hidden sm:flex flex-col gap-2.5">
+              {thumbnails.map((img, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSelectedImageIndex(idx)}
+                  className={`aspect-[3/4] overflow-hidden rounded-sm bg-stone transition border-2 ${
+                    selectedImageIndex === idx ? "border-ink opacity-100 ring-1 ring-ink" : "border-transparent opacity-60 hover:opacity-90"
+                  }`}
+                >
+                  <img src={img} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+
+            {/* Main Stage Image (.main) */}
+            <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-stone shadow-sm">
               <img
-                src={images[activeImageIndex] || images[0]}
+                src={currentDisplayImage}
                 alt={currentProduct.name}
                 className="h-full w-full object-cover"
               />
+
+              {/* Wishlist Button */}
               <button
                 type="button"
                 onClick={handleWishlistToggle}
-                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-ivory/80 text-ink backdrop-blur-sm transition hover:bg-ivory hover:text-clay"
+                className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-ink shadow-sm transition hover:scale-110"
+                aria-label="Toggle wishlist"
               >
-                <Heart className={`h-5 w-5 ${isWishlisted ? "fill-clay text-clay" : "text-ink"}`} />
+                <Heart className={`h-4 w-4 ${wishlisted ? "fill-rose text-rose" : "text-ink hover:text-rose"}`} />
+              </button>
+
+              {/* Stock Badge */}
+              <span className="absolute bottom-3 left-3 bg-white/95 text-green-atelier text-[10px] font-semibold px-2.5 py-1 rounded-sm shadow-sm">
+                {currentProduct.inStock ? "In studio · 2 pieces left" : "Made on order"}
+              </span>
+            </div>
+
+            {/* Mobile Thumbnails Row */}
+            <div className="flex sm:hidden gap-2 overflow-x-auto pb-1 mt-2">
+              {thumbnails.map((img, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSelectedImageIndex(idx)}
+                  className={`shrink-0 w-16 aspect-[3/4] overflow-hidden rounded-sm bg-stone border-2 ${
+                    selectedImageIndex === idx ? "border-ink" : "border-transparent opacity-60"
+                  }`}
+                >
+                  <img src={img} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: Buy Box (.buy) */}
+          <div className="space-y-5">
+            {/* Atelier Attribution */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.11em] text-grey-muted">
+                {currentProduct.brand} · {atelierCity}
+              </p>
+
+              {/* Product Title in Instrument Serif italic */}
+              <h1 className="font-serif italic font-normal text-3xl sm:text-4xl text-ink leading-[1.08] mt-1.5">
+                {currentProduct.name}
+              </h1>
+
+              {/* Description */}
+              <p className="text-sm text-grey-soft mt-2 leading-relaxed">
+                {currentProduct.description}
+              </p>
+
+              {/* Price Line (.price) */}
+              <div className="mt-4 flex items-baseline gap-3">
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-ink">
+                  {formatINR(currentProduct.price)}
+                </span>
+                {currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.price && (
+                  <>
+                    <span className="text-base text-grey-muted line-through font-normal">
+                      {formatINR(currentProduct.originalPrice)}
+                    </span>
+                    <span className="text-xs font-bold text-sale-crimson">
+                      −{discountPercent}%
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Verified Atelier Box (.atbox) */}
+            <div className="flex items-center gap-3 border border-line rounded-sm p-3 bg-wash/60">
+              <div className="h-11 w-11 rounded-full overflow-hidden bg-stone shrink-0 border border-line">
+                <img
+                  src={atelierInfo?.profile_image || "/mockup-assets/lengha-30.jpg"}
+                  alt={currentProduct.brand}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-sm font-bold text-ink truncate">{currentProduct.brand}</span>
+                  <span className="text-[10px] font-semibold text-green-atelier border border-green-atelier rounded-sm px-1.5 py-0.2">
+                    Verified
+                  </span>
+                </div>
+                <p className="text-xs text-grey-soft mt-0.5 truncate">
+                  {atelierCity} · <span className="text-rose font-bold">★</span> 4.8 (96) · replies in ~2h · joined 2023
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsFollowing(!isFollowing)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-sm transition border shrink-0 ${
+                  isFollowing
+                    ? "bg-ink text-white border-ink"
+                    : "border-line text-ink hover:border-ink"
+                }`}
+              >
+                {isFollowing ? "Following" : "Follow"}
               </button>
             </div>
 
-            {/* Thumbnails */}
-            {images.length > 1 && (
-              <div className="grid grid-cols-4 gap-3">
-                {images.map((img, i) => (
+            {/* Colour Options (.opt) */}
+            <div className="border-t border-line pt-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-grey-soft mb-2.5">
+                Colour: <span className="text-ink font-semibold">{selectedColor}</span>
+              </h4>
+              <div className="flex items-center gap-2">
+                {[
+                  { name: "Ruby Rose", hex: "#8d3350" },
+                  { name: "Emerald Studio", hex: "#2C4638" },
+                  { name: "Gold Zari", hex: "#DFC48A" },
+                  { name: "Midnight Indigo", hex: "#3B4C7A" },
+                ].map((c) => (
                   <button
-                    key={i}
+                    key={c.name}
                     type="button"
-                    onClick={() => setActiveImageIndex(i)}
-                    className={`aspect-square overflow-hidden rounded-xl border-2 transition ${
-                      activeImageIndex === i ? "border-clay" : "border-transparent opacity-75 hover:opacity-100"
+                    onClick={() => setSelectedColor(c.name)}
+                    className={`h-7 w-7 rounded-full transition shadow-sm ${
+                      selectedColor === c.name
+                        ? "ring-2 ring-ink ring-offset-2 scale-110"
+                        : "ring-1 ring-line hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: c.hex }}
+                    title={c.name}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Size Options (.opt) */}
+            <div className="border-t border-line pt-4">
+              <div className="flex items-center justify-between mb-2.5">
+                <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-grey-soft">
+                  Size: <span className="text-ink font-semibold">{selectedSize}</span>
+                </h4>
+                <a
+                  href={`https://wa.me/917742698970?text=${encodeURIComponent(
+                    `Hi OGURA! Can you help me with sizing for ${currentProduct.name}?`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-rose font-medium hover:underline"
+                >
+                  Size Consultation →
+                </a>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {["XS", "S", "M", "L", "XL", "Made to my measurements"].map((sz) => (
+                  <button
+                    key={sz}
+                    type="button"
+                    onClick={() => setSelectedSize(sz)}
+                    className={`px-3.5 py-2 text-xs rounded-sm transition font-medium border ${
+                      selectedSize === sz
+                        ? "border-ink text-ink font-bold bg-white ring-1 ring-ink shadow-sm"
+                        : "border-line text-grey-soft bg-white hover:border-ink hover:text-ink"
                     }`}
                   >
-                    <img src={img} alt={`Angle ${i + 1}`} className="h-full w-full object-cover" />
+                    {sz}
                   </button>
                 ))}
               </div>
-            )}
-          </div>
-
-          {/* Right Column: Editorial Product Narrative & Commerce Actions */}
-          <div className="space-y-6">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] font-semibold text-clay">
-                {currentProduct.brand} · India
-              </p>
-              <h1 className="mt-2 font-display text-3xl sm:text-4xl font-normal leading-tight">
-                {currentProduct.name}
-              </h1>
-              {currentProduct.description && (
-                <p className="mt-2 text-sm sm:text-base text-ink-soft leading-relaxed">
-                  {currentProduct.description}
-                </p>
-              )}
-              <div className="mt-4 flex items-baseline gap-3">
-                <span className="font-display text-3xl font-normal">
-                  ₹{currentProduct.price.toLocaleString("en-IN")}
-                </span>
-                {currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.price && (
-                  <span className="text-sm text-ink-soft line-through">
-                    ₹{currentProduct.originalPrice.toLocaleString("en-IN")}
-                  </span>
-                )}
-                <span className="text-xs text-ink-soft">Inclusive of all taxes</span>
-              </div>
             </div>
 
-            {/* Studio Stock Status Banner */}
-            {currentProduct.inStock ? (
-              <div className="rounded-xl border border-forest/25 bg-forest/5 p-4 text-xs sm:text-sm">
-                <p className="font-medium text-forest">In the studio right now</p>
-                <p className="mt-1 text-ink-soft">
-                  Ships in 2–3 days. Once this studio piece is claimed, the atelier remakes it to order.
-                </p>
-              </div>
-            ) : (
-              <div className="rounded-xl border border-ink/15 bg-parchment p-4 text-xs sm:text-sm">
-                <p className="font-medium text-ink">Bespoke creation — made on order</p>
-                <p className="mt-1 text-ink-soft">
-                  Tailored to your specific measurements in 10–14 days. Begins with a designer call.
-                </p>
-              </div>
-            )}
+            {/* Primary Action Buttons (.ctas) */}
+            <div className="space-y-2.5 pt-2">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="w-full py-4 bg-ink text-white font-semibold text-sm rounded-sm hover:bg-rose transition shadow-md flex items-center justify-center gap-2"
+              >
+                <span>Add to bag — {formatINR(currentProduct.price)}</span>
+              </button>
 
-            {/* Fabric Specification */}
-            <div className="border-t border-black/5 pt-4">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-soft">Artisanal Fabric</span>
-              <p className="mt-1 text-sm font-medium">{currentProduct.material || "Pure handloom silk blend"}</p>
+              <a
+                href={`https://wa.me/917742698970?text=${encodeURIComponent(
+                  `Hi OGURA! I am looking at ${currentProduct.name} by ${currentProduct.brand} (₹${currentProduct.price}) and would like to talk to the designer before ordering.`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 border-1.5 border-ink text-ink font-medium text-xs rounded-sm hover:bg-wash transition flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="h-3.5 w-3.5 text-rose" />
+                <span>Talk to Ogura&apos;s designer first</span>
+              </a>
             </div>
 
-            {/* Sizes Selection */}
-            {currentProduct.sizes && currentProduct.sizes.length > 0 && (
-              <div className="border-t border-black/5 pt-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-ink-soft">Select Size</span>
-                    {selectedSize && (
-                      <span className="text-xs font-semibold text-clay bg-clay/10 px-2 py-0.5 rounded-md">
-                        {selectedSize}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowSizeGuide(true)}
-                    className="text-xs font-medium text-clay hover:underline flex items-center gap-1"
-                  >
-                    <Ruler className="h-3 w-3" /> Size Guide
+            {/* Delivery Pincode Checker (.pin) */}
+            <div className="flex items-center justify-between bg-wash border border-line p-3 text-xs text-grey-soft rounded-sm">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-ink shrink-0" />
+                <span>Deliver to <b>{pincode} · {pincodeCity}</b></span>
+                <span className="text-green-atelier font-semibold ml-1">Arrives in 3 days</span>
+              </div>
+
+              {!isEditingPincode ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingPincode(true)}
+                  className="text-xs font-semibold text-ink border-b border-line hover:border-rose hover:text-rose transition"
+                >
+                  Change
+                </button>
+              ) : (
+                <form onSubmit={handlePincodeSubmit} className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={pincode}
+                    onChange={(e) => setPincode(e.target.value)}
+                    className="w-16 bg-white border border-line px-1.5 py-0.5 text-xs text-ink rounded-sm"
+                  />
+                  <button type="submit" className="text-xs font-bold text-rose">
+                    Check
                   </button>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {currentProduct.sizes.map((s) => {
-                    const isSelected = selectedSize === s;
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setSelectedSize(s)}
-                        className={cn(
-                          "min-w-[48px] rounded-full px-4 py-2 text-xs font-semibold tracking-wide transition-all",
-                          isSelected
-                            ? "bg-ink text-ivory shadow-md ring-2 ring-ink ring-offset-2 scale-[1.03]"
-                            : "border border-ink/20 bg-white/70 text-ink hover:border-ink hover:bg-white"
-                        )}
-                      >
-                        {s}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Colors Selection */}
-            {currentProduct.colors && currentProduct.colors.length > 0 && (
-              <div className="border-t border-black/5 pt-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-ink-soft">Color Variant</span>
-                  {selectedColor && (
-                    <span className="text-xs font-semibold text-clay bg-clay/10 px-2 py-0.5 rounded-md">
-                      {selectedColor}
-                    </span>
-                  )}
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {currentProduct.colors.map((c) => {
-                    const isSelected = selectedColor === c.name;
-                    return (
-                      <button
-                        key={c.name}
-                        type="button"
-                        onClick={() => setSelectedColor(c.name)}
-                        className={cn(
-                          "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all",
-                          isSelected
-                            ? "border-2 border-clay bg-white text-ink shadow-sm ring-2 ring-clay/20 font-semibold"
-                            : "border border-ink/20 bg-white/70 text-ink-soft hover:border-ink hover:text-ink"
-                        )}
-                      >
-                        <span
-                          className="h-3.5 w-3.5 rounded-full border border-black/15 shrink-0"
-                          style={{ backgroundColor: c.hex }}
-                        />
-                        <span>{c.name}</span>
-                        {isSelected && <Check className="h-3 w-3 text-clay stroke-[3]" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Quantity */}
-            <div className="flex items-center gap-4 border-t border-black/5 pt-4">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-soft">Quantity</span>
-              <div className="flex items-center rounded-full border border-ink/20 bg-white px-2 py-1">
-                <button
-                  type="button"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                  className="p-1 text-ink-soft hover:text-ink disabled:opacity-30"
-                >
-                  <Minus className="h-3.5 w-3.5" />
-                </button>
-                <span className="w-8 text-center text-xs font-medium">{quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="p-1 text-ink-soft hover:text-ink"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                </button>
-              </div>
+                </form>
+              )}
             </div>
 
-            {/* Commerce Action Buttons */}
-            <div className="space-y-3 pt-2">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="flex-1 rounded-full bg-ink py-6 text-sm font-medium text-ivory hover:bg-clay transition shadow-md hover:shadow-lg"
-                >
-                  <ShoppingBag className="mr-2 h-4 w-4" />
-                  Add to Bag · ₹{(currentProduct.price * quantity).toLocaleString("en-IN")}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleBuyNow}
-                  className="flex-1 rounded-full border border-ink bg-transparent py-6 text-sm font-medium text-ink hover:bg-ink hover:text-ivory transition"
-                >
-                  Buy Now with One-Click
-                </Button>
+            {/* The 4 Trust Invariants (.trust) */}
+            <div className="bg-wash/70 border border-line p-4 space-y-2.5 text-xs text-grey-soft rounded-sm">
+              <div className="flex items-start gap-2.5">
+                <span className="text-green-atelier font-bold text-sm leading-none">✓</span>
+                <span>
+                  <b className="text-ink">In the studio now.</b> Two pieces left, ships in three days.
+                </span>
               </div>
-
-              {/* Atelier Call Consultation Trigger - Talk to OGURA's Atelier */}
-              <div className="rounded-2xl border border-clay/30 bg-clay/5 p-4 sm:p-5 mt-2">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-full bg-clay/10 p-2.5 text-clay shrink-0 mt-0.5">
-                    <PhoneCall className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-display text-base font-semibold text-ink">
-                        Talk to OGURA&apos;s Atelier
-                      </h3>
-                      <span className="rounded-full bg-forest/10 px-2 py-0.5 text-[10px] font-semibold text-forest uppercase tracking-wider">
-                        Complimentary
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-ink-soft leading-relaxed">
-                      Custom measurements, custom sleeve/neckline, or specific dye colors? Connect directly with the head designer of {currentProduct.brand || "OGURA Atelier"} before ordering.
-                    </p>
-                    <div className="mt-3">
-                      <CallRequest
-                        boutique={currentProduct.brand || "OGURA Atelier"}
-                        owner="Head Atelier Couturier"
-                        design={currentProduct.name}
-                        variant="solid"
-                        label="Talk to OGURA's Atelier · Request a Call"
-                      />
-                    </div>
-                  </div>
-                </div>
+              <div className="flex items-start gap-2.5">
+                <span className="text-green-atelier font-bold text-sm leading-none">✓</span>
+                <span>
+                  <b className="text-ink">Money held in escrow</b> until you confirm the fit.
+                </span>
               </div>
-
-              <p className="text-center text-xs text-ink-soft pt-1">
-                Ogura Buyer Protection: Your payment is held safely until you verify fit. One complimentary alteration included anywhere in India.
-              </p>
-            </div>
-
-            {/* Delivery Checker Component */}
-            <div className="border-t border-black/5 pt-6">
-              <DeliveryChecker />
-            </div>
-
-            {/* "Nothing in your size?" Atelier Custom Guarantee */}
-            <div className="rounded-xl border border-ink/10 bg-parchment/60 p-5 text-xs sm:text-sm">
-              <p className="font-semibold text-ink">Need custom sleeve, neckline, or specific size?</p>
-              <p className="mt-1.5 leading-relaxed text-ink-soft">
-                That is why the consultation call exists. The atelier can customize this design to your exact body measurements, change the lining, or craft it in another shade. Click &quot;Talk to OGURA&apos;s Atelier&quot; above to coordinate directly with the studio.
-              </p>
+              <div className="flex items-start gap-2.5">
+                <span className="text-green-atelier font-bold text-sm leading-none">✓</span>
+                <span>
+                  <b className="text-ink">One free alteration</b> anywhere in India.
+                </span>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <span className="text-green-atelier font-bold text-sm leading-none">✓</span>
+                <span>
+                  <b className="text-ink">Atelier verified</b> — studio vetted by OGURA.
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-
-        {/* More Creations from Ateliers */}
-        {moreDesigns.length > 0 && (
-          <section className="mt-24 border-t border-black/5 pt-14">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-2xl sm:text-3xl font-normal">More from the ateliers</h2>
-              <Link to="/collections" className="text-xs sm:text-sm font-medium text-clay hover:underline">
-                View all collection →
+        {/* ============================================================ */}
+        {/* MORE FROM THIS ATELIER                                       */}
+        {/* ============================================================ */}
+        {sameAtelierDesigns.length > 0 && (
+          <section className="mt-20 pt-10 border-t border-line">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl sm:text-2xl font-medium font-sans text-ink">
+                More from {currentProduct.brand}
+              </h2>
+              <Link
+                to={`/collections?atelier=${encodeURIComponent(currentProduct.brand)}`}
+                className="text-xs font-semibold text-grey-soft hover:text-rose border-b border-line pb-0.5"
+              >
+                View all atelier pieces
               </Link>
             </div>
-            <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-4">
-              {moreDesigns.map((d) => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+              {sameAtelierDesigns.map((d) => (
+                <DesignCard key={d.slug} design={d} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ============================================================ */}
+        {/* SIMILAR CATEGORY PIECES                                      */}
+        {/* ============================================================ */}
+        {crossCategoryDesigns.length > 0 && (
+          <section className="mt-14">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl sm:text-2xl font-medium font-sans text-ink">
+                You may also like in {currentProduct.category}
+              </h2>
+              <Link
+                to={`/collections?category=${encodeURIComponent(currentProduct.category)}`}
+                className="text-xs font-semibold text-grey-soft hover:text-rose border-b border-line pb-0.5"
+              >
+                Shop category
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+              {crossCategoryDesigns.map((d) => (
                 <DesignCard key={d.slug} design={d} />
               ))}
             </div>
           </section>
         )}
       </main>
-
-      {/* Modals */}
-      {showSizeGuide && (
-        <SizeGuideModal
-          isOpen={showSizeGuide}
-          onClose={() => setShowSizeGuide(false)}
-          category={currentProduct.category}
-        />
-      )}
-
-      {showAddressModal && (
-        <AddressSelectionModal
-          open={showAddressModal}
-          onOpenChange={setShowAddressModal}
-          onAddressSelect={handleAddressSelect}
-          selectedAddressId={selectedAddress?.id}
-        />
-      )}
 
       <Footer />
     </div>

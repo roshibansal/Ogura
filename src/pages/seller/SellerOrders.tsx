@@ -48,6 +48,31 @@ const SellerOrders = () => {
         return;
       }
 
+      // Track B: Query seller_orders (Suborders) first for strict seller isolation
+      try {
+        const { data: suborders, error: subErr } = await (supabase as any)
+          .from("seller_orders")
+          .select("id, parent_order_id, status, fulfillment_status, seller_subtotal, seller_payable, tracking_id, created_at, orders(order_number, customer_id)")
+          .eq("seller_id", seller.id)
+          .order("created_at", { ascending: false });
+
+        if (!subErr && suborders && suborders.length > 0) {
+          setOrders(suborders.map((s: any) => ({
+            id: s.id,
+            order_number: s.orders?.order_number || `SUB-${s.id.slice(0, 8)}`,
+            status: s.status || "confirmed",
+            total: Number(s.seller_payable || s.seller_subtotal || 0),
+            created_at: s.created_at,
+            customer_id: s.orders?.customer_id || "",
+          })));
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.warn("[SellerOrders] Falling back to orders table:", err);
+      }
+
+      // Backward compatibility fallback to legacy orders
       const { data, error } = await supabase
         .from("orders")
         .select("id, order_number, status, total, created_at, customer_id")

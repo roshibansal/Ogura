@@ -1,117 +1,230 @@
-import { ShoppingBag, Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Search, Heart, ShoppingBag, Menu, X, ArrowRight } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { MegaMenu } from "@/components/MegaMenu";
-import { MegaMenuMobile } from "@/components/MegaMenuMobile";
-import { HeaderLocationIndicator } from "@/components/HeaderLocationIndicator";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { AlgoliaSearchDropdown, AlgoliaMobileSearch } from "@/components/search";
 import { UserMenu } from "@/components/auth/UserMenu";
-import oguraLogo from "@/assets/ogura-logo.png.asset.json";
+import { CANONICAL_TAXONOMY } from "@/lib/adapters/productAdapter";
 
 export const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const { totalItems } = useCart();
+  const { items: wishlistItems } = useWishlist();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/collections?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const currentCategory = new URLSearchParams(location.search).get("category") || "";
+
+  const navLinks = [
+    { label: "New in", path: "/collections?sort=new" },
+    ...CANONICAL_TAXONOMY.map((cat) => ({
+      label: cat,
+      path: `/collections?category=${encodeURIComponent(cat)}`,
+    })),
+    { label: "Made to order", path: "/collections?availability=order" },
+    { label: "Ateliers", path: "/designers" },
+    { label: "Sale", path: "/collections?price=under12", isSale: true },
+  ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-black/5 bg-ivory/85 backdrop-blur-md text-ink">
-      {/* Location bar for desktop */}
-      <div className="hidden md:block border-b border-black/5 bg-parchment/40">
-        <div className="max-w-7xl mx-auto px-5">
-          <div className="flex h-7 items-center justify-between text-xs text-ink-soft">
-            <HeaderLocationIndicator variant="compact" />
-            <div className="flex items-center gap-4">
-              <Link to="/how-it-works" className="hover:text-ink transition">How it works</Link>
-              <span className="text-black/20">|</span>
-              <a href="/seller-login" className="hover:text-ink transition">For Boutiques & Ateliers</a>
-            </div>
-          </div>
+    <header className="sticky top-0 z-40 w-full bg-paper border-b border-line shadow-sm">
+      {/* 1. Promo Strip (.promo) */}
+      <div className="bg-wash text-grey-soft border-b border-line flex items-center justify-center gap-6 sm:gap-11 py-2 px-3 text-[11px] font-normal tracking-wide overflow-hidden whitespace-nowrap">
+        <span>Free direct studio delivery over ₹2,500</span>
+        <span className="hidden sm:inline">·</span>
+        <span>Talk to a designer before you order</span>
+        <span className="hidden md:inline">·</span>
+        <span className="hidden md:inline">Concierge alteration assistance on studio pieces</span>
+      </div>
+
+      {/* 2. Main Header Bar (.hd) */}
+      <div className="max-w-[1320px] mx-auto px-4 sm:px-8 py-3.5 flex items-center gap-4 sm:gap-6 justify-between">
+        <div className="flex items-center gap-3">
+          {/* Mobile Menu Button */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-1.5 text-ink hover:text-rose transition"
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+
+          {/* OGURA Brand Logo (.wm) */}
+          <Link to="/" className="flex items-center gap-2" aria-label="OGURA Home">
+            <span className="font-sans font-extrabold text-2xl tracking-[-0.04em] text-rose">
+              OGURA
+            </span>
+          </Link>
+        </div>
+
+        {/* Central Search Bar (.search) */}
+        <div className="hidden md:flex flex-1 max-w-xl mx-4">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="w-full flex items-center gap-2.5 bg-white border border-line rounded-sm py-2 px-3.5 text-xs text-grey-muted focus-within:border-ink transition"
+          >
+            <Search className="h-3.5 w-3.5 text-grey-muted shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search 311 original pieces from 40 creator studios"
+              className="w-full bg-transparent text-ink placeholder:text-grey-muted text-xs focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="text-xs font-semibold text-ink hover:text-rose transition shrink-0 ml-auto border-l border-line pl-2.5"
+            >
+              Search
+            </button>
+          </form>
+        </div>
+
+        {/* Right Utility Bar (.util) */}
+        <div className="flex items-center gap-4 sm:gap-6 text-xs font-medium text-grey-soft">
+          <Link
+            to="/how-it-works"
+            className="hidden sm:inline-block hover:text-ink transition"
+          >
+            Help
+          </Link>
+
+          <a
+            href="/seller-login"
+            className="hidden lg:inline-block text-grey-soft hover:text-rose transition"
+          >
+            Sell on Ogura
+          </a>
+
+          {/* Saved / Wishlist */}
+          <Link
+            to="/wishlist"
+            className="flex items-center gap-1.5 hover:text-ink transition"
+          >
+            <Heart className="h-4 w-4" />
+            <span className="hidden sm:inline">Saved</span>
+            {wishlistItems.length > 0 && (
+              <span className="text-[11px] font-semibold text-rose">
+                ({wishlistItems.length})
+              </span>
+            )}
+          </Link>
+
+          {/* User Account */}
+          <UserMenu isScrolled={true} />
+
+          {/* Shopping Bag (.bg) */}
+          <Link
+            to="/cart"
+            className="flex items-center gap-1.5 text-rose font-semibold hover:opacity-85 transition"
+          >
+            <ShoppingBag className="h-4 w-4 text-rose" />
+            <span>Bag ({totalItems})</span>
+          </Link>
         </div>
       </div>
-      
-      <div className="max-w-7xl mx-auto px-5">
-        <div className="flex h-16 items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="md:hidden text-ink hover:bg-parchment/60" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <Menu className="h-5 w-5" />
-            </Button>
-            
-            {/* Artisanal Wordmark */}
-            <Link to="/" className="flex items-center gap-2.5" aria-label="OGURA home">
-              <svg viewBox="0 0 32 32" className="h-7 w-7 flex-shrink-0" aria-hidden>
-                <path d="M4 22c0-8 5.5-13 12-13s12 4 12 9-5 8-10 8c-4 0-7-2-7-5s2.5-5 5.5-5" fill="none" stroke="#b0512c" strokeWidth="1.6" strokeLinecap="round" />
-                <circle cx="16.5" cy="16" r="1.8" fill="#a3853f" />
-              </svg>
-              <span className="font-display text-2xl tracking-tight text-ink font-normal">Ogura</span>
-            </Link>
 
-            {/* Mobile location indicator */}
-            <div className="md:hidden">
-              <HeaderLocationIndicator variant="compact" />
+      {/* Mobile Search Bar */}
+      <div className="md:hidden px-4 pb-3">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="w-full flex items-center gap-2 bg-white border border-line rounded-sm py-2 px-3 text-xs text-grey-muted"
+        >
+          <Search className="h-3.5 w-3.5 text-grey-muted shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search 311 pieces from 40 studios..."
+            className="w-full bg-transparent text-ink placeholder:text-grey-muted text-xs focus:outline-none"
+          />
+          <button type="submit" className="text-xs font-bold text-ink">
+            Go
+          </button>
+        </form>
+      </div>
+
+      {/* 3. Sticky Main Navigation Rail (.mainnav) */}
+      <nav className="bg-paper border-t border-line overflow-x-auto scrollbar-none flex items-center px-4 sm:px-8 text-xs font-medium tracking-wide">
+        {navLinks.map((item, idx) => {
+          const isActive =
+            item.label === "New in"
+              ? location.search.includes("sort=new")
+              : currentCategory.toLowerCase() === item.label.toLowerCase();
+
+          return (
+            <Link
+              key={idx}
+              to={item.path}
+              className={`shrink-0 py-3 px-3.5 sm:px-4 transition border-b-2 ${
+                item.isSale
+                  ? "text-sale-crimson font-semibold hover:text-rose border-transparent"
+                  : isActive
+                  ? "text-ink font-bold border-rose"
+                  : "text-grey-soft hover:text-ink border-transparent"
+              } ${idx === 0 ? "pl-0 sm:pl-0" : ""}`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Mobile Navigation Drawer */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-paper border-t border-line px-5 py-4 space-y-4 max-h-[75vh] overflow-y-auto">
+          <div className="border-b border-line pb-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-rose mb-2">
+              Browse Categories
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {CANONICAL_TAXONOMY.map((cat) => (
+                <Link
+                  key={cat}
+                  to={`/collections?category=${encodeURIComponent(cat)}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-1 text-grey-soft hover:text-rose transition"
+                >
+                  {cat}
+                </Link>
+              ))}
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-7 text-sm text-ink-soft">
-            <Link to="/collections" className="transition hover:text-ink font-medium">Designs</Link>
-            <Link to="/designers" className="transition hover:text-ink font-medium">Boutiques</Link>
-            <Link to="/occasions" className="transition hover:text-ink font-medium">Occasions</Link>
-            <Link to="/how-it-works" className="transition hover:text-ink font-medium">How it works</Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            {/* Desktop Algolia Search */}
-            <div className="hidden lg:block w-52">
-              <AlgoliaSearchDropdown isScrolled={true} />
-            </div>
-
-            {/* CTA Pill */}
+          <div className="pt-2 flex flex-col gap-2.5 text-xs text-grey-soft font-medium">
             <Link
               to="/designers"
-              className="hidden sm:inline-flex rounded-full bg-ink px-4 py-2 text-xs font-medium text-ivory transition hover:bg-clay"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="hover:text-ink transition flex items-center justify-between"
             >
-              Find a boutique
+              <span>Explore Independent Ateliers</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
-
-            {/* User Menu */}
-            <UserMenu isScrolled={true} />
-
-            {/* Cart Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative text-ink hover:bg-parchment/60"
-              onClick={() => navigate('/cart')}
-              aria-label={`Shopping bag with ${totalItems} items`}
+            <Link
+              to="/how-it-works"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="hover:text-ink transition flex items-center justify-between"
             >
-              <ShoppingBag className="h-5 w-5" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-clay text-[10px] font-medium text-white flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Algolia Search */}
-        <div className="md:hidden pb-3">
-          <AlgoliaMobileSearch />
-        </div>
-      </div>
-
-      {/* Mobile Drawer */}
-      {isMenuOpen && (
-        <div className="md:hidden border-t border-black/5 bg-ivory">
-          <div className="px-5 py-4 space-y-3">
-            <nav className="flex flex-col gap-2">
-              <Link to="/collections" className="text-base font-medium py-2 text-ink hover:text-clay transition" onClick={() => setIsMenuOpen(false)}>Designs</Link>
-              <Link to="/designers" className="text-base font-medium py-2 text-ink hover:text-clay transition" onClick={() => setIsMenuOpen(false)}>Boutiques</Link>
-              <Link to="/occasions" className="text-base font-medium py-2 text-ink hover:text-clay transition" onClick={() => setIsMenuOpen(false)}>Occasions</Link>
-              <Link to="/how-it-works" className="text-base font-medium py-2 text-ink hover:text-clay transition" onClick={() => setIsMenuOpen(false)}>How it works</Link>
-              <Link to="/seller-login" className="text-sm font-medium py-2 text-ink-soft hover:text-ink transition border-t border-black/5 pt-3" onClick={() => setIsMenuOpen(false)}>For Boutiques</Link>
-            </nav>
+              <span>How OGURA Works</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+            <a
+              href="/seller-login"
+              className="text-rose font-semibold hover:underline flex items-center justify-between pt-2 border-t border-line"
+            >
+              <span>Seller Login & Atelier Portal</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
           </div>
         </div>
       )}

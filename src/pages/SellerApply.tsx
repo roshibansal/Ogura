@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { LuxuryHeader } from "@/components/LuxuryHeader";
-import { LuxuryFooter } from "@/components/LuxuryFooter";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,34 +91,34 @@ const SellerApply = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background">
-        <LuxuryHeader />
-        <main className="py-24 md:py-32">
+      <div className="min-h-screen bg-paper text-ink flex flex-col">
+        <Header />
+        <main className="flex-1 py-20">
           <div className="container mx-auto px-4 max-w-lg text-center">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-10 h-10 text-primary" />
+            <div className="w-16 h-16 bg-green-atelier/10 rounded-full flex items-center justify-center mx-auto mb-5">
+              <CheckCircle2 className="w-8 h-8 text-green-atelier" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold font-sans text-ink mb-3">
               Application Submitted
             </h1>
-            <p className="text-muted-foreground mb-8 leading-relaxed">
-              Your application has been submitted. Our team will review it soon.
+            <p className="text-grey-soft text-xs sm:text-sm mb-6 leading-relaxed">
+              Your boutique application has been submitted to OGURA. Our curation team will review your catalogue and reach out within 48 hours.
             </p>
-            <Link to="/join">
-              <Button variant="outline" className="gap-2">
-                <ArrowLeft className="w-4 h-4" /> Back to Join Us
+            <Link to="/">
+              <Button variant="outline" className="gap-2 text-xs">
+                <ArrowLeft className="w-4 h-4" /> Back to OGURA
               </Button>
             </Link>
           </div>
         </main>
-        <LuxuryFooter />
+        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <LuxuryHeader />
+      <Header />
       <main className="py-16 md:py-24">
         <div className="container mx-auto px-4 max-w-2xl">
           <Link to="/join" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
@@ -244,7 +244,7 @@ const SellerApply = () => {
           </form>
         </div>
       </main>
-      <LuxuryFooter />
+      <Footer />
     </div>
   );
 };

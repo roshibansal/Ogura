@@ -44,10 +44,10 @@ All colors MUST be HSL.
     --instagram-orange: 11 90% 61%;
     --instagram-yellow: 35 97% 63%;
 
-    /* OGURA brand colors */
-    --ogura-red: 0 84% 60%;
-    --ogura-pink: 342 68% 52%;
-    --ogura-pink-light: 342 74% 62%;
+    /* OGURA editorial brand colors */
+    --ogura-red: 351 52% 42%;
+    --ogura-pink: 351 40% 42%; /* Deep Rose #9b3b4a */
+    --ogura-pink-light: 350 42% 60%; /* Soft Rose #c2707f */
     --gradient-ogura: linear-gradient(
       100deg,
       hsl(var(--ogura-pink)) 0%,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -64,6 +64,16 @@ export default function Checkout() {
       navigate('/cart');
     }
   }, [items, navigate]);
+
+  const itemsByAtelier = useMemo(() => {
+    const map = new Map<string, typeof items>();
+    items.forEach((item) => {
+      const atelierName = item.product.brand || "Independent Atelier";
+      if (!map.has(atelierName)) map.set(atelierName, []);
+      map.get(atelierName)!.push(item);
+    });
+    return Array.from(map.entries());
+  }, [items]);
 
   const handleAddressSelect = (address: UserAddress) => {
     setSelectedAddress(address);
@@ -148,7 +158,7 @@ export default function Checkout() {
     setIsProcessing(true);
 
     try {
-      // Create Razorpay order
+      // Create Razorpay order with authoritative item payload
       const { data: orderResponse, error: orderError } = await supabase.functions.invoke(
         'razorpay-create-order',
         {
@@ -156,9 +166,17 @@ export default function Checkout() {
             amount: finalTotal,
             currency: 'INR',
             receipt: `rcpt_${Date.now()}`,
+            items: items.map(item => ({
+              product_id: item.product.id,
+              quantity: item.quantity,
+              size: item.size,
+              color: item.color,
+            })),
             notes: {
               customer_email: user?.email,
               items_count: items.length,
+              deliveryFee,
+              discount: discountAmount,
             },
           },
         }
@@ -348,27 +366,40 @@ export default function Checkout() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <div key={`${item.product.id}-${item.size}-${item.color}`} className="flex gap-4">
-                    <div className="w-20 h-24 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                      <img
-                        src={item.product.images[0]}
-                        alt={item.product.name}
-                        className="w-full h-full object-cover"
-                      />
+              <div className="space-y-6">
+                {itemsByAtelier.map(([atelier, atelierItems]) => (
+                  <div key={atelier} className="rounded-lg border border-black/5 bg-warm-white/40 p-4">
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-black/5">
+                      <span className="text-xs uppercase tracking-wider font-semibold text-rose">
+                        Studio {atelier}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {atelierItems.length} {atelierItems.length === 1 ? "creation" : "creations"}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm line-clamp-1">{item.product.name}</h3>
-                      <p className="text-xs text-muted-foreground">{item.product.brand}</p>
-                      <div className="flex gap-3 text-xs text-muted-foreground mt-1">
-                        <span>Size: {item.size}</span>
-                        <span>Color: {item.color}</span>
-                        <span>Qty: {item.quantity}</span>
-                      </div>
-                      <p className="font-semibold mt-2">
-                        ₹{(item.product.price * item.quantity).toLocaleString()}
-                      </p>
+                    <div className="space-y-4">
+                      {atelierItems.map((item) => (
+                        <div key={`${item.product.id}-${item.size}-${item.color}`} className="flex gap-4">
+                          <div className="w-16 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                            <img
+                              src={item.product.images[0]}
+                              alt={item.product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm line-clamp-1">{item.product.name}</h3>
+                            <div className="flex gap-3 text-xs text-muted-foreground mt-1">
+                              <span>Size: {item.size}</span>
+                              <span>Color: {item.color}</span>
+                              <span>Qty: {item.quantity}</span>
+                            </div>
+                            <p className="font-semibold text-sm mt-1.5 text-ink">
+                              ₹{(item.product.price * item.quantity).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}

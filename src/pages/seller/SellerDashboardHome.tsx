@@ -78,9 +78,30 @@ const SellerDashboardHome = () => {
       ]);
 
       if (!active) return;
-
       const products = productsRes.data ?? [];
-      const orders = ordersRes.data ?? [];
+
+      let orders: any[] = [];
+      try {
+        const { data: suborders, error: subErr } = await (supabase as any)
+          .from("seller_orders")
+          .select("id, seller_payable, seller_subtotal, status, created_at")
+          .eq("seller_id", sellerId);
+
+        if (!subErr && suborders && suborders.length > 0) {
+          orders = suborders.map((s: any) => ({
+            id: s.id,
+            total: Number(s.seller_payable || s.seller_subtotal || 0),
+            status: s.status,
+            created_at: s.created_at,
+          }));
+        }
+      } catch {
+        // Fallback to legacy orders
+      }
+
+      if (orders.length === 0) {
+        orders = ordersRes.data ?? [];
+      }
 
       const isPending = (s: string | null) => s === "pending" || s === "submitted";
       const revenueIn = (from: string, to?: string) =>

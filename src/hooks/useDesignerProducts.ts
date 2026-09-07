@@ -16,9 +16,16 @@ export const useDesignerProducts = (
 
       let query = supabase
         .from('products')
-        .select('*', { count: 'exact' })
-        .eq('designer_id', designerId)
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' });
+
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(designerId);
+      if (isUUID) {
+        query = query.or(`designer_id.eq.${designerId},seller_id.eq.${designerId}`);
+      } else {
+        query = query.ilike('brand', designerId);
+      }
+
+      query = query.order('created_at', { ascending: false });
 
       // Apply category filter
       if (filters.category && filters.category !== 'All') {

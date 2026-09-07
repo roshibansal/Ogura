@@ -114,38 +114,72 @@ export default function OrderConfirmation() {
             </div>
           </Card>
 
-          {/* Order Items */}
-          <Card className="p-6 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Package className="h-5 w-5 text-primary" />
-              <h2 className="font-semibold">Order Items ({state.items.length})</h2>
+          {/* Multi-Atelier Suborder Tracking & Items */}
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" />
+                <h2 className="font-serif text-lg font-bold">Atelier Parcels ({state.items.length} {state.items.length === 1 ? 'item' : 'items'})</h2>
+              </div>
+              <span className="text-xs uppercase tracking-widest text-muted-foreground font-mono">Multi-Seller Fulfilment</span>
             </div>
-            <div className="space-y-4">
-              {state.items.map((item, index) => (
-                <div key={index} className="flex gap-4">
-                  <div className="w-16 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                    <img
-                      src={item.product.images[0]}
-                      alt={item.product.name}
-                      className="w-full h-full object-cover"
-                    />
+
+            {Object.entries(
+              state.items.reduce((acc, item) => {
+                const atelier = item.product.brand || 'OGURA Atelier';
+                if (!acc[atelier]) {
+                  acc[atelier] = [];
+                }
+                acc[atelier].push(item);
+                return acc;
+              }, {} as Record<string, typeof state.items>)
+            ).map(([atelierName, atelierItems]) => (
+              <Card key={atelierName} className="p-5 border border-ink/10 bg-white/80 backdrop-blur-sm rounded-none shadow-sm">
+                <div className="flex flex-wrap items-center justify-between border-b border-ink/10 pb-3 mb-4 gap-2">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Dispatched directly by</span>
+                    <h3 className="font-serif font-bold text-base text-ink">{atelierName}</h3>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm line-clamp-1">{item.product.name}</h3>
-                    <p className="text-xs text-muted-foreground">{item.product.brand}</p>
-                    <div className="flex gap-3 text-xs text-muted-foreground mt-1">
-                      <span>Size: {item.size}</span>
-                      <span>Color: {item.color}</span>
-                      <span>Qty: {item.quantity}</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded border border-amber-200/50">
+                      Confirmed · Preparing at Studio
+                    </span>
                   </div>
-                  <p className="font-semibold text-sm">
-                    ₹{(item.product.price * item.quantity).toLocaleString()}
-                  </p>
                 </div>
-              ))}
-            </div>
-          </Card>
+
+                <div className="space-y-3">
+                  {atelierItems.map((item, index) => (
+                    <div key={index} className="flex gap-4 items-center">
+                      <div className="w-16 h-20 rounded overflow-hidden bg-muted flex-shrink-0 border border-ink/5">
+                        <img
+                          src={item.product.images[0]}
+                          alt={item.product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm line-clamp-1 text-ink">{item.product.name}</h4>
+                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
+                          <span>Size: <strong className="text-ink">{item.size}</strong></span>
+                          <span>Color: <strong className="text-ink">{item.color}</strong></span>
+                          <span>Qty: <strong className="text-ink">{item.quantity}</strong></span>
+                        </div>
+                      </div>
+                      <p className="font-semibold text-sm text-ink whitespace-nowrap">
+                        ₹{(item.product.price * item.quantity).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Suborder fulfillment</span>
+                  <span className="font-medium text-ink">Independent Direct Courier</span>
+                </div>
+              </Card>
+            ))}
+          </div>
 
           {/* What's Next */}
           <Card className="p-6 mb-6 bg-primary/5 border-primary/20">

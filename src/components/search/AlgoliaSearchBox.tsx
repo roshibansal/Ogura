@@ -12,7 +12,6 @@ interface AlgoliaSearchBoxProps extends UseSearchBoxProps {
   onSubmit?: (query: string) => void;
   autoFocus?: boolean;
   className?: string;
-  inputClassName?: string;
 }
 
 export const AlgoliaSearchBox = ({
@@ -23,7 +22,6 @@ export const AlgoliaSearchBox = ({
   onSubmit,
   autoFocus = false,
   className,
-  inputClassName,
   ...props
 }: AlgoliaSearchBoxProps) => {
   const { query, refine, clear } = useSearchBox(props);
@@ -74,8 +72,7 @@ export const AlgoliaSearchBox = ({
           "pl-10 pr-10 h-10 transition-all",
           isScrolled
             ? "bg-secondary border-border"
-            : "bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20",
-          inputClassName
+            : "bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20"
         )}
       />
       {query && (

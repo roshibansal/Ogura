@@ -14,9 +14,6 @@ import { cn } from "@/lib/utils";
 interface AlgoliaSearchDropdownProps {
   isScrolled?: boolean;
   className?: string;
-  placeholder?: string;
-  inputClassName?: string;
-  boxClassName?: string;
 }
 
 const SearchResults = ({ onResultClick }: { onResultClick: () => void }) => {
@@ -92,17 +89,11 @@ const SearchDropdownContent = ({
   isOpen,
   setIsOpen,
   containerRef,
-  placeholder,
-  inputClassName,
-  boxClassName,
 }: {
   isScrolled: boolean;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   containerRef: React.RefObject<HTMLDivElement>;
-  placeholder?: string;
-  inputClassName?: string;
-  boxClassName?: string;
 }) => {
   const navigate = useNavigate();
   const { query } = useSearchBox();
@@ -122,14 +113,12 @@ const SearchDropdownContent = ({
       {/* Configure always active so Algolia fetches results immediately */}
       <Configure hitsPerPage={6} />
       
-      <div className="flex items-center gap-1 w-full">
+      <div className="flex items-center gap-1">
         <AlgoliaSearchBox
           isScrolled={isScrolled}
           onFocus={() => setIsOpen(true)}
           onSubmit={handleSubmit}
-          placeholder={placeholder}
-          className={cn("w-full", boxClassName)}
-          inputClassName={inputClassName}
+          className="w-48"
         />
         <ImageSearchDialog
           trigger={
@@ -137,7 +126,7 @@ const SearchDropdownContent = ({
               variant="ghost"
               size="icon"
               className={cn(
-                "transition-colors shrink-0",
+                "transition-colors",
                 !isScrolled && "text-white hover:bg-white/10"
               )}
               title="Search by image"
@@ -160,9 +149,6 @@ const SearchDropdownContent = ({
 export const AlgoliaSearchDropdown = ({
   isScrolled = true,
   className,
-  placeholder,
-  inputClassName,
-  boxClassName,
 }: AlgoliaSearchDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -200,9 +186,6 @@ export const AlgoliaSearchDropdown = ({
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           containerRef={containerRef}
-          placeholder={placeholder}
-          inputClassName={inputClassName}
-          boxClassName={boxClassName}
         />
       </InstantSearch>
     </div>

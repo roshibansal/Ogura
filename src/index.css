@@ -1131,31 +1131,3 @@ All colors MUST be HSL.
   height: 1px;
 }
 
-/* ============================================================
-   OGURA LUXURY EDITORIAL SYSTEM
-   ============================================================ */
-.ogura-hero-left-overlay {
-  background: linear-gradient(90deg, #050506E8 0%, #05050680 38%, #05050610 72%);
-}
-
-.ogura-hero-bottom-blend {
-  background: linear-gradient(180deg, transparent 55%, #09090B 100%);
-}
-
-.ogura-tile-readability-overlay {
-  background: linear-gradient(180deg, transparent 35%, #09090BE6 100%);
-}
-
-.ogura-campaign-overlay {
-  background-color: #050506CC;
-}
-
-.font-editorial {
-  font-family: "Cormorant Garamond", Georgia, serif;
-}
-
-.font-functional {
-  font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
-}
-
-

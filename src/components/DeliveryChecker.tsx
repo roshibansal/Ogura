@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Truck, Zap, MapPin, AlertCircle, Check } from 'lucide-react';
+import { Package, Truck, Clock, MapPin, AlertCircle, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLocation, DeliveryInfo } from '@/contexts/LocationContext';
@@ -146,7 +146,7 @@ export const DeliveryChecker = ({ className, compact = false }: DeliveryCheckerP
                 </div>
                 {deliveryInfo.expressAvailable && (
                   <div className="flex items-center gap-1 text-primary">
-                    <Zap className="h-4 w-4" />
+                    <Clock className="h-4 w-4" />
                     <span>Express available</span>
                   </div>
                 )}

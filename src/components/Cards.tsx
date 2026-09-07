@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
 import { DesignVM, transformProductToDesignStrict } from "@/lib/adapters/productAdapter";
 import { BoutiqueVM } from "@/lib/adapters/boutiqueAdapter";
 import { Product } from "@/types";
@@ -20,10 +20,12 @@ export function DesignCard({
   product,
   design,
   priority = false,
+  compact = false,
 }: {
   product?: Product;
   design?: DesignVM;
   priority?: boolean;
+  compact?: boolean;
 }) {
   const d: DesignVM = design || (product ? transformProductToDesignStrict(product) : ({} as DesignVM));
   const { isInWishlist, addItem: addWishlist, removeItem: removeWishlist } = useWishlist();
@@ -57,8 +59,27 @@ export function DesignCard({
     addCart(d.rawProduct, size, d.colours[0] || "Studio Original", 1);
     toast({
       title: "Added to Bag",
-      description: `${d.title} (${size}) added directly to your bag.`,
+      description: `${d.title} (${size}) is ready in your bag.`,
+      action: (
+        <button
+          type="button"
+          onClick={() => navigate("/checkout")}
+          className="bg-[#FFA41C] text-[#0F1111] border border-[#FF8F00] text-[11px] font-bold px-3 py-1 rounded-sm hover:bg-[#FF8F00] transition shadow-xs shrink-0"
+        >
+          Buy Now →
+        </button>
+      ),
     });
+  };
+
+  const handleDirectBuy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!d.rawProduct) return;
+    const sizeToUse = d.sizes && d.sizes.length > 0 ? d.sizes[0] : "Standard";
+    const colorToUse = d.colours && d.colours.length > 0 ? d.colours[0] : "Studio Original";
+    addCart(d.rawProduct, sizeToUse, colorToUse, 1);
+    navigate("/checkout");
   };
 
   const discountPercent =
@@ -67,8 +88,12 @@ export function DesignCard({
       : null;
 
   return (
-    <article className="group relative flex flex-col text-ink cursor-pointer">
-      {/* Product Image Wrapper (.pw) with Dual Image Hover */}
+    <article
+      className={`group relative flex flex-col text-ink cursor-pointer bg-white/95 rounded-sm border border-[#fcb8fd] shadow-[0_0_10px_rgba(252,184,253,0.3)] hover:shadow-[0_0_20px_rgba(252,184,253,0.55)] transition-all hover:border-[#fe84ff] ${
+        compact ? "p-2 sm:p-2.5" : "p-3.5 sm:p-4"
+      }`}
+    >
+      {/* Product Image Wrapper with Dual Image Hover */}
       <div className="relative aspect-[3/4] overflow-hidden bg-stone rounded-sm">
         <Link to={`/product/${d.slug}`} className="block h-full w-full">
           {/* Main Image */}
@@ -88,133 +113,122 @@ export function DesignCard({
           />
         </Link>
 
-        {/* Top Left: Discount Badge */}
-        {discountPercent && discountPercent > 0 && (
-          <span className="absolute left-2.5 top-2.5 z-10 rounded-sm bg-white/95 px-2 py-0.5 text-[11px] font-semibold tracking-tight text-sale-crimson shadow-sm">
-            Save {discountPercent}%
-          </span>
-        )}
+        {/* Top Left: % Discount Badge */}
+        {discountPercent && discountPercent > 0 ? (
+          <div className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-sm bg-[#FFA41C] px-1.5 py-0.5 text-[11px] sm:text-xs font-black tracking-tight text-[#0F1111] shadow-md border border-[#FF8F00]">
+            <span>%{discountPercent} OFF</span>
+          </div>
+        ) : d.readyStock ? (
+          <div className="absolute left-2 top-2 z-10 rounded-sm bg-white/95 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink border border-[#fcb8fd] shadow-xs">
+            Ships 48h
+          </div>
+        ) : null}
 
-        {/* Top Right: Heart Wishlist Button */}
+        {/* Top Right: Wishlist Toggle */}
         {d.rawProduct && (
           <button
             type="button"
             onClick={handleWishlistToggle}
             aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            className="absolute right-2.5 top-2.5 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-ink shadow-sm transition hover:scale-110"
+            className="absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-ink shadow-xs transition hover:scale-110 border border-[#fcb8fd]/60"
           >
             <Heart
               className={`h-3.5 w-3.5 transition ${
-                wishlisted ? "fill-rose text-rose" : "text-ink hover:text-rose"
+                wishlisted ? "fill-ink text-ink" : "text-ink/60 hover:text-ink"
               }`}
             />
           </button>
         )}
 
-        {/* Bottom Left: Stock Status Badge (.stk) */}
-        <div className="absolute bottom-2.5 left-2.5 z-10">
-          <span
-            className={`rounded-sm bg-white/95 px-2 py-0.5 text-[10px] font-medium tracking-tight shadow-sm ${
-              d.readyStock ? "text-green-atelier" : "text-grey-soft"
-            }`}
-          >
-            {d.readyStock ? "In studio" : "Made on order"}
-          </span>
-        </div>
-
-        {/* Hover Quick Size Selector (.quick) */}
-        <div className="absolute inset-x-2.5 bottom-2.5 z-20 hidden sm:flex items-center justify-center gap-1.5 rounded-sm bg-white/97 py-2 px-1 text-[11px] font-medium text-ink shadow-md opacity-0 translate-y-2 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
+        {/* Hover Quick Size Selector */}
+        <div className="absolute inset-x-2 bottom-2 z-20 hidden sm:flex items-center justify-center gap-1.5 rounded-sm bg-white/97 py-1.5 px-2 text-xs font-semibold text-ink shadow-md opacity-0 translate-y-2 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0 border border-[#fcb8fd]">
           {(d.sizes.length > 0 ? d.sizes : ["XS", "S", "M", "L"]).slice(0, 4).map((sz) => (
             <button
               key={sz}
               type="button"
               onClick={(e) => handleQuickAdd(e, sz)}
-              className="rounded px-1.5 py-0.5 text-grey-soft hover:bg-wash hover:text-ink transition font-semibold"
+              className="rounded px-1.5 py-0.5 text-ink/90 hover:bg-[#fcb8fd] hover:text-ink transition font-bold text-[11px]"
             >
               {sz}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={(e) => handleQuickAdd(e, "+ custom")}
-            className="text-[10px] font-bold text-grey-muted hover:text-rose transition ml-1"
-          >
-            + custom
-          </button>
         </div>
       </div>
 
-      {/* Product Details (.pb) */}
-      <div className="pt-2.5 pb-1 flex flex-col justify-between flex-1">
+      {/* Product Details */}
+      <div className={`pt-2.5 pb-0.5 flex flex-col justify-between flex-1`}>
         <div>
           {/* Atelier Attribution */}
-          <Link to={`/collections?atelier=${encodeURIComponent(d.boutique)}`} className="block">
-            <p className="text-[11px] font-medium uppercase tracking-[0.09em] text-grey-muted hover:text-rose transition line-clamp-1">
-              {d.boutique} · {d.city}
-            </p>
-          </Link>
+          <div className="flex items-center justify-between gap-1">
+            <Link to={`/collections?atelier=${encodeURIComponent(d.boutique)}`} className="block min-w-0">
+              <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.1em] text-ink/80 hover:text-[#B38F24] transition truncate">
+                {d.boutique} | {d.city}
+              </p>
+            </Link>
+            <span className="text-[10px] font-mono font-extrabold text-[#B38F24] uppercase tracking-wider shrink-0">
+              VERIFIED
+            </span>
+          </div>
 
-          {/* Product Title in Instrument Serif italic */}
+          {/* Product Title */}
           <Link to={`/product/${d.slug}`} className="block mt-1">
-            <h3 className="font-serif italic font-normal text-[1.18rem] text-ink leading-tight transition group-hover:text-rose line-clamp-1">
+            <h3
+              className={`font-serif italic font-normal text-ink leading-snug transition group-hover:text-[#B38F24] line-clamp-1 ${
+                compact ? "text-base sm:text-lg" : "text-lg sm:text-xl"
+              }`}
+            >
               {d.title}
             </h3>
-            {d.subtitle && (
-              <p className="text-xs text-grey-soft mt-0.5 line-clamp-1 font-normal">
-                {d.subtitle}
-              </p>
-            )}
           </Link>
 
-          {/* Price Line (.pp) */}
-          <div className="mt-1.5 flex items-baseline gap-2 text-sm font-semibold text-ink">
-            <span>{formatINR(d.price)}</span>
+          {/* Price Line */}
+          <div className="mt-1.5 flex items-baseline gap-2 text-base font-bold text-ink">
+            <span className={compact ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{formatINR(d.price)}</span>
             {d.originalPrice && d.originalPrice > d.price && (
               <>
-                <span className="text-xs text-grey-muted line-through font-normal">
+                <span className="text-xs text-ink/40 line-through font-normal">
                   {formatINR(d.originalPrice)}
                 </span>
-                <span className="text-xs font-semibold text-sale-crimson">
-                  −{discountPercent}%
-                </span>
+                {!compact && (
+                  <span className="text-xs font-black text-[#0F1111] bg-[#FFA41C] px-1 py-0.2 rounded-xs">
+                    %{discountPercent} OFF
+                  </span>
+                )}
               </>
             )}
           </div>
+        </div>
 
-          {/* Rating & Response Line (.rt) */}
-          <p className="mt-1 text-[11px] text-grey-soft flex items-center gap-1">
-            <span className="text-rose font-bold">★</span>
-            <span className="font-semibold text-ink">{d.rating.toFixed(1)}</span>
-            <span className="text-grey-muted">({d.reviewCount})</span>
-            <span className="text-grey-muted">· replies in ~{d.replyTime}</span>
-          </p>
-
-          {/* Color Swatch Dots (.sws) */}
-          <div className="flex items-center gap-1 mt-2">
-            {(d.colours && d.colours.length > 0 ? d.colours : ["Studio Original"]).slice(0, 4).map((c, i) => {
-              const bgColors = ["#8d3350", "#2C4638", "#DFC48A", "#3B4C7A", "#1B1714"];
-              return (
-                <span
-                  key={i}
-                  className="h-2.5 w-2.5 rounded-full ring-1 ring-line/80"
-                  style={{ backgroundColor: bgColors[i % bgColors.length] }}
-                />
-              );
-            })}
-          </div>
-
-          {/* Talk to Atelier Link (.talk) */}
-          <a
-            href={`https://wa.me/917742698970?text=${encodeURIComponent(
-              `Hi OGURA! I am looking at ${d.title} by ${d.boutique} (₹${d.price}) and would like to ask a question.`
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="mt-2.5 inline-block text-[11px] font-medium text-ink border-b border-line pb-0.5 transition hover:border-rose hover:text-rose"
+        {/* Amazon Buying Psychology Buttons */}
+        <div
+          className={`pt-2 border-t border-[#fcb8fd]/60 ${
+            compact ? "flex items-center gap-1.5 mt-2" : "flex flex-col gap-2 mt-3"
+          }`}
+        >
+          <button
+            type="button"
+            onClick={handleDirectBuy}
+            className={`rounded-sm bg-[#FFA41C] hover:bg-[#FF8F00] active:bg-[#E07E00] text-[#0F1111] font-extrabold transition-all border border-[#FF8F00] flex items-center justify-center text-center ${
+              compact
+                ? "flex-1 py-1.5 px-2 text-xs"
+                : "w-full py-2.5 px-3 text-xs sm:text-sm shadow-xs"
+            }`}
           >
-            Talk to Ogura&apos;s designer →
-          </a>
+            Buy Now
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => handleQuickAdd(e, d.sizes[0] || "Standard")}
+            className={`rounded-sm bg-[#0F1111] hover:bg-[#232F3E] text-white font-bold transition-all flex items-center justify-center text-center ${
+              compact
+                ? "flex-1 py-1.5 px-2 text-xs gap-1"
+                : "w-full py-2 px-3 text-xs sm:text-sm shadow-xs gap-2"
+            }`}
+          >
+            <ShoppingBag className="h-3 w-3 text-white" />
+            <span>Add to Bag</span>
+          </button>
         </div>
       </div>
     </article>
@@ -223,25 +237,23 @@ export function DesignCard({
 
 export function BoutiqueCard({ b, count }: { b: BoutiqueVM; count?: number }) {
   return (
-    <Link to={`/designers/${b.slug}`} className="group block text-ink">
-      <div className="overflow-hidden rounded-sm aspect-[5/4] bg-stone">
+    <Link to={`/designers/${b.slug}`} className="group block text-ink bg-white/95 p-4 rounded-sm border border-[#fcb8fd] hover:border-[#fe84ff] transition-all shadow-[0_0_12px_rgba(252,184,253,0.25)] hover:shadow-[0_0_22px_rgba(252,184,253,0.5)]">
+      <div className="overflow-hidden rounded-sm aspect-[5/4] bg-stone border border-[#fcb8fd]/60">
         <img
           src={b.image}
           alt={`${b.name}, ${b.city}`}
           className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-105"
         />
       </div>
-      <div className="mt-2.5">
-        <h3 className="font-serif italic text-lg font-normal transition group-hover:text-rose leading-snug">
-          {b.name}
-        </h3>
-        <p className="text-xs text-grey-soft mt-0.5 font-medium">
+      <div className="mt-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-serif italic text-xl font-normal transition group-hover:text-gold leading-snug text-ink">
+            {b.name}
+          </h3>
+          <span className="text-[11px] font-mono text-gold font-bold uppercase tracking-wider">VERIFIED</span>
+        </div>
+        <p className="text-sm text-ink/80 mt-1 font-medium">
           {b.city} · {count || 24} creations
-        </p>
-        <p className="mt-1 text-xs text-grey-soft flex items-center gap-1">
-          <span className="text-rose font-bold">★</span>
-          <span className="font-semibold text-ink">4.8</span>
-          <span className="text-grey-muted">(96)</span>
         </p>
       </div>
     </Link>

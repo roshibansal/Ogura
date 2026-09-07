@@ -11,7 +11,7 @@ import { useDesigners } from "@/hooks/useDesigners";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types";
 import { normalizeProductSizes, normalizeProductColors, getAtelierCity } from "@/lib/adapters/productAdapter";
-import { Heart, Check, MapPin, Sparkles, MessageCircle } from "lucide-react";
+import { Heart, Check, MapPin, MessageCircle, ShoppingBag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProductDetail() {
@@ -209,6 +209,11 @@ export default function ProductDetail() {
     });
   };
 
+  const handleBuyNow = () => {
+    addItem(currentProduct, selectedSize, selectedColor, 1);
+    navigate("/checkout");
+  };
+
   const handlePincodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsEditingPincode(false);
@@ -221,19 +226,19 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-paper text-ink flex flex-col selection:bg-rose selection:text-white">
+    <div className="min-h-screen bg-[#f8d2f9] text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
       <Header />
 
-      <main className="flex-1 max-w-[1320px] mx-auto w-full px-4 sm:px-8 py-5 sm:py-7">
+      <main className="flex-1 max-w-[1360px] mx-auto w-full px-4 sm:px-8 py-6 sm:py-8">
         {/* Breadcrumbs (.crumbs) */}
-        <p className="text-xs text-grey-muted mb-4">
+        <p className="text-sm text-ink/75 mb-5 font-semibold">
           <Link to="/" className="hover:text-ink transition">Home</Link>
-          <span className="mx-2">/</span>
+          <span className="mx-2 text-[#fcb8fd]">/</span>
           <Link to={`/collections?category=${encodeURIComponent(currentProduct.category)}`} className="hover:text-ink transition">
             {currentProduct.category}
           </Link>
-          <span className="mx-2">/</span>
-          <span className="text-ink font-medium">{currentProduct.name}</span>
+          <span className="mx-2 text-[#fcb8fd]">/</span>
+          <span className="text-ink font-bold">{currentProduct.name}</span>
         </p>
 
         {/* 2-Column PDP Layout (.pdp) */}
@@ -300,42 +305,42 @@ export default function ProductDetail() {
           {/* Right: Buy Box (.buy) */}
           <div className="space-y-5">
             {/* Atelier Attribution */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.11em] text-grey-muted">
+            <div>              <p className="text-xs sm:text-sm font-bold tracking-[0.16em] uppercase text-ink/80">
                 {currentProduct.brand} · {atelierCity}
               </p>
 
-              {/* Product Title in Instrument Serif italic */}
-              <h1 className="font-serif italic font-normal text-3xl sm:text-4xl text-ink leading-[1.08] mt-1.5">
+              {/* Product Title in Instrument Serif */}
+              <h1 className="font-serif italic font-normal text-3xl sm:text-5xl text-ink leading-[1.08] mt-2">
                 {currentProduct.name}
               </h1>
 
               {/* Description */}
-              <p className="text-sm text-grey-soft mt-2 leading-relaxed">
+              <p className="text-sm sm:text-base text-ink/85 mt-3 leading-relaxed">
                 {currentProduct.description}
               </p>
 
               {/* Price Line (.price) */}
-              <div className="mt-4 flex items-baseline gap-3">
-                <span className="text-2xl sm:text-3xl font-bold tracking-tight text-ink">
+              <div className="mt-5 flex flex-wrap items-baseline gap-3.5">
+                <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-ink">
                   {formatINR(currentProduct.price)}
                 </span>
                 {currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.price && (
-                  <>
-                    <span className="text-base text-grey-muted line-through font-normal">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs sm:text-sm font-black text-[#0F1111] bg-[#FFA41C] border border-[#FF8F00] px-2.5 py-1 rounded-xs flex items-center gap-1 shadow-xs">
+                      <span className="text-sm font-black">%</span>
+                      <span>SAVE {discountPercent}%</span>
+                    </span>
+                    <span className="text-base text-ink/40 line-through font-normal">
                       {formatINR(currentProduct.originalPrice)}
                     </span>
-                    <span className="text-xs font-bold text-sale-crimson">
-                      −{discountPercent}%
-                    </span>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Verified Atelier Box (.atbox) */}
-            <div className="flex items-center gap-3 border border-line rounded-sm p-3 bg-wash/60">
-              <div className="h-11 w-11 rounded-full overflow-hidden bg-stone shrink-0 border border-line">
+            {/* Verified Atelier Box with Faded Gold Glow */}
+            <div className="flex items-center gap-4 border border-[#E2D1A3] rounded-sm p-4 bg-white/95 shadow-[0_0_15px_rgba(226,209,163,0.22)]">
+              <div className="h-12 w-12 rounded-full overflow-hidden bg-stone shrink-0 border-2 border-[#E2D1A3]">
                 <img
                   src={atelierInfo?.profile_image || "/mockup-assets/lengha-30.jpg"}
                   alt={currentProduct.brand}
@@ -344,24 +349,24 @@ export default function ProductDetail() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-sm font-bold text-ink truncate">{currentProduct.brand}</span>
-                  <span className="text-[10px] font-semibold text-green-atelier border border-green-atelier rounded-sm px-1.5 py-0.2">
-                    Verified
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-base font-bold text-ink truncate">{currentProduct.brand}</span>
+                  <span className="text-xs font-mono font-extrabold text-gold border border-[#E2D1A3] rounded-sm px-2 py-0.5 uppercase tracking-wider bg-white">
+                    VERIFIED ATELIER
                   </span>
                 </div>
-                <p className="text-xs text-grey-soft mt-0.5 truncate">
-                  {atelierCity} · <span className="text-rose font-bold">★</span> 4.8 (96) · replies in ~2h · joined 2023
+                <p className="text-xs sm:text-sm text-ink/80 mt-0.5 truncate font-medium">
+                  {atelierCity} · Handcrafted in studio · replies in ~2h
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsFollowing(!isFollowing)}
-                className={`text-xs font-semibold px-3 py-1.5 rounded-sm transition border shrink-0 ${
+                className={`text-xs sm:text-sm font-bold px-4 py-2 rounded-sm transition border shrink-0 ${
                   isFollowing
                     ? "bg-ink text-white border-ink"
-                    : "border-line text-ink hover:border-ink"
+                    : "border-[#E2D1A3] text-ink hover:border-gold hover:text-gold bg-white"
                 }`}
               >
                 {isFollowing ? "Following" : "Follow"}
@@ -370,7 +375,7 @@ export default function ProductDetail() {
 
             {/* Colour Options (.opt) */}
             <div className="border-t border-line pt-4">
-              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-grey-soft mb-2.5">
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-ink/75 mb-2.5">
                 Colour: <span className="text-ink font-semibold">{selectedColor}</span>
               </h4>
               <div className="flex items-center gap-2">
@@ -386,7 +391,7 @@ export default function ProductDetail() {
                     onClick={() => setSelectedColor(c.name)}
                     className={`h-7 w-7 rounded-full transition shadow-sm ${
                       selectedColor === c.name
-                        ? "ring-2 ring-ink ring-offset-2 scale-110"
+                        ? "ring-2 ring-gold ring-offset-2 scale-110"
                         : "ring-1 ring-line hover:scale-105"
                     }`}
                     style={{ backgroundColor: c.hex }}
@@ -399,7 +404,7 @@ export default function ProductDetail() {
             {/* Size Options (.opt) */}
             <div className="border-t border-line pt-4">
               <div className="flex items-center justify-between mb-2.5">
-                <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-grey-soft">
+                <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-ink/75">
                   Size: <span className="text-ink font-semibold">{selectedSize}</span>
                 </h4>
                 <a
@@ -408,22 +413,24 @@ export default function ProductDetail() {
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-rose font-medium hover:underline"
+                  className="text-xs text-[#B38F24] font-bold hover:underline"
                 >
-                  Size Consultation →
+                  Free Size Help →
                 </a>
               </div>
-
               <div className="flex flex-wrap gap-2">
-                {["XS", "S", "M", "L", "XL", "Made to my measurements"].map((sz) => (
+                {(currentProduct.sizes && currentProduct.sizes.length > 0
+                  ? currentProduct.sizes
+                  : ["XS", "S", "M", "L", "XL"]
+                ).map((sz) => (
                   <button
                     key={sz}
                     type="button"
                     onClick={() => setSelectedSize(sz)}
-                    className={`px-3.5 py-2 text-xs rounded-sm transition font-medium border ${
+                    className={`px-3.5 py-1.5 text-xs font-bold rounded-sm border transition ${
                       selectedSize === sz
-                        ? "border-ink text-ink font-bold bg-white ring-1 ring-ink shadow-sm"
-                        : "border-line text-grey-soft bg-white hover:border-ink hover:text-ink"
+                        ? "bg-ink text-white border-ink shadow-xs"
+                        : "bg-white text-ink border-line hover:border-gold"
                     }`}
                   >
                     {sz}
@@ -432,15 +439,26 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Primary Action Buttons (.ctas) */}
-            <div className="space-y-2.5 pt-2">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="w-full py-4 bg-ink text-white font-semibold text-sm rounded-sm hover:bg-rose transition shadow-md flex items-center justify-center gap-2"
-              >
-                <span>Add to bag — {formatINR(currentProduct.price)}</span>
-              </button>
+            {/* Primary Action Buttons (Amazon Psychology: Amazon Orange Buy Now, Black Add to Bag) */}
+            <div className="space-y-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="w-full py-4 bg-[#FFA41C] hover:bg-[#FF8F00] active:bg-[#E07E00] text-[#0F1111] font-extrabold text-base rounded-sm transition shadow-md flex items-center justify-center gap-2 border border-[#FF8F00] group"
+                >
+                  <span>Buy Now — {formatINR(currentProduct.price)}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="w-full py-4 bg-[#0F1111] hover:bg-[#232F3E] text-white font-bold text-base rounded-sm transition shadow-md flex items-center justify-center gap-2"
+                >
+                  <ShoppingBag className="h-5 w-5 text-white" />
+                  <span>Add to Bag</span>
+                </button>
+              </div>
 
               <a
                 href={`https://wa.me/917742698970?text=${encodeURIComponent(
@@ -448,39 +466,40 @@ export default function ProductDetail() {
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3.5 border-1.5 border-ink text-ink font-medium text-xs rounded-sm hover:bg-wash transition flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-white border border-[#E2D1A3] text-ink font-bold text-sm rounded-sm hover:border-gold transition flex items-center justify-center gap-2.5 shadow-[0_0_10px_rgba(226,209,163,0.15)]"
               >
-                <MessageCircle className="h-3.5 w-3.5 text-rose" />
+                <MessageCircle className="h-4 w-4 text-gold" />
                 <span>Talk to Ogura&apos;s designer first</span>
+                <span className="text-xs text-ink/70 font-medium">(Fit & styling consult)</span>
               </a>
             </div>
 
             {/* Delivery Pincode Checker (.pin) */}
-            <div className="flex items-center justify-between bg-wash border border-line p-3 text-xs text-grey-soft rounded-sm">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-ink shrink-0" />
+            <div className="flex items-center justify-between bg-white/95 border border-[#E2D1A3] p-4 text-sm text-ink rounded-sm shadow-[0_0_12px_rgba(226,209,163,0.18)]">
+              <div className="flex items-center gap-2.5">
+                <MapPin className="h-4 w-4 text-ink shrink-0" />
                 <span>Deliver to <b>{pincode} · {pincodeCity}</b></span>
-                <span className="text-green-atelier font-semibold ml-1">Arrives in 3 days</span>
+                <span className="text-green-atelier font-bold ml-1">Arrives in 3 days</span>
               </div>
 
               {!isEditingPincode ? (
                 <button
                   type="button"
                   onClick={() => setIsEditingPincode(true)}
-                  className="text-xs font-semibold text-ink border-b border-line hover:border-rose hover:text-rose transition"
+                  className="text-sm font-bold text-ink border-b border-line hover:border-rose hover:text-rose transition"
                 >
                   Change
                 </button>
               ) : (
-                <form onSubmit={handlePincodeSubmit} className="flex items-center gap-1.5">
+                <form onSubmit={handlePincodeSubmit} className="flex items-center gap-2">
                   <input
                     type="text"
                     maxLength={6}
                     value={pincode}
                     onChange={(e) => setPincode(e.target.value)}
-                    className="w-16 bg-white border border-line px-1.5 py-0.5 text-xs text-ink rounded-sm"
+                    className="w-20 bg-white border border-[#E2D1A3] px-2 py-1 text-sm text-ink rounded-sm font-bold"
                   />
-                  <button type="submit" className="text-xs font-bold text-rose">
+                  <button type="submit" className="text-sm font-extrabold text-rose">
                     Check
                   </button>
                 </form>
@@ -488,29 +507,29 @@ export default function ProductDetail() {
             </div>
 
             {/* The 4 Trust Invariants (.trust) */}
-            <div className="bg-wash/70 border border-line p-4 space-y-2.5 text-xs text-grey-soft rounded-sm">
-              <div className="flex items-start gap-2.5">
-                <span className="text-green-atelier font-bold text-sm leading-none">✓</span>
+            <div className="bg-white/95 border border-[#fcb8fd] p-5 space-y-3 text-sm text-ink/85 rounded-sm shadow-xs">
+              <div className="flex items-start gap-3">
+                <span className="text-emerald-700 font-extrabold text-base leading-none">✓</span>
                 <span>
-                  <b className="text-ink">In the studio now.</b> Two pieces left, ships in three days.
+                  <b className="text-ink">In the shop now.</b> Ready to ship in 2-3 days.
                 </span>
               </div>
-              <div className="flex items-start gap-2.5">
-                <span className="text-green-atelier font-bold text-sm leading-none">✓</span>
+              <div className="flex items-start gap-3">
+                <span className="text-emerald-700 font-extrabold text-base leading-none">✓</span>
                 <span>
-                  <b className="text-ink">Money held in escrow</b> until you confirm the fit.
+                  <b className="text-ink">100% Safe Payments.</b> Your money is fully protected until you confirm the fit.
                 </span>
               </div>
-              <div className="flex items-start gap-2.5">
-                <span className="text-green-atelier font-bold text-sm leading-none">✓</span>
+              <div className="flex items-start gap-3">
+                <span className="text-emerald-700 font-extrabold text-base leading-none">✓</span>
                 <span>
                   <b className="text-ink">One free alteration</b> anywhere in India.
                 </span>
               </div>
-              <div className="flex items-start gap-2.5">
-                <span className="text-green-atelier font-bold text-sm leading-none">✓</span>
+              <div className="flex items-start gap-3">
+                <span className="text-emerald-700 font-extrabold text-base leading-none">✓</span>
                 <span>
-                  <b className="text-ink">Atelier verified</b> — studio vetted by OGURA.
+                  <b className="text-ink">Verified Shop</b> — quality checked directly by OGURA.
                 </span>
               </div>
             </div>

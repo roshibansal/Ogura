@@ -299,41 +299,42 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-ivory text-ink grain selection:bg-clay selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#FCE8EE] text-[#5A0A26] selection:bg-gold selection:text-ink">
       <Header />
-      <main className="flex-1 max-w-7xl mx-auto px-5 py-8 w-full">
+      <main className="flex-1 max-w-[1360px] mx-auto px-4 sm:px-8 py-10 w-full">
         {/* Checkout Steps */}
-        <div className="flex items-center gap-2 text-xs text-ink-soft mb-6">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[#5A0A26]/80 mb-6">
           <span>Shopping Bag</span>
-          <ChevronRight className="h-3 w-3" />
-          <span className="text-ink font-semibold">Checkout</span>
-          <ChevronRight className="h-3 w-3" />
+          <ChevronRight className="h-4 w-4" />
+          <span className="text-[#5A0A26] font-bold">Checkout</span>
+          <ChevronRight className="h-4 w-4" />
           <span>Confirmation</span>
         </div>
 
-        <h1 className="font-display text-3xl sm:text-4xl font-normal mb-6">Checkout</h1>
+        <h1 className="font-serif text-3xl sm:text-5xl font-normal mb-8 text-[#5A0A26]">Checkout</h1>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-8">
           {/* Left Column - Address & Items */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-6">
             {/* Delivery Address Section */}
-            <Card className="p-5">
+            <div className="p-6 rounded-sm bg-white/95 border border-[#E2D1A3] shadow-[0_0_14px_rgba(226,209,163,0.18)]">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <MapPin className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-sm bg-[#5A0A26]/5 flex items-center justify-center border border-[#E2D1A3]/60">
+                    <MapPin className="h-5 w-5 text-gold" />
                   </div>
                   <div>
-                    <h2 className="font-semibold">Delivery Address</h2>
-                    <p className="text-sm text-muted-foreground">Where should we deliver?</p>
+                    <h2 className="font-serif text-xl sm:text-2xl font-normal text-[#5A0A26]">Delivery Address</h2>
+                    <p className="text-sm text-[#5A0A26]/75">Direct atelier delivery to your doorstep</p>
                   </div>
                 </div>
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => setShowAddressModal(true)}
+                  className="rounded-sm border-[#E2D1A3] font-bold text-sm text-[#5A0A26]"
                 >
-                  {selectedAddress ? 'Change' : 'Add Address'}
+                  {selectedAddress ? 'Change Address' : 'Add Address'}
                 </Button>
               </div>
               
@@ -346,23 +347,24 @@ export default function Checkout() {
               ) : (
                 <button
                   onClick={() => setShowAddressModal(true)}
-                  className="w-full border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                  className="w-full border-2 border-dashed border-[#E2D1A3] rounded-sm p-6 flex flex-col items-center justify-center gap-2 text-[#5A0A26]/70 hover:border-gold hover:text-[#5A0A26] transition-colors"
                 >
-                  <MapPin className="h-8 w-8" />
-                  <span className="font-medium">Add Delivery Address</span>
+                  <MapPin className="h-8 w-8 text-gold" />
+                  <span className="font-bold text-base">Add Delivery Address</span>
+                  <span className="text-xs">Enter your delivery address and pincode for accurate studio dispatch</span>
                 </button>
               )}
-            </Card>
+            </div>
 
             {/* Order Items */}
-            <Card className="p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <ShoppingBag className="h-4 w-4 text-primary" />
+            <div className="p-6 rounded-sm bg-white/95 border border-[#E2D1A3] shadow-[0_0_14px_rgba(226,209,163,0.18)]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="h-10 w-10 rounded-sm bg-[#5A0A26]/5 flex items-center justify-center border border-[#E2D1A3]/60">
+                  <ShoppingBag className="h-5 w-5 text-gold" />
                 </div>
                 <div>
-                  <h2 className="font-semibold">Order Items ({items.length})</h2>
-                  <p className="text-sm text-muted-foreground">Review your items</p>
+                  <h2 className="font-serif text-xl sm:text-2xl font-normal text-[#5A0A26]">Order Items ({items.length})</h2>
+                  <p className="text-sm text-[#5A0A26]/75">Verified pieces direct from makers</p>
                 </div>
               </div>
 
@@ -404,59 +406,56 @@ export default function Checkout() {
                   </div>
                 ))}
               </div>
-            </Card>
+            </div>
           </div>
 
           {/* Right Column - Payment Summary */}
           <div className="lg:col-span-1">
-            <Card className="p-5 sticky top-24">
-              <h2 className="font-semibold mb-4">Payment Summary</h2>
+            <div className="p-6 sticky top-24 rounded-sm bg-white/95 border border-[#E2D1A3] shadow-[0_0_18px_rgba(226,209,163,0.22)]">
+              <h2 className="font-serif text-xl sm:text-2xl font-normal text-[#5A0A26] mb-4">Payment Summary</h2>
 
               {/* Discount Code */}
               {!appliedDiscount && (
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-2 mb-5">
                   <Input
                     placeholder="Discount code"
                     value={discountCode}
                     onChange={e => setDiscountCode(e.target.value)}
-                    className="uppercase text-sm"
+                    className="uppercase text-sm rounded-sm border-[#E2D1A3]"
                     onKeyDown={e => e.key === "Enter" && handleApplyDiscount()}
                   />
-                  <Button variant="outline" size="sm" onClick={handleApplyDiscount} disabled={applyingDiscount}>
+                  <Button variant="outline" size="sm" onClick={handleApplyDiscount} disabled={applyingDiscount} className="rounded-sm border-[#E2D1A3] font-bold text-xs">
                     {applyingDiscount ? <Loader2 className="h-3 w-3 animate-spin" /> : "Apply"}
                   </Button>
                 </div>
               )}
 
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>₹{subtotal.toLocaleString()}</span>
+              <div className="space-y-3 text-sm sm:text-base font-medium">
+                <div className="flex justify-between text-[#5A0A26]/85">
+                  <span>Subtotal</span>
+                  <span className="font-bold">₹{subtotal.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Delivery</span>
-                  <span className="text-green-600">FREE</span>
+                <div className="flex justify-between text-[#5A0A26]/85">
+                  <span>Express Studio Delivery</span>
+                  <span className="text-emerald-700 font-bold">FREE</span>
                 </div>
                 {appliedDiscount && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-emerald-700 font-bold">
                     <span className="flex items-center gap-1">
                       Discount ({appliedDiscount.code})
-                      <button onClick={removeDiscount} className="text-xs underline text-muted-foreground hover:text-destructive">Remove</button>
+                      <button onClick={removeDiscount} className="text-xs underline text-red-700 hover:text-red-900 ml-1">Remove</button>
                     </span>
                     <span>-₹{discountAmount.toLocaleString()}</span>
                   </div>
                 )}
-                <Separator />
-                <div className="flex justify-between font-bold text-base">
+                <div className="border-t border-[#E2D1A3]/60 pt-3 flex justify-between font-bold text-xl text-[#5A0A26]">
                   <span>Total</span>
                   <span>₹{finalTotal.toLocaleString()}</span>
                 </div>
               </div>
 
-
-
               <Button 
-                className="w-full mt-6" 
+                className="w-full mt-6 py-4 text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-sm bg-[#FFA41C] hover:bg-[#FF8F00] text-[#0F1111] border border-[#FF8F00] shadow-md transition" 
                 size="lg"
                 onClick={handlePayment}
                 disabled={isProcessing || !razorpayLoaded}
@@ -464,7 +463,7 @@ export default function Checkout() {
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Processing...
+                    Processing Safe Payment...
                   </>
                 ) : (
                   <>
@@ -508,7 +507,7 @@ export default function Checkout() {
                   </div>
                 </div>
               </div>
-            </Card>
+            </div>
           </div>
         </div>
       </main>

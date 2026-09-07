@@ -7,34 +7,38 @@ All colors MUST be HSL.
 */
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    --background: 298 73% 90%;
+    --foreground: 340 80% 19%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card: 298 60% 95%;
+    --card-foreground: 340 80% 19%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover: 298 60% 95%;
+    --popover-foreground: 340 80% 19%;
 
-    --primary: 0 0% 10%;
+    --primary: 340 80% 19%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 346 45% 91%;
+    --secondary-foreground: 340 80% 19%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 346 45% 91%;
+    --muted-foreground: 340 40% 45%;
 
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 43 65% 52%;
+    --accent-foreground: 340 80% 19%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 350 84% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 10%;
+    --border: 346 38% 85%;
+    --input: 346 38% 85%;
+    --ring: 43 65% 52%;
 
     --radius: 0.75rem;
 
@@ -122,6 +126,22 @@ All colors MUST be HSL.
 @layer utilities {
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-105;
+  }
+
+  /* Faded white-gold border with subtle soft glow */
+  .border-faded-gold {
+    border: 1px solid rgba(226, 209, 163, 0.75);
+    box-shadow: 0 0 14px rgba(226, 209, 163, 0.22);
+  }
+
+  .border-faded-gold-sm {
+    border: 1px solid rgba(226, 209, 163, 0.65);
+    box-shadow: 0 0 8px rgba(226, 209, 163, 0.16);
+  }
+
+  .border-faded-gold-lg {
+    border: 1.5px solid rgba(226, 209, 163, 0.85);
+    box-shadow: 0 0 20px rgba(226, 209, 163, 0.28);
   }
 
   .instagram-gradient {

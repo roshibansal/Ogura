@@ -22,13 +22,25 @@ export const SellerAuthRoute = ({ children }: { children: React.ReactNode }) => 
       .select("id, application_status, is_active")
       .eq("user_id", user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (!active) return;
-        // Testing phase: any signed-in account can access the seller dashboard.
+        if (!data) {
+          try {
+            await supabase.from("sellers").insert({
+              user_id: user.id,
+              brand_name: user.email ? user.email.split("@")[0].toUpperCase() : "Atelier Partner",
+              city: "Jaipur",
+              seller_type: "boutique",
+              application_status: "approved",
+              is_active: true,
+            });
+          } catch (e) {
+            console.warn("Seller auto-provision notice:", e);
+          }
+        }
         setAllowed(true);
         setChecking(false);
       });
-
 
     return () => {
       active = false;
@@ -44,7 +56,7 @@ export const SellerAuthRoute = ({ children }: { children: React.ReactNode }) => 
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/join" replace />;
+    return <Navigate to="/seller-login" replace />;
   }
 
   if (!allowed) {

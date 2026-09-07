@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { DesignCard } from "@/components/Cards";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
-import { CANONICAL_TAXONOMY, DesignVM } from "@/lib/adapters/productAdapter";
+import { CANONICAL_TAXONOMY, DesignVM, resolveCategoryFromSlug, slugifyCategory } from "@/lib/adapters/productAdapter";
 import { Filter, X, Check, ChevronDown } from "lucide-react";
 
 export default function Collections() {
@@ -14,6 +14,10 @@ export default function Collections() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   const activeCategory = searchParams.get("category") || routeCategory || "";
+  const activeCategoryCanonical = useMemo(() => {
+    return resolveCategoryFromSlug(activeCategory);
+  }, [activeCategory]);
+
   const activeAtelier = searchParams.get("atelier") || "";
   const activeAvailability = searchParams.get("availability") || "";
   const activePrice = searchParams.get("price") || "";
@@ -99,11 +103,15 @@ export default function Collections() {
           if (!matchTitle && !matchBrand && !matchCategory) return false;
         }
 
-        // Category filter
+        // Category filter with slug resolution
         if (activeCategory) {
-          const normActive = activeCategory.toLowerCase();
-          const normItem = d.category.toLowerCase();
-          if (normActive !== normItem) return false;
+          if (activeCategoryCanonical) {
+            if (d.category !== activeCategoryCanonical) return false;
+          } else {
+            const normActive = activeCategory.toLowerCase();
+            const normItem = d.category.toLowerCase();
+            if (normActive !== normItem) return false;
+          }
         }
 
         // Atelier filter
@@ -147,35 +155,35 @@ export default function Collections() {
   );
 
   return (
-    <div className="min-h-screen bg-paper text-ink flex flex-col selection:bg-rose selection:text-white">
+    <div className="min-h-screen bg-[#f8d2f9] text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
       <Header />
 
-      <main className="flex-1 max-w-[1320px] mx-auto w-full px-4 sm:px-8 py-6 sm:py-8">
+      <main className="flex-1 max-w-[1440px] mx-auto w-full px-3 sm:px-6 py-5 sm:py-7">
         {/* Breadcrumbs (.crumbs) */}
-        <p className="text-xs text-grey-muted mb-3">
+        <p className="text-sm text-ink/75 mb-4 font-semibold">
           <Link to="/" className="hover:text-ink transition">
             Home
           </Link>
-          <span className="mx-2">/</span>
-          <span className="text-ink font-medium">
+          <span className="mx-2 text-[#fcb8fd]">/</span>
+          <span className="text-ink font-bold">
             {activeCategory || (searchQuery ? `Search: "${searchQuery}"` : "All Creations")}
           </span>
         </p>
 
         {/* Listing Header (.lhead) */}
-        <div className="flex flex-wrap items-baseline justify-between gap-4 pb-4 border-b border-line">
+        <div className="flex flex-wrap items-baseline justify-between gap-4 pb-5 border-b border-[#fcb8fd]">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-ink font-sans">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif tracking-tight text-ink">
               {activeCategory || (searchQuery ? `Search results for "${searchQuery}"` : "All Creations")}
             </h1>
-            <p className="text-xs text-grey-soft mt-1">
-              <b>{filteredDesigns.length}</b> {filteredDesigns.length === 1 ? "piece" : "pieces"} from{" "}
-              <b>{distinctAteliersCount}</b> {distinctAteliersCount === 1 ? "atelier" : "ateliers"}
+            <p className="text-sm sm:text-base text-ink/80 mt-1.5 font-medium">
+              <b className="text-ink font-extrabold">{filteredDesigns.length}</b> {filteredDesigns.length === 1 ? "piece" : "pieces"} from{" "}
+              <b className="text-ink font-extrabold">{distinctAteliersCount}</b> {distinctAteliersCount === 1 ? "shop" : "shops"}
             </p>
           </div>
 
           {/* Sort Selector and Filter Trigger */}
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-3 text-sm font-semibold">
             {/* Mobile Filter Button */}
             <button
               type="button"
@@ -194,11 +202,11 @@ export default function Collections() {
               <select
                 value={activeSort}
                 onChange={(e) => setParam("sort", e.target.value)}
-                className="appearance-none border border-line bg-white px-3 py-2 pr-7 rounded-sm text-grey-soft hover:border-ink focus:outline-none transition cursor-pointer text-xs font-medium"
+                className="appearance-none border border-[#fcb8fd] bg-white px-3 py-2 pr-7 rounded-sm text-[#5A0A26] hover:border-[#5A0A26] focus:outline-none transition cursor-pointer text-xs font-bold shadow-xs"
               >
-                <option value="low">Sort: Price low to high</option>
-                <option value="high">Sort: Price high to low</option>
-                <option value="new">Sort: Newly added</option>
+                <option value="low">Price: Low to High (Default)</option>
+                <option value="high">Price: High to Low</option>
+                <option value="new">Newly Added</option>
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-grey-muted pointer-events-none" />
             </div>
@@ -218,7 +226,7 @@ export default function Collections() {
                 onClick={() => setParam("category", "")}
                 className="inline-flex items-center gap-1 border border-rose text-rose bg-white px-2.5 py-1 rounded-sm text-xs hover:bg-rose/5 transition"
               >
-                <span>Category: {activeCategory}</span>
+                <span>Category: {activeCategoryCanonical || activeCategory}</span>
                 <X className="h-3 w-3" />
               </button>
             )}
@@ -295,12 +303,12 @@ export default function Collections() {
         )}
 
         {/* 2-Column Listing Layout (.listing) */}
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-[212px_1fr] gap-8 items-start">
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 items-start">
           {/* Left Filter Rail (.rail) */}
-          <aside className="hidden lg:block space-y-5 text-xs text-grey-soft">
+          <aside className="hidden lg:block space-y-5 text-xs text-[#5A0A26] bg-white/95 border border-[#fcb8fd] p-4 rounded-sm shadow-xs">
             {/* Availability */}
-            <div className="border-b border-line pb-4">
-              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-grey-soft mb-2.5">
+            <div className="border-b border-[#fcb8fd]/70 pb-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-[#5A0A26] mb-2.5">
                 Availability
               </h4>
               <div className="space-y-1.5">
@@ -416,13 +424,15 @@ export default function Collections() {
               </h4>
               <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
                 {CANONICAL_TAXONOMY.map((cat) => {
-                  const isSelected = activeCategory.toLowerCase() === cat.toLowerCase();
+                  const isSelected =
+                    activeCategoryCanonical === cat ||
+                    activeCategory.toLowerCase() === cat.toLowerCase();
                   const count = facetCounts.categories[cat] || 0;
                   return (
                     <button
                       key={cat}
                       type="button"
-                      onClick={() => toggleParam("category", cat)}
+                      onClick={() => toggleParam("category", slugifyCategory(cat))}
                       className={`flex items-center justify-between w-full text-left py-1 hover:text-ink transition ${
                         isSelected ? "font-bold text-ink" : ""
                       }`}
@@ -519,12 +529,12 @@ export default function Collections() {
             </div>
           </aside>
 
-          {/* Right Product Grid (.grid) */}
+          {/* Right Product Grid (.grid) - 4 in a row, compact Amazon style */}
           <div className="w-full">
             {filteredDesigns.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
                 {filteredDesigns.map((d) => (
-                  <DesignCard key={d.slug} design={d} />
+                  <DesignCard key={d.slug} design={d} compact={true} />
                 ))}
               </div>
             ) : (
@@ -605,20 +615,23 @@ export default function Collections() {
               <div className="py-3 border-b border-line text-xs">
                 <h4 className="font-bold text-ink mb-2">Category</h4>
                 <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                  {CANONICAL_TAXONOMY.map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => toggleParam("category", cat)}
-                      className={`block w-full text-left py-1 ${
-                        activeCategory.toLowerCase() === cat.toLowerCase()
-                          ? "font-bold text-rose"
-                          : "text-grey-soft"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                  {CANONICAL_TAXONOMY.map((cat) => {
+                    const isSelected =
+                      activeCategoryCanonical === cat ||
+                      activeCategory.toLowerCase() === cat.toLowerCase();
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => toggleParam("category", slugifyCategory(cat))}
+                        className={`block w-full text-left py-1 ${
+                          isSelected ? "font-bold text-rose" : "text-grey-soft"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

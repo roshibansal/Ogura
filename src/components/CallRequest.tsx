@@ -82,7 +82,7 @@ export function CallRequest({
   const handleRequestCall = () => {
     const rawDigits = phone.replace(/\D/g, "");
     const message = 
-`Hi OGURA Concierge! I would like to request a styling consultation with ${owner} (${boutique}).
+`Hi OGURA Support! I would like to request a styling consultation with ${owner} (${boutique}).
 • Interested in: ${design ? `"${design}"` : "Custom Couture"}
 • Consultation Format: ${mode} Call
 • Preferred Language: ${language}

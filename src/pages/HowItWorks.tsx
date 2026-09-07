@@ -6,110 +6,108 @@ import { Footer } from "@/components/Footer";
 const STEPS = [
   {
     n: "01",
-    h: "Find a studio, not a SKU",
-    p: "Browse by city, craft or category. Every atelier page reveals the lead couturier, their specialization, studio timeline, and what they craft by hand.",
+    h: "Pick what you like from genuine shops",
+    p: "Look through authentic lehengas, sarees, dresses, and bags from real independent shops in Jaipur, Chennai, Hyderabad, and Goa.",
   },
   {
     n: "02",
-    h: "Request a call — free, before you pay",
-    p: "Pick a slot, specify what you want to consult on, choose video or voice in your preferred language. The studio confirms promptly. Fifteen minutes on a call answers what forty product photos cannot.",
+    h: "Free help before you order",
+    p: "Send a quick WhatsApp message or schedule a quick video call with the shop to check colors, matching accessories, or ask questions.",
   },
   {
     n: "03",
-    h: "Agree on the piece and customizations",
-    p: "Colour palette, neckline, sleeve length, fabric weight, delivery date, and custom accents. Everything settled on the call is documented directly in your bespoke order details.",
+    h: "Custom size stitching",
+    p: "Want it made to your exact size? Tell the shop your measurements, or choose standard sizes (XS to XXL).",
   },
   {
     n: "04",
-    h: "Measurements, guided personally",
-    p: "The designer or master tailor walks you through it on video — eight minutes and a measuring tape. We store your measurement block securely on file for all future commissions.",
+    h: "100% Safe Payments",
+    p: "You pay Ogura safely online. The seller receives payment only after you get your package and check that it fits.",
   },
   {
     n: "05",
-    h: "We protect your payment",
-    p: "You pay Ogura through our secure Razorpay escrow pipeline, not the atelier directly. The studio receives funds after you receive the garment and confirm the fit.",
+    h: "Fast home delivery",
+    p: "Your order is packed carefully at the shop and shipped straight to your house with live courier tracking.",
   },
   {
     n: "06",
-    h: "It arrives, and it fits",
-    p: "Insured courier directly from the atelier to your doorstep. If anything is imperfect, one complimentary alteration is included anywhere in India.",
+    h: "Free size fixes",
+    p: "If the fit is slightly tight or loose, we provide one free size alteration anywhere in India so you feel confident wearing it.",
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <div className="min-h-screen bg-ivory text-ink grain flex flex-col selection:bg-clay selection:text-white">
+    <div className="min-h-screen bg-[#f8d2f9] text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
       <Header />
 
-      <main className="flex-1 mx-auto max-w-4xl px-5 py-14 w-full">
-        <span className="text-xs uppercase tracking-[0.2em] font-semibold text-clay">
-          Bespoke Consultation Architecture
+      <main className="flex-1 mx-auto max-w-4xl px-5 py-10 sm:py-14 w-full">
+        <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-[#B38F24]">
+          How Shopping Works
         </span>
-        <h1 className="mt-2 font-display text-4xl leading-tight sm:text-5xl font-normal">
-          The call is the product.
+        <h1 className="mt-2 font-serif text-4xl leading-tight sm:text-5xl font-normal text-[#5A0A26]">
+          Simple, Safe & Direct Shopping.
         </h1>
-        <p className="mt-4 text-base sm:text-lg leading-relaxed text-ink-soft">
-          Buying a luxury made-to-order couture piece from an artisan studio 1,400 km away is a trust and personalization challenge, not a commodity catalog problem. Everything in Ogura exists to solve that.
+        <p className="mt-4 text-base sm:text-lg leading-relaxed text-[#5A0A26]/85">
+          We connect you directly to real independent fashion shops across India. Talk with the makers, get custom sizes, and enjoy 100% safe payments with zero middleman markups.
         </p>
 
         {/* 6 Core Steps */}
-        <div className="mt-14 space-y-12">
+        <div className="mt-12 space-y-8">
           {STEPS.map((s) => (
-            <div key={s.n} className="grid gap-4 sm:grid-cols-[5rem_1fr] items-baseline">
-              <p className="font-display text-3xl text-clay/60 font-normal">{s.n}</p>
+            <div key={s.n} className="bg-white/95 border border-[#fcb8fd] p-6 rounded-sm shadow-xs grid gap-4 sm:grid-cols-[4rem_1fr] items-baseline">
+              <p className="font-serif italic text-3xl text-[#B38F24] font-normal">{s.n}</p>
               <div>
-                <h2 className="font-display text-2xl font-normal text-ink">{s.h}</h2>
-                <p className="mt-2 max-w-2xl leading-relaxed text-sm sm:text-base text-ink-soft">{s.p}</p>
+                <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#5A0A26]">{s.h}</h2>
+                <p className="mt-1.5 max-w-2xl leading-relaxed text-sm sm:text-base text-[#5A0A26]/80">{s.p}</p>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="rule my-14" />
-
-        {/* The Honest Truth */}
-        <h2 className="font-display text-3xl font-normal">The honest guidelines</h2>
-        <div className="mt-6 space-y-6 text-sm text-ink-soft">
-          <div className="rounded-xl border border-black/5 bg-parchment/50 p-5">
-            <p className="font-medium text-ink">Bespoke creation takes craftsmanship time.</p>
+        {/* The Honest Guidelines */}
+        <h2 className="font-serif text-3xl font-normal text-[#5A0A26] mt-14">Helpful Things to Know</h2>
+        <div className="mt-6 space-y-4 text-sm text-[#5A0A26]/85">
+          <div className="rounded-sm border border-[#fcb8fd] bg-white/95 p-5 shadow-xs">
+            <p className="font-bold text-[#5A0A26]">Handmade pieces take a little time to craft.</p>
             <p className="mt-1.5 leading-relaxed">
-              Two weeks for artisanal tops and co-ords, up to eight to ten weeks for heavy bridal couture. If you need something off-the-rack by tomorrow, filter by &quot;Studio Stock&quot; or consult with us.
+              Items already in shop ship in 2-3 days. Custom-stitched outfits take 1-2 weeks because they are tailored specifically for you.
             </p>
           </div>
 
-          <div className="rounded-xl border border-black/5 bg-parchment/50 p-5">
-            <p className="font-medium text-ink">Custom garments cannot be returned for cash refunds.</p>
+          <div className="rounded-sm border border-[#fcb8fd] bg-white/95 p-5 shadow-xs">
+            <p className="font-bold text-[#5A0A26]">Free size adjustments.</p>
             <p className="mt-1.5 leading-relaxed">
-              Because the garment is cut exclusively to your individual anatomy, standard returns are not possible. What you receive instead is one complimentary alteration anywhere in India and a direct consultation before scissors touch cloth.
+              Because custom-stitched clothes are made for your exact body, we offer one free alteration anywhere in India to make sure you get the perfect fit.
             </p>
           </div>
 
-          <div className="rounded-xl border border-black/5 bg-parchment/50 p-5">
-            <p className="font-medium text-ink">Handmade weaving and dye variations.</p>
+          <div className="rounded-sm border border-[#fcb8fd] bg-white/95 p-5 shadow-xs">
+            <p className="font-bold text-[#5A0A26]">Real handloom fabrics.</p>
             <p className="mt-1.5 leading-relaxed">
-              Hand-spun khadi, vegetable indigo vats, and hand-embroidery possess subtle natural characteristics that make each piece singular. The designer will show you fabric swatches during your video call.
+              Hand-spun silks and hand-block prints have beautiful subtle textures that make each piece special and authentic.
             </p>
           </div>
         </div>
 
         {/* Bottom CTA */}
-        <div className="mt-14 rounded-2xl bg-parchment/70 border border-black/5 px-7 py-10 text-center">
-          <h3 className="font-display text-2xl font-normal">Start with an atelier you connect with</h3>
-          <p className="mt-2 text-xs sm:text-sm text-ink-soft">
-            Explore vetted independent fashion houses across India and book a 15-minute styling consultation.
+        <div className="mt-12 rounded-sm bg-white/95 border border-[#fcb8fd] px-7 py-9 text-center shadow-xs">
+          <h3 className="font-serif text-2xl sm:text-3xl text-[#5A0A26]">Ready to find your favorite outfit?</h3>
+          <p className="mt-2 text-sm text-[#5A0A26]/80">
+            Explore verified shops across India and buy directly with complete safety.
           </p>
-          <div className="mt-6 flex justify-center gap-3">
-            <Link
-              to="/designers"
-              className="inline-block rounded-full bg-ink px-7 py-3 text-xs font-medium text-ivory transition hover:bg-clay"
-            >
-              Browse Boutiques
-            </Link>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               to="/collections"
-              className="inline-block rounded-full border border-ink/20 px-7 py-3 text-xs font-medium text-ink transition hover:bg-parchment"
+              className="inline-block rounded-sm bg-[#FFA41C] hover:bg-[#FF8F00] px-8 py-3.5 text-sm font-extrabold text-[#0F1111] transition shadow-xs border border-[#FF8F00]"
             >
-              Explore All Designs
+              Explore Marketplace
+            </Link>
+            <Link
+              to="/designers"
+              className="inline-block rounded-sm border border-[#fcb8fd] bg-white px-7 py-3.5 text-sm font-bold text-[#5A0A26] transition hover:bg-[#fcb8fd]/30"
+            >
+              Meet Our Shops
             </Link>
           </div>
         </div>

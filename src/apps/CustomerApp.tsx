@@ -36,6 +36,9 @@ import Contact from "@/pages/Contact";
 import Careers from "@/pages/Careers";
 import OAuthConsent from "@/pages/OAuthConsent";
 import BrandWaitlist from "@/pages/BrandWaitlist";
+import SellerLogin from "@/pages/seller/SellerLogin";
+import SellerSignup from "@/pages/seller/SellerSignup";
+import SellerApp from "@/apps/SellerApp";
 import { PushNotificationManager } from "@/components/notifications/PushNotificationManager";
 
 
@@ -75,7 +78,10 @@ const CustomerApp = () => {
         <Route path="/careers" element={<Careers />} />
         <Route path="/seller-program" element={<BrandWaitlist />} />
         <Route path="/waitlist" element={<Navigate to="/seller-program" replace />} />
-        <Route path="/apply-to-join" element={<Navigate to="/seller-program" replace />} />
+        <Route path="/seller-login" element={<SellerLogin />} />
+        <Route path="/seller-signup" element={<SellerSignup />} />
+        <Route path="/seller/login" element={<SellerLogin />} />
+        <Route path="/seller/*" element={<SellerApp />} />
 
         <Route path="/auth/pinterest/callback" element={<PinterestCallback />} />
         <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />

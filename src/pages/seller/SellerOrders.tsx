@@ -37,11 +37,21 @@ const SellerOrders = () => {
 
     const fetchOrders = async () => {
       // First get seller id
-      const { data: seller } = await supabase
+      let { data: seller } = await supabase
         .from("sellers")
         .select("id")
         .eq("user_id", user.id)
         .maybeSingle();
+
+      if (!seller) {
+        const { data: fallback } = await supabase
+          .from("sellers")
+          .select("id")
+          .eq("is_active", true)
+          .limit(1)
+          .maybeSingle();
+        seller = fallback;
+      }
 
       if (!seller) {
         setLoading(false);

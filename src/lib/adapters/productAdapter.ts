@@ -62,6 +62,32 @@ export function mapCategoryToNewTaxonomy(rawCategory?: string): CanonicalCategor
   return null;
 }
 
+export function slugifyCategory(cat: string): string {
+  const norm = (cat || "").toLowerCase().trim();
+  if (norm === "western dresses" || norm === "dresses") return "dresses";
+  if (norm === "indian co-ords" || norm === "indian coords") return "indian-coords";
+  if (norm === "western co-ords" || norm === "western coords") return "western-coords";
+  if (norm === "indo-western" || norm === "indo western") return "indo-western";
+  return norm.replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+export function resolveCategoryFromSlug(slugOrName?: string): CanonicalCategory | null {
+  if (!slugOrName) return null;
+  const s = slugOrName.toLowerCase().trim().replace(/[-_]+/g, " ");
+  if (s.includes("lehenga") || s.includes("ghagra")) return "Lehengas";
+  if (s.includes("saree") || s.includes("sari")) return "Sarees";
+  if (s.includes("indo western") || s.includes("fusion")) return "Indo-Western";
+  if (s.includes("indian co ord") || s.includes("indian coord") || s.includes("kurta set") || s.includes("ethnic set") || s.includes("anarkali set")) return "Indian Co-ords";
+  if (s.includes("western co ord") || s.includes("western coord") || s.includes("pant suit")) return "Western Co-ords";
+  if (s.includes("dress") || s.includes("gown") || s.includes("maxi") || s.includes("midi")) return "Western Dresses";
+  if (s.includes("jumpsuit") || s.includes("playsuit") || s.includes("romper")) return "Jumpsuits";
+  if (s.includes("top") || s.includes("shirt") || s.includes("blouse") || s.includes("tunic") || s.includes("corset")) return "Tops";
+  if (s.includes("bottom") || s.includes("pant") || s.includes("trouser") || s.includes("skirt") || s.includes("palazzo")) return "Bottoms";
+  if (s.includes("bag") || s.includes("clutch") || s.includes("potli") || s.includes("tote") || s.includes("handbag")) return "Bags";
+  if (s.includes("shoe") || s.includes("footwear") || s.includes("juttis") || s.includes("sandals") || s.includes("heels") || s.includes("mojri")) return "Shoes";
+  return null;
+}
+
 const PALETTES = [
   { from: "#17130f", to: "#4a3e35", accent: "#b0512c" },
   { from: "#24402f", to: "#4a6352", accent: "#a3853f" },

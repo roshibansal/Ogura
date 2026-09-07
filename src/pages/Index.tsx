@@ -4,9 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { DesignCard, formatINR } from "@/components/Cards";
 import { useCatalogProducts } from "@/hooks/useCatalogProducts";
-import { useDesigners } from "@/hooks/useDesigners";
-import { DesignVM } from "@/lib/adapters/productAdapter";
-import { ArrowRight, ShieldCheck, Sparkles, Truck, RefreshCw, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ChevronRight, ShoppingBag } from "lucide-react";
 
 // City pairs for animated hero value proposition
 const CITY_PAIRS = [
@@ -15,6 +13,58 @@ const CITY_PAIRS = [
   ["Kolkata", "Jaipur"],
   ["Chennai", "Amritsar"],
   ["Pune", "Hyderabad"],
+];
+
+// Rotating Hero Lookbook Looks with high-res editorial assets
+const HERO_LOOKS = [
+  {
+    id: "look-1",
+    image: "/mockup-assets/lengha-03.jpg",
+    alt: "Handloom Embroidered Bridal Lehenga",
+    label: "LOOK 01 | HANDLOOM HERITAGE",
+    boutique: "Atelier Vindhya",
+    city: "Hyderabad",
+    title: "Gulaab Handloom Lehenga",
+    price: 9300,
+    originalPrice: 12400,
+    slug: "gulaab-lehenga",
+  },
+  {
+    id: "look-2",
+    image: "/mockup-assets/saree-15.jpg",
+    alt: "Kanjeevaram Temple Border Silk Saree",
+    label: "LOOK 02 | PURE MULBERRY SILK",
+    boutique: "Kamala House",
+    city: "Chennai",
+    title: "Temple Border Pure Silk Saree",
+    price: 11800,
+    originalPrice: 14500,
+    slug: "temple-border-saree",
+  },
+  {
+    id: "look-3",
+    image: "/mockup-assets/dresses-western-25.jpg",
+    alt: "Contemporary Draped Evening Gown",
+    label: "LOOK 03 | SCULPTURAL SILHOUETTE",
+    boutique: "Ruh Studio",
+    city: "Goa",
+    title: "Draped Asymmetric Satin Gown",
+    price: 8400,
+    originalPrice: 10500,
+    slug: "draped-asymmetric-gown",
+  },
+  {
+    id: "look-4",
+    image: "/mockup-assets/bags-14.jpg",
+    alt: "Sculpted Handcrafted Bag",
+    label: "LOOK 04 | ARTISANAL LEATHER & SILK",
+    boutique: "Thaila Co.",
+    city: "Jaipur",
+    title: "Sculpted Silk Envelope Bag",
+    price: 4999,
+    originalPrice: 6999,
+    slug: "sculpted-envelope-bag",
+  },
 ];
 
 // Curated Category Blocks with high-res mockup assets
@@ -27,22 +77,18 @@ const CATEGORY_BLOCKS = [
   { title: "Tops", count: 17, image: "/mockup-assets/tops-western-09.jpg", path: "/collections?category=Tops" },
   { title: "Indo-Western", count: 8, image: "/mockup-assets/indowesteern-03.jpg", path: "/collections?category=Indo-Western" },
   { title: "Indian Co-ords", count: 17, image: "/mockup-assets/coord-indian-04.jpg", path: "/collections?category=Indian%20Co-ords" },
-  { title: "Jumpsuits", count: 4, image: "/mockup-assets/jumpsuits-02.jpg", path: "/collections?category=Jumpsuits" },
-  { title: "Bottoms", count: 6, image: "/mockup-assets/bottoms-03.jpg", path: "/collections?category=Bottoms" },
-  { title: "Western Co-ords", count: 7, image: "/mockup-assets/coord-western-02.jpg", path: "/collections?category=Western%20Co-ords" },
-  { title: "View All Pieces", count: 311, image: "/mockup-assets/lengha-12.jpg", path: "/collections" },
 ];
 
-// Featured Ateliers Rail
+// Featured Ateliers
 const FEATURED_ATELIERS = [
-  { name: "Atelier Vindhya", city: "Hyderabad", pieces: 24, rating: 4.8, reviews: 96, image: "/mockup-assets/lengha-30.jpg", slug: "vindhya" },
-  { name: "Kamala House", city: "Chennai", pieces: 21, rating: 4.8, reviews: 412, image: "/mockup-assets/saree-15.jpg", slug: "kamala" },
-  { name: "Noor Bagh", city: "Lucknow", pieces: 24, rating: 4.9, reviews: 296, image: "/mockup-assets/indowesteern-03.jpg", slug: "noor" },
-  { name: "Ruh Studio", city: "Goa", pieces: 34, rating: 4.7, reviews: 289, image: "/mockup-assets/dresses-western-25.jpg", slug: "ruh" },
-  { name: "Thaila Co.", city: "Jaipur", pieces: 20, rating: 4.8, reviews: 612, image: "/mockup-assets/bags-14.jpg", slug: "thaila" },
-  { name: "Juti House", city: "Amritsar", pieces: 24, rating: 4.9, reviews: 728, image: "/mockup-assets/shoes-14.jpg", slug: "juti" },
-  { name: "Saanjh Label", city: "Bengaluru", pieces: 17, rating: 4.8, reviews: 344, image: "/mockup-assets/tops-western-09.jpg", slug: "saanjh" },
-  { name: "Rangreza", city: "Jaipur", pieces: 18, rating: 4.8, reviews: 508, image: "/mockup-assets/coord-indian-04.jpg", slug: "rangreza" },
+  { name: "Atelier Vindhya", city: "Hyderabad", pieces: 24, craft: "Heritage Handloom", image: "/mockup-assets/lengha-30.jpg" },
+  { name: "Kamala House", city: "Chennai", pieces: 21, craft: "Pure Mulberry Zari", image: "/mockup-assets/saree-15.jpg" },
+  { name: "Noor Bagh", city: "Lucknow", pieces: 24, craft: "Shadow Work & Zardozi", image: "/mockup-assets/indowesteern-03.jpg" },
+  { name: "Ruh Studio", city: "Goa", pieces: 34, craft: "Sculptural Draping", image: "/mockup-assets/dresses-western-25.jpg" },
+  { name: "Thaila Co.", city: "Jaipur", pieces: 20, craft: "Vegetable Dyed Silk", image: "/mockup-assets/bags-14.jpg" },
+  { name: "Juti House", city: "Amritsar", pieces: 24, craft: "Hand-Embroidered Juttis", image: "/mockup-assets/shoes-14.jpg" },
+  { name: "Saanjh Label", city: "Bengaluru", pieces: 17, craft: "Raw Silk Tailoring", image: "/mockup-assets/tops-western-09.jpg" },
+  { name: "Rangreza", city: "Jaipur", pieces: 18, craft: "Bandhani & Blockprint", image: "/mockup-assets/coord-indian-04.jpg" },
 ];
 
 export default function Index() {
@@ -50,72 +96,85 @@ export default function Index() {
   const designs = catalogData?.designs || [];
   const navigate = useNavigate();
 
-  // City animation rotator
+  // 1. Rotating Hero Lookbook State
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  useEffect(() => {
+    const heroTimer = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % HERO_LOOKS.length);
+    }, 4800);
+
+    return () => clearInterval(heroTimer);
+  }, []);
+
+  const activeLook = HERO_LOOKS[heroIndex];
+
+  // 2. City animation rotator
   const [cityIndex, setCityIndex] = useState(0);
   const [isCityFading, setIsCityFading] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const cityTimer = setInterval(() => {
       setIsCityFading(true);
       setTimeout(() => {
         setCityIndex((prev) => (prev + 1) % CITY_PAIRS.length);
         setIsCityFading(false);
       }, 500);
-    }, 3400);
+    }, 3200);
 
-    return () => clearInterval(timer);
+    return () => clearInterval(cityTimer);
   }, []);
 
   const [cityA, cityB] = CITY_PAIRS[cityIndex];
 
-  // New In Pieces (first 8 real items)
-  const newInPieces = useMemo(() => designs.slice(0, 8), [designs]);
+  // Filtered Products for Sections
+  const newInPieces = useMemo(() => designs.slice(0, 4), [designs]);
 
-  // Under ₹12,000 Pieces
-  const under12kPieces = useMemo(() => {
-    return designs.filter((d) => d.price <= 12000).slice(0, 4);
+  const salePieces = useMemo(() => {
+    return designs.filter((d) => d.originalPrice && d.originalPrice > d.price).slice(0, 4);
   }, [designs]);
 
-  // Floating Hero "Shop This Look" piece
-  const heroFeaturedPiece = designs[0] || {
-    title: "Gulaab Lehenga",
-    boutique: "Atelier Vindhya",
-    city: "Hyderabad",
-    price: 9300,
-    originalPrice: 12400,
-    slug: "gulaab-lehenga",
-  };
-
   return (
-    <div className="min-h-screen bg-paper text-ink flex flex-col selection:bg-rose selection:text-white">
+    <div className="min-h-screen bg-[#f8d2f9] text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
+      {/* Clean Pink Header */}
       <Header />
 
-      <main className="flex-1">
+      <main className="flex-1 w-full space-y-8 sm:space-y-12 pb-16">
         {/* ============================================================ */}
-        {/* 1. HERO BANNER (.banner) with Animated City Rotator         */}
+        {/* SECTION 1: HERO LOOKBOOK (PROUD, EXPANSIVE & READABLE)       */}
         {/* ============================================================ */}
-        <section className="relative min-h-[460px] sm:min-h-[520px] overflow-hidden bg-stone flex items-center">
-          {/* Background image */}
-          <img
-            src="/mockup-assets/lengha-03.jpg"
-            alt="OGURA Indian Fashion Atelier"
-            className="absolute inset-0 w-full h-full object-cover object-[50%_28%]"
-          />
+        <section className="relative h-[560px] sm:h-[640px] lg:h-[700px] w-full overflow-hidden flex items-center justify-center border-b border-[#fcb8fd] shadow-[0_4px_20px_rgba(252,184,253,0.3)]">
+          {/* Rotating Lookbook Background Images with Smooth Cross-Fade */}
+          {HERO_LOOKS.map((look, idx) => (
+            <img
+              key={look.id}
+              src={look.image}
+              alt={look.alt}
+              className={`absolute inset-0 w-full h-full object-cover object-[50%_25%] transition-opacity duration-1000 ease-in-out ${
+                idx === heroIndex ? "opacity-100 scale-100" : "opacity-0 scale-105 pointer-events-none"
+              }`}
+            />
+          ))}
 
-          {/* Contrast Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/40 to-transparent" />
+          {/* High-Contrast Editorial Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#4A091E]/95 via-[#4A091E]/65 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#4A091E]/55 to-transparent" />
 
-          {/* Hero Content */}
-          <div className="relative max-w-[1320px] mx-auto px-4 sm:px-8 py-16 sm:py-24 text-white z-10 w-full">
+          {/* Hero Content Frame */}
+          <div className="relative max-w-[1360px] mx-auto px-4 sm:px-8 py-10 text-white z-10 w-full flex flex-col justify-center h-full">
             <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-85 text-rose-light">
-                311 original pieces · 40 ateliers · new drops weekly
-              </p>
+              {/* Simple Category Intro Tag */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xs bg-white/20 backdrop-blur-md border border-white/40 mb-6 shadow-sm">
+                <p className="text-xs sm:text-sm font-black uppercase tracking-[0.18em] text-white">
+                  Shop 40 Verified Indian Boutiques
+                </p>
+              </div>
 
-              <h1 className="mt-4 font-sans text-3xl sm:text-5xl lg:text-6xl font-medium tracking-tight leading-[1.08]">
+              {/* Headline with Large Typography */}
+              <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-normal tracking-tight leading-[1.05] text-white drop-shadow-sm">
                 Sit in{" "}
                 <span
-                  className={`font-serif italic font-normal inline-block transition-all duration-500 text-white ${
+                  className={`italic text-white border-b-2 border-gold pb-1 inline-block transition-all duration-500 ${
                     isCityFading ? "opacity-0 -translate-y-2" : "opacity-100 translate-y-0"
                   }`}
                 >
@@ -124,7 +183,7 @@ export default function Index() {
                 .<br />
                 Order from a boutique in{" "}
                 <span
-                  className={`font-serif italic font-normal inline-block transition-all duration-500 text-white ${
+                  className={`italic text-gold inline-block transition-all duration-500 ${
                     isCityFading ? "opacity-0 -translate-y-2" : "opacity-100 translate-y-0"
                   }`}
                 >
@@ -133,46 +192,70 @@ export default function Index() {
                 .
               </h1>
 
-              <p className="mt-4 text-sm sm:text-base leading-relaxed opacity-90 max-w-lg">
-                311 pieces from 40 independent studios across India — the kind you only find by walking in. Most ship this week, and you can talk to a designer before you order.
+              <p className="mt-5 text-base sm:text-xl leading-relaxed text-white/95 max-w-xl font-normal">
+                Authentic handcrafted clothes from 40 independent boutique shops across India. Talk directly with the makers, get custom sizing, and enjoy fast home delivery.
               </p>
 
-              <div className="mt-7 flex flex-wrap items-center gap-3">
+              {/* Amazon Psychology Buying Button & Outline */}
+              <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link
-                  to="/collections?sort=new"
-                  className="rounded-sm bg-white px-7 py-3 text-xs font-semibold text-ink tracking-wide hover:bg-wash transition shadow-md"
+                  to="/collections"
+                  className="rounded-sm bg-[#FFA41C] hover:bg-[#FF8F00] active:bg-[#E07E00] px-9 py-4 text-base font-extrabold text-[#0F1111] tracking-wider uppercase transition shadow-md border border-[#FF8F00]"
                 >
-                  Shop new in
+                  Explore Marketplace
                 </Link>
                 <Link
                   to="/how-it-works"
-                  className="rounded-sm border border-white/80 px-7 py-3 text-xs font-medium text-white tracking-wide hover:bg-white/10 transition"
+                  className="rounded-sm bg-white/20 backdrop-blur-md border border-white/90 px-8 py-4 text-base font-bold text-white tracking-wider uppercase hover:bg-white/30 transition"
                 >
-                  How the call works
+                  How it works
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* Floating "Shop This Look" Card (.shopthis) */}
-          <div className="hidden lg:block absolute right-8 bottom-8 z-20 bg-white/95 rounded-sm p-4 min-w-[220px] shadow-2xl border border-line backdrop-blur-sm">
-            <p className="text-[10px] font-medium tracking-widest uppercase text-grey-muted">
-              {heroFeaturedPiece.boutique} · {heroFeaturedPiece.city || "Hyderabad"}
+          {/* Lookbook Rotating Indicators (Bottom Left) */}
+          <div className="absolute left-4 sm:left-8 bottom-6 z-20 flex items-center gap-3">
+            {HERO_LOOKS.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setHeroIndex(idx)}
+                className={`h-3 transition-all duration-500 rounded-full cursor-pointer ${
+                  idx === heroIndex ? "w-12 bg-gold shadow-xs" : "w-3 bg-white/40 hover:bg-white/80"
+                }`}
+                aria-label={`Switch to Look ${idx + 1}`}
+              />
+            ))}
+            <span className="text-xs font-mono font-bold uppercase tracking-widest text-gold ml-2">
+              0{heroIndex + 1} / 0{HERO_LOOKS.length}
+            </span>
+          </div>
+
+          {/* Floating "Shop This Look" Card with Faded Pink Glow */}
+          <div className="hidden lg:block absolute right-8 bottom-6 z-20 bg-white/95 rounded-sm p-6 min-w-[340px] shadow-2xl border border-[#fcb8fd] shadow-[0_0_20px_rgba(252,184,253,0.35)] backdrop-blur-md transition-all duration-500">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold tracking-widest uppercase text-[#5A0A26]">
+                {activeLook.boutique} | {activeLook.city}
+              </p>
+              <span className="text-[10px] font-mono font-extrabold text-gold uppercase px-2 py-0.5 rounded-xs bg-[#5A0A26] text-white">
+                VERIFIED SHOP
+              </span>
+            </div>
+            <p className="font-serif italic text-2xl leading-tight text-[#5A0A26] mt-2 font-normal">
+              {activeLook.title}
             </p>
-            <p className="font-serif italic text-lg leading-tight text-ink mt-1 font-normal">
-              {heroFeaturedPiece.title}
-            </p>
-            <p className="text-xs font-semibold text-ink mt-1 flex items-baseline gap-2">
-              <span>{formatINR(heroFeaturedPiece.price)}</span>
-              {heroFeaturedPiece.originalPrice && (
-                <span className="text-[11px] text-grey-muted line-through font-normal">
-                  {formatINR(heroFeaturedPiece.originalPrice)}
+            <p className="text-base font-bold text-[#5A0A26] mt-2 flex items-baseline gap-2.5">
+              <span className="text-xl font-extrabold">{formatINR(activeLook.price)}</span>
+              {activeLook.originalPrice && (
+                <span className="text-sm text-[#5A0A26]/50 line-through font-normal">
+                  {formatINR(activeLook.originalPrice)}
                 </span>
               )}
             </p>
             <Link
-              to={`/product/${heroFeaturedPiece.slug}`}
-              className="inline-block text-xs font-semibold text-rose mt-2 hover:underline"
+              to={`/product/${activeLook.slug}`}
+              className="mt-3.5 block text-center py-3 px-4 rounded-sm bg-[#FFA41C] hover:bg-[#FF8F00] text-[#0F1111] font-extrabold text-sm border border-[#FF8F00] shadow-xs transition"
             >
               Shop this look →
             </Link>
@@ -180,63 +263,101 @@ export default function Index() {
         </section>
 
         {/* ============================================================ */}
-        {/* 2. THREE PROMO TILES (.promos)                              */}
+        {/* SECTION 2: POPULAR WAYS TO SHOP (BIGGER WIDGETS)             */}
         {/* ============================================================ */}
-        <section className="max-w-[1320px] mx-auto px-4 sm:px-8 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Tile 1 */}
+        <section className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-2">
+          <div className="mb-6 flex items-end justify-between border-b border-[#fcb8fd] pb-3">
+            <div>
+              <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#B38F24]">
+                WAYS TO SHOP
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#5A0A26] tracking-tight mt-1">
+                Find Your Perfect Style
+              </h2>
+            </div>
+            <p className="hidden sm:block text-sm sm:text-base font-semibold text-[#5A0A26]/80">
+              Ready to ship | Custom size stitching | Budget-friendly prices
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Tile 1: Under 12k */}
             <Link
               to="/collections?price=under12"
-              className="group relative aspect-[16/7] overflow-hidden bg-stone rounded-sm"
+              className="group relative aspect-[16/10] min-h-[290px] sm:min-h-[320px] overflow-hidden bg-white rounded-sm border border-[#fcb8fd] shadow-[0_0_15px_rgba(252,184,253,0.3)] hover:shadow-[0_0_25px_rgba(252,184,253,0.55)] transition-all hover:border-[#fe84ff]"
             >
               <img
                 src="/mockup-assets/tops-western-09.jpg"
                 alt="Under ₹12,000"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-105"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-106"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-ink/75 to-ink/20" />
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white">
-                <b className="block text-base sm:text-lg font-medium tracking-tight">Under ₹12,000</b>
-                <span className="inline-block mt-1 text-xs opacity-90 border-b border-white/70 pb-0.5">
-                  Curated luxury pieces
+              <div className="absolute inset-0 bg-gradient-to-r from-[#4A091E]/95 via-[#4A091E]/60 to-transparent" />
+              <div className="absolute left-7 top-1/2 -translate-y-1/2 text-white">
+                <span className="text-xs font-black uppercase tracking-widest text-[#FFA41C] block mb-1">
+                  % SALE SPECIAL
+                </span>
+                <b className="block text-3xl sm:text-4xl lg:text-5xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs">
+                  Under ₹12,000
+                </b>
+                <p className="text-sm sm:text-base text-white/95 mt-2 max-w-[280px] leading-relaxed font-medium">
+                  Beautiful sarees, dresses and tops at easy everyday prices.
+                </p>
+                <span className="inline-block mt-4 text-sm font-extrabold text-[#FFA41C] border-b-2 border-[#FFA41C] pb-0.5">
+                  See pieces under ₹12k →
                 </span>
               </div>
             </Link>
 
-            {/* Tile 2 */}
+            {/* Tile 2: Made to order */}
             <Link
               to="/collections?availability=order"
-              className="group relative aspect-[16/7] overflow-hidden bg-stone rounded-sm"
+              className="group relative aspect-[16/10] min-h-[290px] sm:min-h-[320px] overflow-hidden bg-white rounded-sm border border-[#fcb8fd] shadow-[0_0_15px_rgba(252,184,253,0.3)] hover:shadow-[0_0_25px_rgba(252,184,253,0.55)] transition-all hover:border-[#fe84ff]"
             >
               <img
                 src="/mockup-assets/lengha-07.jpg"
                 alt="Made to order"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-105"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-106"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-ink/75 to-ink/20" />
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white">
-                <b className="block text-base sm:text-lg font-medium tracking-tight">Made on order</b>
-                <span className="inline-block mt-1 text-xs opacity-90 border-b border-white/70 pb-0.5">
-                  Cut for your exact fit
+              <div className="absolute inset-0 bg-gradient-to-r from-[#4A091E]/95 via-[#4A091E]/60 to-transparent" />
+              <div className="absolute left-7 top-1/2 -translate-y-1/2 text-white">
+                <span className="text-xs font-black uppercase tracking-widest text-gold block mb-1">
+                  CUSTOM STITCHING
+                </span>
+                <b className="block text-3xl sm:text-4xl lg:text-5xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs">
+                  Made on order
+                </b>
+                <p className="text-sm sm:text-base text-white/95 mt-2 max-w-[280px] leading-relaxed font-medium">
+                  Stitched to your exact measurements directly by boutique tailors.
+                </p>
+                <span className="inline-block mt-4 text-sm font-extrabold text-gold border-b-2 border-gold pb-0.5">
+                  See custom fit pieces →
                 </span>
               </div>
             </Link>
 
-            {/* Tile 3 */}
+            {/* Tile 3: Ships in 48 hrs */}
             <Link
               to="/collections?availability=stock"
-              className="group relative aspect-[16/7] overflow-hidden bg-stone rounded-sm"
+              className="group relative aspect-[16/10] min-h-[290px] sm:min-h-[320px] overflow-hidden bg-white rounded-sm border border-[#fcb8fd] shadow-[0_0_15px_rgba(252,184,253,0.3)] hover:shadow-[0_0_25px_rgba(252,184,253,0.55)] transition-all hover:border-[#fe84ff]"
             >
               <img
                 src="/mockup-assets/bags-14.jpg"
                 alt="Ships in 48 hrs"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-105"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-106"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-ink/75 to-ink/20" />
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white">
-                <b className="block text-base sm:text-lg font-medium tracking-tight">Ships in 48 hrs</b>
-                <span className="inline-block mt-1 text-xs opacity-90 border-b border-white/70 pb-0.5">
-                  Ready in studio now
+              <div className="absolute inset-0 bg-gradient-to-r from-[#4A091E]/95 via-[#4A091E]/60 to-transparent" />
+              <div className="absolute left-7 top-1/2 -translate-y-1/2 text-white">
+                <span className="text-xs font-black uppercase tracking-widest text-[#FFA41C] block mb-1">
+                  FAST DELIVERY
+                </span>
+                <b className="block text-3xl sm:text-4xl lg:text-5xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs">
+                  Ships in 48 hrs
+                </b>
+                <p className="text-sm sm:text-base text-white/95 mt-2 max-w-[280px] leading-relaxed font-medium">
+                  Ready in shop right now. Packed and dispatched quickly to your door.
+                </p>
+                <span className="inline-block mt-4 text-sm font-extrabold text-[#FFA41C] border-b-2 border-[#FFA41C] pb-0.5">
+                  See ready-to-ship pieces →
                 </span>
               </div>
             </Link>
@@ -244,118 +365,214 @@ export default function Index() {
         </section>
 
         {/* ============================================================ */}
-        {/* 3. SHOP BY CATEGORY (.cblocks)                              */}
+        {/* SECTION 3: SHOP BY CATEGORY                                  */}
         {/* ============================================================ */}
-        <section className="max-w-[1320px] mx-auto px-4 sm:px-8 pt-12 sm:pt-16">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-ink font-sans">
-              Shop by category
-            </h2>
+        <section className="max-w-[1360px] mx-auto px-4 sm:px-8">
+          <div className="flex items-end justify-between mb-6 border-b border-[#fcb8fd] pb-3">
+            <div>
+              <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#B38F24]">
+                POPULAR CATEGORIES
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#5A0A26] tracking-tight mt-1">
+                Shop By Category
+              </h2>
+              <p className="text-sm sm:text-base text-[#5A0A26]/80 mt-1">
+                Explore handloom lehengas, silk sarees, designer dresses, bags, and shoes.
+              </p>
+            </div>
             <Link
               to="/collections"
-              className="text-xs font-semibold text-grey-soft hover:text-rose transition border-b border-line pb-0.5"
+              className="text-sm font-extrabold text-[#5A0A26] hover:text-[#B38F24] transition border-b-2 border-[#B38F24] pb-0.5 shrink-0"
             >
-              View all
+              Browse All 311 Pieces →
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
             {CATEGORY_BLOCKS.map((c, i) => (
               <Link
                 key={i}
                 to={c.path}
-                className="group relative aspect-[4/5] overflow-hidden bg-stone rounded-sm"
+                className="group relative aspect-[4/3] min-h-[210px] overflow-hidden bg-white rounded-sm border border-[#fcb8fd] shadow-[0_0_12px_rgba(252,184,253,0.25)] hover:shadow-[0_0_20px_rgba(252,184,253,0.45)] transition-all hover:border-[#fe84ff]"
               >
                 <img
                   src={c.image}
                   alt={c.title}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-106"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-3.5 text-white">
-                  <b className="block text-sm sm:text-base font-medium leading-tight">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#4A091E]/95 via-[#4A091E]/30 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+                  <span className="text-xs font-mono text-gold block uppercase tracking-widest mb-0.5 font-extrabold">
+                    0{i + 1}
+                  </span>
+                  <b className="block text-lg sm:text-2xl font-serif italic font-normal leading-tight text-white drop-shadow-xs">
                     {c.title}
                   </b>
-                  <span className="text-[11px] opacity-85">{c.count} pieces</span>
+                  <span className="text-xs sm:text-sm opacity-95 mt-1 block font-sans">{c.count} verified pieces</span>
                 </div>
               </Link>
             ))}
           </div>
+
+          {/* Quick Taxonomy Links Bar */}
+          <div className="mt-4 pt-3 border-t border-[#fcb8fd] flex flex-wrap items-center justify-between gap-3 text-sm text-[#5A0A26]">
+            <span className="font-extrabold text-xs sm:text-sm uppercase tracking-wider text-[#5A0A26]/80">
+              More Styles:
+            </span>
+            <div className="flex flex-wrap items-center gap-4 font-bold">
+              <Link to="/collections?category=Jumpsuits" className="hover:text-[#B38F24] transition">Jumpsuits (4)</Link>
+              <span>|</span>
+              <Link to="/collections?category=Bottoms" className="hover:text-[#B38F24] transition">Bottoms (6)</Link>
+              <span>|</span>
+              <Link to="/collections?category=Western%20Co-ords" className="hover:text-[#B38F24] transition">Western Co-ords (7)</Link>
+            </div>
+            <Link to="/collections" className="font-extrabold text-[#B38F24] hover:underline ml-auto">
+              View All 11 Categories →
+            </Link>
+          </div>
         </section>
 
         {/* ============================================================ */}
-        {/* 4. THE STUDIOS BEHIND THEM (.arail)                         */}
+        {/* SECTION 4: ARCHIVE SALE SPOTLIGHT (% DEALS WITH GLOW BORDER) */}
         {/* ============================================================ */}
-        <section className="max-w-[1320px] mx-auto px-4 sm:px-8 pt-14 sm:pt-18">
-          <div className="flex items-center justify-between mb-5">
+        {salePieces.length > 0 && (
+          <section className="max-w-[1360px] mx-auto px-4 sm:px-8">
+            <div className="bg-white/95 border border-[#fcb8fd] shadow-[0_0_20px_rgba(252,184,253,0.3)] rounded-sm p-6 sm:p-10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-[#fcb8fd] pb-4">
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs bg-[#FFA41C] text-[#0F1111] font-black text-xs sm:text-sm uppercase tracking-wider mb-2 shadow-2xs">
+                    <span className="text-sm font-black">%</span> Special Sale Deals
+                  </div>
+                  <h2 className="text-3xl sm:text-4xl font-serif text-[#5A0A26] tracking-tight">
+                    Limited-Stock Pieces On Sale
+                  </h2>
+                  <p className="text-sm sm:text-base text-[#5A0A26]/80 mt-1">
+                    Up to 35% off on genuine boutique samples and ready-to-ship outfits.
+                  </p>
+                </div>
+
+                <Link
+                  to="/collections?price=under12"
+                  className="rounded-sm bg-[#0F1111] hover:bg-[#232F3E] text-white px-7 py-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition shrink-0 self-start sm:self-auto border border-gold shadow-xs"
+                >
+                  View All Sale Items →
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+                {salePieces.map((d) => (
+                  <DesignCard key={d.slug} design={d} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ============================================================ */}
+        {/* SECTION 5: MEET OUR SHOPS & DESIGNERS                        */}
+        {/* ============================================================ */}
+        <section className="max-w-[1360px] mx-auto px-4 sm:px-8">
+          <div className="flex items-end justify-between mb-6 border-b border-[#fcb8fd] pb-3">
             <div>
-              <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-ink font-sans">
-                The studios behind them
+              <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#B38F24]">
+                GENUINE SHOPS & CREATORS
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#5A0A26] tracking-tight mt-1">
+                Meet Our Boutiques & Designers
               </h2>
-              <p className="text-xs text-grey-soft mt-0.5">
-                Verified independent creators across India
+              <p className="text-sm sm:text-base text-[#5A0A26]/80 mt-1">
+                Buy directly from real shops in Jaipur, Chennai, Hyderabad, Goa and more.
               </p>
             </div>
             <Link
               to="/designers"
-              className="text-xs font-semibold text-grey-soft hover:text-rose transition border-b border-line pb-0.5"
+              className="text-sm font-extrabold text-[#B38F24] hover:underline transition border-b-2 border-[#B38F24] pb-0.5 shrink-0"
             >
-              Meet all 40 ateliers
+              Meet all 40 shops →
             </Link>
           </div>
 
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
-            {FEATURED_ATELIERS.map((a, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {FEATURED_ATELIERS.slice(0, 4).map((a, i) => (
               <Link
                 key={i}
                 to={`/collections?atelier=${encodeURIComponent(a.name)}`}
-                className="group shrink-0 w-[190px] sm:w-[210px] block cursor-pointer"
+                className="group block cursor-pointer bg-white/95 p-4 rounded-sm border border-[#fcb8fd] shadow-[0_0_15px_rgba(252,184,253,0.25)] hover:shadow-[0_0_22px_rgba(252,184,253,0.45)] transition-all hover:border-[#fe84ff]"
               >
-                <div className="aspect-[5/4] overflow-hidden rounded-sm bg-stone">
+                <div className="aspect-[4/3] overflow-hidden rounded-sm bg-stone border border-[#fcb8fd]/70">
                   <img
                     src={a.image}
                     alt={a.name}
                     className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-105"
                   />
                 </div>
-                <p className="text-sm font-semibold text-ink mt-2.5 group-hover:text-rose transition leading-snug">
-                  {a.name}
-                </p>
-                <p className="text-xs text-grey-soft mt-0.5">
-                  {a.city} · {a.pieces} pieces
-                </p>
-                <p className="text-[11px] text-grey-soft mt-1 flex items-center gap-1">
-                  <span className="text-rose font-bold">★</span>
-                  <span className="font-semibold text-ink">{a.rating}</span>
-                  <span className="text-grey-muted">({a.reviews})</span>
-                </p>
+                <div className="mt-3.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xl font-serif italic text-[#5A0A26] group-hover:text-gold transition leading-snug font-normal">
+                      {a.name}
+                    </p>
+                    <span className="text-xs font-mono font-extrabold text-gold uppercase px-1.5 py-0.5 rounded-xs bg-[#5A0A26] text-white">
+                      VERIFIED
+                    </span>
+                  </div>
+                  <p className="text-sm text-[#5A0A26]/85 mt-1 font-semibold">
+                    {a.city} | {a.pieces} pieces
+                  </p>
+                  <p className="text-xs sm:text-sm text-[#5A0A26]/75 mt-0.5 font-mono truncate">
+                    Specialty: {a.craft}
+                  </p>
+                </div>
               </Link>
             ))}
+          </div>
+
+          {/* Regional Hubs Row */}
+          <div className="mt-4 pt-3 border-t border-[#fcb8fd] flex items-center justify-between text-sm text-[#5A0A26]">
+            <span className="font-extrabold text-xs sm:text-sm uppercase tracking-wider text-[#5A0A26]/80">
+              Shop by City:
+            </span>
+            <div className="flex flex-wrap items-center gap-4 font-bold">
+              <Link to="/collections?atelier=Thaila%20Co." className="hover:text-[#B38F24] transition">Jaipur</Link>
+              <span>|</span>
+              <Link to="/collections?atelier=Atelier%20Vindhya" className="hover:text-[#B38F24] transition">Hyderabad</Link>
+              <span>|</span>
+              <Link to="/collections?atelier=Kamala%20House" className="hover:text-[#B38F24] transition">Chennai</Link>
+              <span>|</span>
+              <Link to="/collections?atelier=Noor%20Bagh" className="hover:text-[#B38F24] transition">Lucknow</Link>
+              <span>|</span>
+              <Link to="/collections?atelier=Ruh%20Studio" className="hover:text-[#B38F24] transition">Goa</Link>
+            </div>
+            <Link to="/designers" className="font-extrabold text-[#B38F24] hover:underline">
+              View All 40 Shops →
+            </Link>
           </div>
         </section>
 
         {/* ============================================================ */}
-        {/* 5. NEW IN THIS WEEK (Product Grid)                          */}
+        {/* SECTION 6: FRESH STUDIO RELEASES (NEW IN THIS WEEK)          */}
         {/* ============================================================ */}
-        <section className="max-w-[1320px] mx-auto px-4 sm:px-8 pt-14 sm:pt-18">
-          <div className="flex items-center justify-between mb-5">
+        <section className="max-w-[1360px] mx-auto px-4 sm:px-8">
+          <div className="flex items-end justify-between mb-6 border-b border-[#fcb8fd] pb-3">
             <div>
-              <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-ink font-sans">
-                New in this week
+              <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#B38F24]">
+                JUST ARRIVED
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#5A0A26] tracking-tight mt-1">
+                New In This Week
               </h2>
-              <p className="text-xs text-grey-soft mt-0.5">
-                Fresh drops directly from atelier workrooms
+              <p className="text-sm sm:text-base text-[#5A0A26]/80 mt-1">
+                Freshly listed clothes and accessories directly from boutique workshops.
               </p>
             </div>
             <Link
               to="/collections?sort=new"
-              className="text-xs font-semibold text-grey-soft hover:text-rose transition border-b border-line pb-0.5"
+              className="text-sm font-extrabold text-[#B38F24] hover:underline transition border-b-2 border-[#B38F24] pb-0.5 shrink-0"
             >
-              Shop all new in
+              Shop All New In →
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
             {newInPieces.map((d) => (
               <DesignCard key={d.slug} design={d} />
             ))}
@@ -363,118 +580,90 @@ export default function Index() {
         </section>
 
         {/* ============================================================ */}
-        {/* 6. CURATED EDITS / UNDER ₹12,000                            */}
+        {/* SECTION 7: WHY CHOOSE OGURA & SELLER ONBOARDING              */}
         {/* ============================================================ */}
-        {under12kPieces.length > 0 && (
-          <section className="max-w-[1320px] mx-auto px-4 sm:px-8 pt-14 sm:pt-18">
-            <div className="flex items-center justify-between mb-5">
+        <section className="max-w-[1360px] mx-auto px-4 sm:px-8 space-y-6 sm:space-y-8">
+          {/* Why Ogura Box */}
+          <div className="bg-white/95 border border-[#fcb8fd] shadow-[0_0_20px_rgba(252,184,253,0.3)] rounded-sm p-6 sm:p-10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#fcb8fd] pb-3 gap-2">
               <div>
-                <h2 className="text-xl sm:text-2xl font-medium tracking-tight text-ink font-sans">
-                  Under ₹12,000
+                <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#B38F24]">
+                  SAFE & RELIABLE SHOPPING
+                </span>
+                <h2 className="font-serif text-3xl sm:text-4xl text-[#5A0A26] mt-1 tracking-tight">
+                  Why Shop With Ogura
                 </h2>
-                <p className="text-xs text-grey-soft mt-0.5">
-                  Artisanal luxury within accessible reach
-                </p>
               </div>
-              <Link
-                to="/collections?price=under12"
-                className="text-xs font-semibold text-grey-soft hover:text-rose transition border-b border-line pb-0.5"
-              >
-                Shop all {under12kPieces.length}+ pieces
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
-              {under12kPieces.map((d) => (
-                <DesignCard key={d.slug} design={d} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ============================================================ */}
-        {/* 7. THE TRUST LAYER (.trust)                                 */}
-        {/* ============================================================ */}
-        <section className="max-w-[1320px] mx-auto px-4 sm:px-8 pt-16 sm:pt-20">
-          <div className="bg-wash border border-line rounded-sm p-6 sm:p-10">
-            <div className="max-w-xl">
-              <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-rose">
-                The Trust Layer
-              </span>
-              <h2 className="font-sans text-2xl sm:text-3xl font-medium text-ink mt-1.5 tracking-tight">
-                WHY OGURA
-              </h2>
-              <p className="text-xs sm:text-sm text-grey-soft mt-1 leading-relaxed">
-                Independent creator brands. One trusted, escrow-protected marketplace.
+              <p className="text-sm font-semibold text-[#5A0A26]/80 text-left sm:text-right">
+                Real boutiques across India | 100% money-back buyer protection
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 mt-8 pt-6 border-t border-line">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 mt-6 pt-2">
               <div>
-                <span className="font-serif italic text-2xl text-rose block">01</span>
-                <h3 className="text-sm font-semibold text-ink mt-1.5">Original creator studios</h3>
-                <p className="text-xs text-grey-soft mt-1 leading-relaxed">
-                  Every piece is sourced directly from verified ateliers. Zero unauthorized resellers or mass copies.
+                <span className="font-serif italic text-3xl sm:text-4xl text-gold block leading-none">I.</span>
+                <h3 className="text-base font-bold text-[#5A0A26] mt-2">Real Independent Shops</h3>
+                <p className="text-xs sm:text-sm text-[#5A0A26]/80 mt-1 leading-relaxed">
+                  Every product comes directly from genuine boutique shops. No middle warehouses or fake copies.
                 </p>
               </div>
               <div>
-                <span className="font-serif italic text-2xl text-rose block">02</span>
-                <h3 className="text-sm font-semibold text-ink mt-1.5">Curated by OGURA</h3>
-                <p className="text-xs text-grey-soft mt-1 leading-relaxed">
-                  Selected for exceptional textile heritage, artisanal distinction, and rigorous finishing.
+                <span className="font-serif italic text-3xl sm:text-4xl text-gold block leading-none">II.</span>
+                <h3 className="text-base font-bold text-[#5A0A26] mt-2">Checked for Quality</h3>
+                <p className="text-xs sm:text-sm text-[#5A0A26]/80 mt-1 leading-relaxed">
+                  Every garment is made with high quality fabrics, neat stitching, and beautiful original detailing.
                 </p>
               </div>
               <div>
-                <span className="font-serif italic text-2xl text-rose block">03</span>
-                <h3 className="text-sm font-semibold text-ink mt-1.5">Secure payment</h3>
-                <p className="text-xs text-grey-soft mt-1 leading-relaxed">
-                  Bank-grade encrypted Razorpay transactions with server-authoritative settlement.
+                <span className="font-serif italic text-3xl sm:text-4xl text-gold block leading-none">III.</span>
+                <h3 className="text-base font-bold text-[#5A0A26] mt-2">100% Safe Payments</h3>
+                <p className="text-xs sm:text-sm text-[#5A0A26]/80 mt-1 leading-relaxed">
+                  Your money is 100% safe. The seller only receives payment after your package arrives safely.
                 </p>
               </div>
               <div>
-                <span className="font-serif italic text-2xl text-rose block">04</span>
-                <h3 className="text-sm font-semibold text-ink mt-1.5">Direct studio delivery</h3>
-                <p className="text-xs text-grey-soft mt-1 leading-relaxed">
-                  Dispatched directly from the maker&apos;s workshop with tracked express courier to your doorstep.
+                <span className="font-serif italic text-3xl sm:text-4xl text-gold block leading-none">IV.</span>
+                <h3 className="text-base font-bold text-[#5A0A26] mt-2">Direct Fast Delivery</h3>
+                <p className="text-xs sm:text-sm text-[#5A0A26]/80 mt-1 leading-relaxed">
+                  Packed and shipped straight from the maker to your house with live courier tracking.
                 </p>
               </div>
               <div>
-                <span className="font-serif italic text-2xl text-rose block">05</span>
-                <h3 className="text-sm font-semibold text-ink mt-1.5">Fit & alteration assist</h3>
-                <p className="text-xs text-grey-soft mt-1 leading-relaxed">
-                  Direct concierge consult with maker before cutting, plus 7-day alteration assistance.
+                <span className="font-serif italic text-3xl sm:text-4xl text-gold block leading-none">V.</span>
+                <h3 className="text-base font-bold text-[#5A0A26] mt-2">Free Size Help & Fixes</h3>
+                <p className="text-xs sm:text-sm text-[#5A0A26]/80 mt-1 leading-relaxed">
+                  Chat with the designer to customize your measurements, plus 7-day free size adjustments if needed.
                 </p>
               </div>
             </div>
           </div>
-        </section>
 
-        {/* ============================================================ */}
-        {/* 8. SELLER ONBOARDING CTA                                    */}
-        {/* ============================================================ */}
-        <section className="max-w-[1320px] mx-auto px-4 sm:px-8 py-16 sm:py-20 text-center">
-          <div className="max-w-2xl mx-auto space-y-4">
-            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-rose">
-              For Independent Boutiques & Ateliers
-            </span>
-            <h2 className="font-sans text-2xl sm:text-4xl font-medium tracking-tight text-ink">
-              Reach customers nationwide without sending inventory to a warehouse.
-            </h2>
-            <p className="text-xs sm:text-sm text-grey-soft max-w-lg mx-auto leading-relaxed">
-              No SKU minimum. No stock consignment. Photograph your creations, set lead times, and retain direct courier dispatch. OGURA handles discovery, escrow payment, and concierge support.
-            </p>
-            <div className="pt-2 flex flex-wrap justify-center gap-3">
+          {/* Seller Onboarding Banner */}
+          <div className="bg-white/95 border border-[#fcb8fd] shadow-[0_0_18px_rgba(252,184,253,0.25)] rounded-sm p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-5">
+            <div>
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-[#B38F24] block">
+                DO YOU OWN A BOUTIQUE OR CLOTHING BRAND?
+              </span>
+              <h3 className="font-serif text-2xl sm:text-3xl text-[#5A0A26] leading-snug mt-1">
+                Sell to shoppers all across India directly from your shop.
+              </h3>
+              <p className="text-sm sm:text-base text-[#5A0A26]/80 mt-1.5 max-w-xl">
+                No listing charges. Keep your clothes in your own store. Fast and reliable payouts directly to your bank account.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4 shrink-0">
               <a
                 href="/seller-login"
-                className="rounded-sm bg-ink px-7 py-3 text-xs font-semibold text-white hover:bg-rose transition shadow-sm"
+                className="rounded-sm bg-[#0F1111] hover:bg-[#232F3E] px-8 py-3.5 text-sm font-extrabold text-white tracking-wider uppercase transition shadow-sm border border-gold"
               >
-                List your atelier on OGURA
+                Start Selling
               </a>
               <Link
                 to="/how-it-works"
-                className="rounded-sm border border-line px-7 py-3 text-xs font-medium text-ink hover:bg-wash transition"
+                className="rounded-sm bg-white border border-[#fcb8fd] px-6 py-3.5 text-sm font-extrabold text-[#5A0A26] hover:border-[#fe84ff] transition"
               >
-                Learn how it works
+                Learn more
               </Link>
             </div>
           </div>

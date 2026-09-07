@@ -141,7 +141,7 @@ export default function OrderConfirmation() {
                     <h3 className="font-serif font-bold text-base text-ink">{atelierName}</h3>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    <span className="inline-block w-2 h-2 rounded-full bg-amber-500" />
                     <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded border border-amber-200/50">
                       Confirmed · Preparing at Studio
                     </span>

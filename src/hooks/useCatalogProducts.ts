@@ -58,6 +58,42 @@ export function useCatalogProducts() {
           }
         }
 
+        // Merge any real-time locally added seller products
+        if (typeof window !== "undefined") {
+          try {
+            const localCustom = localStorage.getItem("ogura_custom_catalog_products");
+            if (localCustom) {
+              const customItems = JSON.parse(localCustom);
+              if (Array.isArray(customItems)) {
+                for (const cp of customItems) {
+                  const idStr = String(cp.id);
+                  if (!seen.has(idStr)) {
+                    seen.add(idStr);
+                    deduplicated.push({
+                      id: idStr,
+                      name: cp.title || "Artisanal Creation",
+                      brand: cp.brand || "OGURA Atelier",
+                      price: Number(cp.price) || 0,
+                      originalPrice: cp.original_price ? Number(cp.original_price) : Math.round((Number(cp.price) || 0) * 1.3),
+                      category: (cp.category || "dresses") as Product["category"],
+                      images: Array.isArray(cp.images) && cp.images.length > 0 ? cp.images : ["/placeholder.svg"],
+                      sizes: normalizeProductSizes(cp.sizes),
+                      colors: normalizeProductColors(cp.colors),
+                      description: cp.description || "",
+                      material: cp.material || cp.fabric || "Pure silk / handloom textile",
+                      inStock: true,
+                      tags: Array.isArray(cp.style_tags) ? cp.style_tags : [],
+                      occasions: Array.isArray(cp.occasion_tags) ? cp.occasion_tags : [],
+                      rating: 5.0,
+                      reviews: 1,
+                    });
+                  }
+                }
+              }
+            }
+          } catch {}
+        }
+
         // Default sort: cheapest to expensive (lowest to highest price)
         deduplicated.sort((a, b) => a.price - b.price);
 

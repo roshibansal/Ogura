@@ -53,9 +53,9 @@ export default function OrderConfirmation() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted/30">
+    <div className="min-h-screen flex flex-col bg-ivory text-ink grain selection:bg-clay selection:text-white">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 max-w-4xl mx-auto px-5 py-12 w-full">
         <div className="max-w-2xl mx-auto">
           {/* Success Header */}
           <div className="text-center mb-8">

@@ -1,103 +1,130 @@
+import React, { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { AzaDesignerCard } from "@/components/AzaDesignerCard";
-import { DesignerFilters } from "@/components/DesignerFilters";
+import { BoutiqueCard } from "@/components/Cards";
 import { useDesigners } from "@/hooks/useDesigners";
-import { useState, useEffect } from "react";
+import { transformDesignerToBoutiqueStrict } from "@/lib/adapters/boutiqueAdapter";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
 
-const Designers = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+export default function Designers() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCity = searchParams.get("city") || "";
 
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
+  const { data: designers = [], isLoading } = useDesigners();
 
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  // Extract unique cities from live database
+  const cities = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of designers) {
+      if (d.city && d.city.trim()) {
+        set.add(d.city.trim());
+      }
+    }
+    return Array.from(set);
+  }, [designers]);
 
-  const { data: designers, isLoading, refetch } = useDesigners({
-    search: debouncedSearch,
-    category: selectedCategory,
-  });
+  // Filter boutiques by city
+  const filteredBoutiques = useMemo(() => {
+    return designers
+      .filter((d) => {
+        if (!selectedCity) return true;
+        return (d.city || "").toLowerCase() === selectedCity.toLowerCase();
+      })
+      .map((d) => transformDesignerToBoutiqueStrict(d));
+  }, [designers, selectedCity]);
 
-  // Set up realtime subscription
-  useEffect(() => {
-    const channel = supabase
-      .channel('designers-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'designers'
-        },
-        () => {
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refetch]);
+  const setCity = (c: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (!c) {
+      next.delete("city");
+    } else {
+      next.set("city", c);
+    }
+    setSearchParams(next);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen bg-ivory text-ink grain flex flex-col selection:bg-clay selection:text-white">
       <Header />
-      
-      <main className="flex-1">
-        <div className="container mx-auto px-4 py-12">
-          {/* Header */}
-          <div className="mb-10">
-            <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground mb-2">
-              Curated Selection
-            </p>
-            <h1 className="text-3xl md:text-4xl font-serif font-light tracking-wide">
-              Designer Labels
-            </h1>
-          </div>
 
-          {/* Filters */}
-          <DesignerFilters
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
-
-          {/* Grid */}
-          {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-              {[...Array(10)].map((_, i) => (
-                <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />
-              ))}
-            </div>
-          ) : designers && designers.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-              {designers.map((designer) => (
-                <AzaDesignerCard key={designer.id} designer={designer} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <p className="text-lg text-muted-foreground">
-                No designers found. Try adjusting your filters.
-              </p>
-            </div>
-          )}
+      <main className="flex-1 mx-auto max-w-7xl px-5 py-12 w-full">
+        <div className="max-w-3xl">
+          <span className="text-xs uppercase tracking-[0.2em] font-semibold text-clay">
+            India&apos;s Independent Ateliers
+          </span>
+          <h1 className="mt-2 font-display text-4xl sm:text-5xl font-normal tracking-tight">
+            Boutiques
+          </h1>
+          <p className="mt-3 text-base sm:text-lg text-ink-soft leading-relaxed">
+            Small studios across India. Every one of them will get on a call with you before you order, and every one of them will craft a single custom piece.
+          </p>
         </div>
+
+        {/* City Filter Pills */}
+        <div className="mt-8 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setCity("")}
+            className={`rounded-full px-4 py-1.5 text-xs font-medium transition ${
+              !selectedCity
+                ? "bg-clay text-white"
+                : "border border-ink/15 bg-white/70 text-ink hover:border-ink/40"
+            }`}
+          >
+            All Cities ({designers.length})
+          </button>
+          {cities.map((city) => (
+            <button
+              key={city}
+              type="button"
+              onClick={() => setCity(city)}
+              className={`rounded-full px-4 py-1.5 text-xs font-medium transition ${
+                selectedCity.toLowerCase() === city.toLowerCase()
+                  ? "bg-clay text-white"
+                  : "border border-ink/15 bg-white/70 text-ink hover:border-clay hover:text-clay"
+              }`}
+            >
+              {city}
+            </button>
+          ))}
+        </div>
+
+        {/* Boutiques Grid */}
+        {isLoading ? (
+          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="aspect-[4/3] rounded-lg bg-parchment" />
+                <Skeleton className="h-5 w-1/2 bg-parchment" />
+                <Skeleton className="h-4 w-3/4 bg-parchment" />
+              </div>
+            ))}
+          </div>
+        ) : filteredBoutiques.length > 0 ? (
+          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredBoutiques.map((b) => (
+              <BoutiqueCard key={b.id} b={b} count={b.productCount} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-16 text-center py-12 rounded-xl border border-dashed border-ink/20 max-w-md mx-auto bg-parchment/30">
+            <h3 className="font-display text-2xl font-normal">No boutiques in {selectedCity}</h3>
+            <p className="mt-2 text-xs text-ink-soft">
+              We are constantly onboarding new master couturiers.
+            </p>
+            <button
+              type="button"
+              onClick={() => setCity("")}
+              className="mt-5 rounded-full bg-ink px-6 py-2 text-xs font-medium text-ivory hover:bg-clay transition"
+            >
+              View All Cities
+            </button>
+          </div>
+        )}
       </main>
 
       <Footer />
     </div>
   );
-};
-
-export default Designers;
+}

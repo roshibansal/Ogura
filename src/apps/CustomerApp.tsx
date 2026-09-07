@@ -15,6 +15,7 @@ import BrandStore from "@/pages/BrandStore";
 import Designers from "@/pages/Designers";
 import DesignerDetail from "@/pages/DesignerDetail";
 import DesignerProfilePage from "@/pages/DesignerProfilePage";
+import HowItWorks from "@/pages/HowItWorks";
 import Occasions from "@/pages/Occasions";
 import OccasionDetail from "@/pages/OccasionDetail";
 import Stores from "@/pages/Stores";
@@ -48,6 +49,10 @@ const CustomerApp = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/collections" element={<Collections />} />
         <Route path="/collections/:category" element={<Collections />} />
+        <Route path="/designs" element={<Collections />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/boutiques" element={<Designers />} />
+        <Route path="/boutiques/:designerId" element={<DesignerDetail />} />
         <Route path="/collection/:slug" element={<CollectionDetail />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/brands" element={<Brands />} />
@@ -75,14 +80,16 @@ const CustomerApp = () => {
         <Route path="/auth/pinterest/callback" element={<PinterestCallback />} />
         <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
 
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-        <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         <Route path="/order-confirmation" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
+
 
         <Route path="*" element={<NotFound />} />
       </Routes>

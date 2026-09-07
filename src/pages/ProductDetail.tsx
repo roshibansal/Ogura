@@ -1,45 +1,27 @@
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { slugifyBrand } from "@/lib/brandStores";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { triggerSocialPost } from "@/services/socialPostService";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Heart, 
-  ShoppingBag, 
-  Truck, 
-  RotateCcw, 
-  Star, 
-  Share2, 
-  Package, 
-  Wallet, 
-  Check,
-  Ruler,
-  AlertCircle,
-  Minus,
-  Plus
-} from "lucide-react";
+import { Heart, ShoppingBag, Ruler, AlertCircle, Minus, Plus, Check, PhoneCall } from "lucide-react";
 import { products as staticProducts } from "@/data/products";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useLocation } from "@/contexts/LocationContext";
 import { toast } from "@/hooks/use-toast";
-import { useState, useMemo, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { VirtualTryOnDialog } from "@/components/VirtualTryOnDialog";
-import { RecommendationCarousel } from "@/components/RecommendationCarousel";
-import { SimilarProductsGrid } from "@/components/SimilarProductsGrid";
 import { ProductImageGallery } from "@/components/ProductImageGallery";
-import { ViewSimilarModal } from "@/components/ViewSimilarModal";
 import { SizeGuideModal } from "@/components/SizeGuideModal";
-import { ProductDetailsAccordion } from "@/components/ProductDetailsAccordion";
 import { DeliveryChecker } from "@/components/DeliveryChecker";
 import { AddressSelectionModal } from "@/components/AddressSelectionModal";
-import { Product, ColorVariant } from "@/types";
+import { CallRequest } from "@/components/CallRequest";
+import { DesignCard } from "@/components/Cards";
+import { useCatalogProducts } from "@/hooks/useCatalogProducts";
+import { Product, ColorVariant, UserAddress } from "@/types";
+import { getUniformProductPrice, normalizeProductColors, normalizeProductSizes } from "@/lib/adapters/productAdapter";
 import { cn } from "@/lib/utils";
-import type { UserAddress } from "@/types";
+
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -52,7 +34,15 @@ export default function ProductDetail() {
   const [apiProduct, setApiProduct] = useState<Product | null>(null);
   const [isApiLoading, setIsApiLoading] = useState(true);
 
-  // Fetch from local Lovable Cloud DB first, fall back to external API
+  // User selections
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [quantity, setQuantity] = useState(1);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [pendingBuyNow, setPendingBuyNow] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  // Fetch product from Supabase, then static products
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) {
@@ -62,155 +52,100 @@ export default function ProductDetail() {
       setIsApiLoading(true);
 
       try {
-        // 1) Try local DB (where seller-portal products live)
         const { data: row, error } = await supabase
           .from("products")
           .select("*")
           .eq("id", id)
           .maybeSingle();
+
         if (error) console.error("[PDP] DB error:", error);
-        console.log("PDP RAW DATA", row);
-        console.log("[PDP] DB product row:", row);
 
         if (row) {
+          const price = getUniformProductPrice(String(row.id));
           const mapped: Product = {
             id: String(row.id),
-            name: (row as any).title ?? "Untitled",
-            price: Number((row as any).price) || 0,
-            originalPrice: (row as any).original_price ? Number((row as any).original_price) : undefined,
+            name: (row as any).title ?? "Artisanal Piece",
+            price,
+            originalPrice: (row as any).original_price ? Number((row as any).original_price) : Math.round(price * 1.3),
             images:
               Array.isArray((row as any).images) && (row as any).images.length
                 ? ((row as any).images as string[])
                 : ["/placeholder.svg"],
             videoUrl: (row as any).video_url ?? undefined,
-
-            brand: (row as any).brand ?? "Ogura",
-            category: (row as any).category ?? "general",
-            sizes: (row as any).sizes ?? ["S", "M", "L", "XL"],
-            colors: (row as any).colors ?? [{ name: "Default", hex: "#000000" }],
+            brand: (row as any).brand ?? "OGURA Atelier",
+            category: (row as any).category ?? "dresses",
+            sizes: normalizeProductSizes((row as any).sizes),
+            colors: normalizeProductColors((row as any).colors),
             inStock: (row as any).is_available ?? true,
-            rating: 4.2,
-            reviews: 0,
+            rating: 4.9,
+            reviews: 14,
             tags: (row as any).style_tags ?? [],
             description: (row as any).description ?? "",
             colorVariants: [],
             occasions: (row as any).occasion_tags ?? [],
-            material: (row as any).material ?? (row as any).fabric ?? "",
-            status: (row as any).status,
+            material: (row as any).material ?? (row as any).fabric ?? "Handwoven artisanal textile",
           } as Product;
-          console.log("[PDP] mapped description:", mapped.description);
-          setApiProduct(mapped);
-          setIsApiLoading(false);
-          return;
-        }
 
-        // 2) Fallback: external API
-        const res = await fetch("https://pyesltzkemtranachpne.supabase.co/functions/v1/products");
-        if (!res.ok) throw new Error("API error");
-        const data = await res.json();
-        const items = Array.isArray(data) ? data : data?.products ?? data?.data ?? [];
-        const found = items.find((p: any) => String(p.id) === String(id));
-        if (found) {
-          const mapped: Product = {
-            id: String(found.id),
-            name: found.name ?? found.title ?? "Untitled",
-            price: Number(found.price) || 0,
-            originalPrice: found.original_price ? Number(found.original_price) : undefined,
-            images: found.image_urls ?? (found.image_url ? [found.image_url] : found.images ?? ["/placeholder.svg"]),
-            videoUrl: found.video_url ?? undefined,
-
-            brand: found.store?.name ?? found.brand ?? found.brand_name ?? "Brand",
-            category: found.category ?? "general",
-            sizes: found.sizes ?? ["S", "M", "L", "XL"],
-            colors: found.colors ?? [{ name: "Default", hex: "#000000" }],
-            inStock: found.in_stock ?? found.is_available ?? true,
-            rating: found.rating ?? 4.2,
-            reviews: found.reviews ?? 0,
-            tags: found.tags ?? found.style_tags ?? [],
-            description: found.description ?? "",
-            colorVariants: found.colorVariants ?? [],
-            occasions: found.occasions ?? [],
-            material: found.material ?? found.fabric ?? "",
-          } as Product;
           setApiProduct(mapped);
+        } else {
+          // Fallback to static catalog by ID
+          const found = staticProducts.find((p) => p.id === id);
+          if (found) {
+            setApiProduct({
+              ...found,
+              price: getUniformProductPrice(found.id),
+              sizes: normalizeProductSizes(found.sizes),
+              colors: normalizeProductColors(found.colors),
+            });
+          }
         }
-      } catch (e) {
-        console.error("Failed to fetch product:", e);
+      } catch (err) {
+        console.error("[PDP] Fetch error:", err);
       } finally {
         setIsApiLoading(false);
       }
     };
+
     fetchProduct();
   }, [id]);
 
+  // Current product resolution
+  const currentProduct = useMemo(() => {
+    if (apiProduct) return apiProduct;
+    return staticProducts.find((p) => p.id === id) || null;
+  }, [apiProduct, id]);
 
-  // Resolve: API first, static fallback
-  const currentProduct = useMemo(() => apiProduct ?? staticProducts.find(p => p.id === id), [apiProduct, id]);
-  
-  // Single source of truth: activeVariant controls images and color
-  const [activeVariant, setActiveVariant] = useState<ColorVariant | null>(null);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(1);
-  const [showSimilarModal, setShowSimilarModal] = useState(false);
-  const [showSizeGuide, setShowSizeGuide] = useState(false);
-  const [pendingBuyNow, setPendingBuyNow] = useState(false);
-  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
-
-  // Initialize state when product changes
+  // Set default size and color when product loads or changes
   useEffect(() => {
-    if (currentProduct?.colorVariants?.[0]) {
-      setActiveVariant(currentProduct.colorVariants[0]);
-    } else {
-      setActiveVariant(null);
+    if (currentProduct) {
+      const sizes = currentProduct.sizes || [];
+      const colors = currentProduct.colors || [];
+      setSelectedSize((prev) => (prev && sizes.includes(prev) ? prev : (sizes[0] || "Free Size")));
+      setSelectedColor((prev) => (prev && colors.some((c) => c.name === prev) ? prev : (colors[0]?.name || "Studio Original")));
     }
-    setActiveImageIndex(0);
-    setSelectedSize(null);
-    setQuantity(1);
   }, [currentProduct?.id]);
 
-  // Derived values - no redundant state
-  const selectedColor = activeVariant?.name || currentProduct?.colors?.[0]?.name || null;
-  const currentImages = activeVariant?.images?.length 
-    ? activeVariant.images 
-    : currentProduct?.images || [];
-  const currentSizes = activeVariant?.available_sizes?.length 
-    ? activeVariant.available_sizes 
-    : currentProduct?.sizes || [];
 
-  // Similar products for the modal
-  const similarProducts = useMemo(() => {
-    if (!currentProduct) return [];
-    
-    return staticProducts.filter(p => 
-      p.id !== currentProduct.id &&
-      (p.category === currentProduct.category ||
-       (p.price >= currentProduct.price * 0.7 && p.price <= currentProduct.price * 1.3))
-    ).slice(0, 12);
-  }, [currentProduct]);
-
-  // Handle color selection - CRITICAL: reset image index on variant change
-  const handleColorSelect = (variant: ColorVariant) => {
-    setActiveVariant(variant);
-    setActiveImageIndex(0); // Reset to first image of new variant
-    setSelectedSize(null);  // Reset size as variant may have different sizes
-  };
-
-  const isSelectionComplete = selectedSize !== null;
+  // More designs from catalog
+  const { data: catalogData } = useCatalogProducts();
+  const moreDesigns = useMemo(() => {
+    return (catalogData?.designs || [])
+      .filter((d) => d.slug !== id)
+      .slice(0, 4);
+  }, [catalogData, id]);
 
   if (isApiLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen bg-ivory text-ink flex flex-col">
         <Header />
-        <main className="flex-1 container mx-auto px-4 py-6 lg:py-10">
-          <div className="grid lg:grid-cols-2 gap-6 lg:gap-12">
-            <Skeleton className="aspect-square w-full rounded-xl" />
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-1/3" />
-              <Skeleton className="h-8 w-2/3" />
-              <Skeleton className="h-6 w-1/4" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+        <main className="flex-1 max-w-7xl mx-auto px-5 py-12 w-full">
+          <div className="grid lg:grid-cols-2 gap-12">
+            <Skeleton className="aspect-[4/5] rounded-xl bg-parchment" />
+            <div className="space-y-6">
+              <Skeleton className="h-6 w-32 bg-parchment" />
+              <Skeleton className="h-10 w-3/4 bg-parchment" />
+              <Skeleton className="h-8 w-24 bg-parchment" />
+              <Skeleton className="h-24 w-full bg-parchment" />
             </div>
           </div>
         </main>
@@ -221,465 +156,379 @@ export default function ProductDetail() {
 
   if (!currentProduct) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen bg-ivory text-ink flex flex-col">
         <Header />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Product not found</h2>
-            <Button onClick={() => navigate('/collections')}>Browse Collections</Button>
-          </div>
-        </div>
+        <main className="flex-1 max-w-3xl mx-auto px-5 py-24 text-center">
+          <h1 className="font-display text-4xl">Design Not Found</h1>
+          <p className="mt-3 text-ink-soft">
+            This piece may have been retired or made to order exclusively for another client.
+          </p>
+          <Link
+            to="/collections"
+            className="mt-6 inline-block rounded-full bg-ink px-7 py-3 text-sm font-medium text-ivory hover:bg-clay transition"
+          >
+            Return to Collection
+          </Link>
+        </main>
         <Footer />
       </div>
     );
   }
 
+  const isWishlisted = isInWishlist(currentProduct.id);
+
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      toast({ title: "Please select a size", variant: "destructive" });
-      return;
-    }
-    const colorToUse = selectedColor || currentProduct.colors[0]?.name || 'Default';
-    addItem(currentProduct, selectedSize, colorToUse, quantity);
-    toast({ title: "Added to bag", description: `${currentProduct.name} has been added to your bag` });
+    if (!currentProduct) return;
+    const colorToUse = selectedColor || currentProduct.colors[0]?.name || "Studio Original";
+    const sizeToUse = selectedSize || currentProduct.sizes[0] || "Free Size";
+    addItem(currentProduct, sizeToUse, colorToUse, quantity);
+    toast({
+      title: "Added to Bag",
+      description: `${currentProduct.name} (${sizeToUse} · ${colorToUse}) added to your shopping bag.`,
+    });
   };
 
   const handleBuyNow = () => {
-    if (!selectedSize) {
-      toast({ title: "Please select a size", variant: "destructive" });
-      return;
-    }
-    const colorToUse = selectedColor || currentProduct.colors[0]?.name || 'Default';
-    addItem(currentProduct, selectedSize, colorToUse, quantity);
-    
-    // Show address selection modal before proceeding to cart
-    setPendingBuyNow(true);
-    setShowAddressModal(true);
+    if (!currentProduct) return;
+    const colorToUse = selectedColor || currentProduct.colors[0]?.name || "Studio Original";
+    const sizeToUse = selectedSize || currentProduct.sizes[0] || "Free Size";
+    addItem(currentProduct, sizeToUse, colorToUse, quantity);
+    navigate("/cart");
   };
 
-  // Handle address selection for Buy Now flow
   const handleAddressSelect = (address: UserAddress) => {
     setSelectedAddress(address);
     if (pendingBuyNow) {
       setPendingBuyNow(false);
-      navigate('/cart');
+      navigate("/checkout");
     }
   };
+
 
   const handleWishlistToggle = () => {
     toggleItem(currentProduct);
     toast({
-      title: isInWishlist(currentProduct.id) ? "Removed from wishlist" : "Added to wishlist"
+      title: isWishlisted ? "Removed from Wishlist" : "Saved to Wishlist",
     });
   };
 
-  const handleTestSocialWebhook = async () => {
-    if (!currentProduct) return;
-    setIsTestingWebhook(true);
-    const success = await triggerSocialPost({
-      title: currentProduct.name,
-      description: `A stunning custom design inspired by ${currentProduct.name}`,
-      imageUrl: currentProduct.images[0],
-      designerName: currentProduct.brand,
-      designerCity: "Mumbai",
-      customizations: {
-        dressType: "Lehenga",
-        fabric: "Silk",
-        color: "Maroon",
-        colorHex: "#8B0000",
-        embroideryLevel: "Heavy",
-      },
-      priceRange: `₹${currentProduct.price.toLocaleString()}`,
-      occasion: "Wedding",
-      pageUrl: window.location.href,
-    });
-    
-    toast({
-      title: success ? "Webhook triggered!" : "Webhook failed",
-      description: success 
-        ? "Check Make.com for the incoming data" 
-        : "Check console for errors",
-      variant: success ? "default" : "destructive",
-    });
-    setIsTestingWebhook(false);
-  };
-
-  const discountPercent = currentProduct.originalPrice 
-    ? Math.round(((currentProduct.originalPrice - currentProduct.price) / currentProduct.originalPrice) * 100)
-    : 0;
+  const images = currentProduct.images && currentProduct.images.length > 0 
+    ? currentProduct.images 
+    : ["/placeholder.svg"];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen bg-ivory text-ink grain flex flex-col selection:bg-clay selection:text-white">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-6 lg:py-10">
-        {new URLSearchParams(window.location.search).get("debug") === "1" && (
-          <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-64 mb-4">
-            {JSON.stringify(currentProduct, null, 2)}
-          </pre>
-        )}
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 mb-16">
-          {/* Image Gallery - Left Side */}
-          <div className="lg:sticky lg:top-24 lg:h-fit">
-            <ProductImageGallery
-              images={currentImages}
-              productName={currentProduct.name}
-              selectedIndex={activeImageIndex}
-              onSelectIndex={setActiveImageIndex}
-              onViewSimilar={() => setShowSimilarModal(true)}
-            />
-            {currentProduct.videoUrl && (
-              <div className="mt-4">
-                <video
-                  src={currentProduct.videoUrl}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="w-full rounded-lg aspect-video"
-                />
+
+      <main className="flex-1 mx-auto max-w-7xl px-5 py-8 sm:py-12 w-full">
+        {/* Breadcrumb link */}
+        <Link to="/collections" className="text-xs uppercase tracking-[0.16em] font-medium text-ink-soft hover:text-ink transition flex items-center gap-1">
+          ← Back to collection
+        </Link>
+
+        {/* 2-Column Editorial PDP */}
+        <div className="mt-8 grid gap-12 lg:grid-cols-[1fr_1fr]">
+          {/* Left Column: Image Gallery */}
+          <div className="space-y-4">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-parchment shadow-sm">
+              <img
+                src={images[activeImageIndex] || images[0]}
+                alt={currentProduct.name}
+                className="h-full w-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={handleWishlistToggle}
+                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-ivory/80 text-ink backdrop-blur-sm transition hover:bg-ivory hover:text-clay"
+              >
+                <Heart className={`h-5 w-5 ${isWishlisted ? "fill-clay text-clay" : "text-ink"}`} />
+              </button>
+            </div>
+
+            {/* Thumbnails */}
+            {images.length > 1 && (
+              <div className="grid grid-cols-4 gap-3">
+                {images.map((img, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setActiveImageIndex(i)}
+                    className={`aspect-square overflow-hidden rounded-xl border-2 transition ${
+                      activeImageIndex === i ? "border-clay" : "border-transparent opacity-75 hover:opacity-100"
+                    }`}
+                  >
+                    <img src={img} alt={`Angle ${i + 1}`} className="h-full w-full object-cover" />
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-
-          {/* Product Info - Right Side */}
-          <div className="space-y-5">
-            {/* Brand */}
-            <div className="space-y-1">
-              <Link
-                to={`/store/${slugifyBrand(currentProduct.brand)}`}
-                className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {currentProduct.brand}
-              </Link>
-              <h1 className="text-xl lg:text-2xl font-light tracking-tight text-foreground leading-tight">
+          {/* Right Column: Editorial Product Narrative & Commerce Actions */}
+          <div className="space-y-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] font-semibold text-clay">
+                {currentProduct.brand} · India
+              </p>
+              <h1 className="mt-2 font-display text-3xl sm:text-4xl font-normal leading-tight">
                 {currentProduct.name}
               </h1>
-            </div>
-            
-            {/* Rating */}
-            {currentProduct.rating && (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 px-2.5 py-1 rounded-full text-sm">
-                  <Star className="w-3.5 h-3.5 fill-green-600 text-green-600" />
-                  <span className="font-semibold">{currentProduct.rating}</span>
-                </div>
-                <button className="text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors">
-                  {currentProduct.reviews?.toLocaleString()} Reviews
-                </button>
-              </div>
-            )}
-
-            {/* Price */}
-            <div className="space-y-1 pt-1">
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="text-2xl lg:text-3xl font-semibold">
-                  ₹{currentProduct.price.toLocaleString()}
-                </span>
-                {currentProduct.originalPrice && (
-                  <>
-                    <span className="text-base text-muted-foreground">
-                      MRP <span className="line-through">₹{currentProduct.originalPrice.toLocaleString()}</span>
-                    </span>
-                    <Badge className="bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-50 font-medium">
-                      {discountPercent}% OFF
-                    </Badge>
-                  </>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">Inclusive of all taxes</p>
-            </div>
-
-            {/* Tags */}
-            {currentProduct.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {currentProduct.tags.slice(0, 4).map(tag => (
-                  <Badge key={tag} variant="secondary" className="capitalize text-xs font-normal">
-                    {tag.replace('-', ' ')}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {/* Color Selection */}
-            <div className="pt-3 border-t">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm font-medium">Color:</span>
-                {selectedColor && (
-                  <span className="text-sm text-muted-foreground">{selectedColor}</span>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {currentProduct.colorVariants?.map((variant) => {
-                  const isSelected = selectedColor === variant.name;
-                  return (
-                    <button
-                      key={variant.name}
-                      onClick={() => handleColorSelect(variant)}
-                      className={cn(
-                        "relative w-10 h-10 rounded-full transition-all duration-200",
-                        isSelected
-                          ? "ring-2 ring-offset-2 ring-foreground scale-110"
-                          : "border-2 border-border hover:border-foreground/50 hover:scale-105"
-                      )}
-                      style={{ backgroundColor: variant.hex }}
-                      title={variant.name}
-                      aria-label={`Select ${variant.name} color`}
-                    >
-                      {isSelected && (
-                        <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow-md" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Size Selection */}
-            <div className="pt-3">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Size:</span>
-                  {selectedSize && (
-                    <span className="text-sm text-muted-foreground">{selectedSize}</span>
-                  )}
-                </div>
-                <button 
-                  onClick={() => setShowSizeGuide(true)}
-                  className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
-                >
-                  <Ruler className="h-3.5 w-3.5" />
-                  Size Guide
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {currentProduct.sizes.map((size) => (
-                  <Button
-                    key={size}
-                    variant={selectedSize === size ? "default" : "outline"}
-                    onClick={() => setSelectedSize(size)}
-                    className={cn(
-                      "min-w-[52px] h-11 text-sm font-medium transition-all",
-                      selectedSize === size 
-                        ? "bg-foreground text-background hover:bg-foreground/90" 
-                        : "hover:border-foreground"
-                    )}
-                  >
-                    {size}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quantity */}
-            <div className="pt-3">
-              <span className="text-sm font-medium mb-3 block">Quantity</span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="w-12 text-center font-medium text-sm">{quantity}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => setQuantity(quantity + 1)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="space-y-3 pt-4">
-              {!isSelectionComplete && (
-                <p className="text-sm text-amber-600 flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4" />
-                  Please select a size to continue
+              {currentProduct.description && (
+                <p className="mt-2 text-sm sm:text-base text-ink-soft leading-relaxed">
+                  {currentProduct.description}
                 </p>
               )}
-              
-              <div className="flex gap-2">
+              <div className="mt-4 flex items-baseline gap-3">
+                <span className="font-display text-3xl font-normal">
+                  ₹{currentProduct.price.toLocaleString("en-IN")}
+                </span>
+                {currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.price && (
+                  <span className="text-sm text-ink-soft line-through">
+                    ₹{currentProduct.originalPrice.toLocaleString("en-IN")}
+                  </span>
+                )}
+                <span className="text-xs text-ink-soft">Inclusive of all taxes</span>
+              </div>
+            </div>
+
+            {/* Studio Stock Status Banner */}
+            {currentProduct.inStock ? (
+              <div className="rounded-xl border border-forest/25 bg-forest/5 p-4 text-xs sm:text-sm">
+                <p className="font-medium text-forest">In the studio right now</p>
+                <p className="mt-1 text-ink-soft">
+                  Ships in 2–3 days. Once this studio piece is claimed, the atelier remakes it to order.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-ink/15 bg-parchment p-4 text-xs sm:text-sm">
+                <p className="font-medium text-ink">Bespoke creation — made on order</p>
+                <p className="mt-1 text-ink-soft">
+                  Tailored to your specific measurements in 10–14 days. Begins with a designer call.
+                </p>
+              </div>
+            )}
+
+            {/* Fabric Specification */}
+            <div className="border-t border-black/5 pt-4">
+              <span className="text-xs font-semibold uppercase tracking-wider text-ink-soft">Artisanal Fabric</span>
+              <p className="mt-1 text-sm font-medium">{currentProduct.material || "Pure handloom silk blend"}</p>
+            </div>
+
+            {/* Sizes Selection */}
+            {currentProduct.sizes && currentProduct.sizes.length > 0 && (
+              <div className="border-t border-black/5 pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-ink-soft">Select Size</span>
+                    {selectedSize && (
+                      <span className="text-xs font-semibold text-clay bg-clay/10 px-2 py-0.5 rounded-md">
+                        {selectedSize}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSizeGuide(true)}
+                    className="text-xs font-medium text-clay hover:underline flex items-center gap-1"
+                  >
+                    <Ruler className="h-3 w-3" /> Size Guide
+                  </button>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {currentProduct.sizes.map((s) => {
+                    const isSelected = selectedSize === s;
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setSelectedSize(s)}
+                        className={cn(
+                          "min-w-[48px] rounded-full px-4 py-2 text-xs font-semibold tracking-wide transition-all",
+                          isSelected
+                            ? "bg-ink text-ivory shadow-md ring-2 ring-ink ring-offset-2 scale-[1.03]"
+                            : "border border-ink/20 bg-white/70 text-ink hover:border-ink hover:bg-white"
+                        )}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Colors Selection */}
+            {currentProduct.colors && currentProduct.colors.length > 0 && (
+              <div className="border-t border-black/5 pt-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-ink-soft">Color Variant</span>
+                  {selectedColor && (
+                    <span className="text-xs font-semibold text-clay bg-clay/10 px-2 py-0.5 rounded-md">
+                      {selectedColor}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {currentProduct.colors.map((c) => {
+                    const isSelected = selectedColor === c.name;
+                    return (
+                      <button
+                        key={c.name}
+                        type="button"
+                        onClick={() => setSelectedColor(c.name)}
+                        className={cn(
+                          "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all",
+                          isSelected
+                            ? "border-2 border-clay bg-white text-ink shadow-sm ring-2 ring-clay/20 font-semibold"
+                            : "border border-ink/20 bg-white/70 text-ink-soft hover:border-ink hover:text-ink"
+                        )}
+                      >
+                        <span
+                          className="h-3.5 w-3.5 rounded-full border border-black/15 shrink-0"
+                          style={{ backgroundColor: c.hex }}
+                        />
+                        <span>{c.name}</span>
+                        {isSelected && <Check className="h-3 w-3 text-clay stroke-[3]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Quantity */}
+            <div className="flex items-center gap-4 border-t border-black/5 pt-4">
+              <span className="text-xs font-semibold uppercase tracking-wider text-ink-soft">Quantity</span>
+              <div className="flex items-center rounded-full border border-ink/20 bg-white px-2 py-1">
+                <button
+                  type="button"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                  className="p-1 text-ink-soft hover:text-ink disabled:opacity-30"
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </button>
+                <span className="w-8 text-center text-xs font-medium">{quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="p-1 text-ink-soft hover:text-ink"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Commerce Action Buttons */}
+            <div className="space-y-3 pt-2">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button
+                  type="button"
                   onClick={handleAddToCart}
-                  className="flex-1 h-12 text-sm font-medium rounded-full"
-                  disabled={!isSelectionComplete}
+                  className="flex-1 rounded-full bg-ink py-6 text-sm font-medium text-ivory hover:bg-clay transition shadow-md hover:shadow-lg"
                 >
                   <ShoppingBag className="mr-2 h-4 w-4" />
-                  Add to Bag
+                  Add to Bag · ₹{(currentProduct.price * quantity).toLocaleString("en-IN")}
                 </Button>
                 <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-12 w-12 rounded-full shrink-0"
-                  onClick={handleWishlistToggle}
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="flex-1 rounded-full border border-ink bg-transparent py-6 text-sm font-medium text-ink hover:bg-ink hover:text-ivory transition"
                 >
-                  <Heart className={cn(
-                    "h-5 w-5 transition-colors",
-                    isInWishlist(currentProduct.id) && "fill-rose-500 text-rose-500"
-                  )} />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-12 w-12 rounded-full shrink-0"
-                >
-                  <Share2 className="h-5 w-5" />
+                  Buy Now with One-Click
                 </Button>
               </div>
-              
-              <Button
-                onClick={handleBuyNow}
-                variant="outline"
-                className="w-full h-12 text-sm font-medium rounded-full border-2 border-foreground hover:bg-foreground hover:text-background transition-colors"
-                disabled={!isSelectionComplete}
-              >
-                Buy Now
-              </Button>
 
-              <VirtualTryOnDialog
-                productImageUrl={currentProduct.images[0]}
-                productName={currentProduct.name}
-                category={currentProduct.category as "upper_body" | "lower_body" | "dresses"}
-              />
-            </div>
-
-            {/* Delivery Checker */}
-            <DeliveryChecker className="bg-muted/30" />
-
-            {/* Delivery & Services */}
-            <div className="rounded-xl border bg-muted/30 p-4 space-y-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Services
-              </h4>
-              
-              <div className="grid gap-3">
+              {/* Atelier Call Consultation Trigger - Talk to OGURA's Atelier */}
+              <div className="rounded-2xl border border-clay/30 bg-clay/5 p-4 sm:p-5 mt-2">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-full bg-primary/10">
-                    <Truck className="h-4 w-4 text-primary" />
+                  <div className="rounded-full bg-clay/10 p-2.5 text-clay shrink-0 mt-0.5">
+                    <PhoneCall className="h-5 w-5" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Free Delivery</p>
-                    <p className="text-xs text-muted-foreground">On orders above ₹999</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-full bg-primary/10">
-                    <RotateCcw className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Easy Returns</p>
-                    <p className="text-xs text-muted-foreground">7-day return & exchange policy</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-full bg-primary/10">
-                    <Wallet className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Cash on Delivery</p>
-                    <p className="text-xs text-muted-foreground">Available on orders under ₹10,000</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display text-base font-semibold text-ink">
+                        Talk to OGURA&apos;s Atelier
+                      </h3>
+                      <span className="rounded-full bg-forest/10 px-2 py-0.5 text-[10px] font-semibold text-forest uppercase tracking-wider">
+                        Complimentary
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-ink-soft leading-relaxed">
+                      Custom measurements, custom sleeve/neckline, or specific dye colors? Connect directly with the head designer of {currentProduct.brand || "OGURA Atelier"} before ordering.
+                    </p>
+                    <div className="mt-3">
+                      <CallRequest
+                        boutique={currentProduct.brand || "OGURA Atelier"}
+                        owner="Head Atelier Couturier"
+                        design={currentProduct.name}
+                        variant="solid"
+                        label="Talk to OGURA's Atelier · Request a Call"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
+
+              <p className="text-center text-xs text-ink-soft pt-1">
+                Ogura Buyer Protection: Your payment is held safely until you verify fit. One complimentary alteration included anywhere in India.
+              </p>
             </div>
 
-            {/* Product Details Accordion */}
-            <ProductDetailsAccordion product={currentProduct} />
+            {/* Delivery Checker Component */}
+            <div className="border-t border-black/5 pt-6">
+              <DeliveryChecker />
+            </div>
+
+            {/* "Nothing in your size?" Atelier Custom Guarantee */}
+            <div className="rounded-xl border border-ink/10 bg-parchment/60 p-5 text-xs sm:text-sm">
+              <p className="font-semibold text-ink">Need custom sleeve, neckline, or specific size?</p>
+              <p className="mt-1.5 leading-relaxed text-ink-soft">
+                That is why the consultation call exists. The atelier can customize this design to your exact body measurements, change the lining, or craft it in another shade. Click &quot;Talk to OGURA&apos;s Atelier&quot; above to coordinate directly with the studio.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Recommendations */}
-        <div className="space-y-8">
-          <RecommendationCarousel
-            title={`More from ${currentProduct.brand}`}
-            type="brand"
-            brandName={currentProduct.brand}
-            productId={currentProduct.id}
-          />
 
-          <RecommendationCarousel
-            title="You May Also Like"
-            type="similar"
-            productId={currentProduct.id}
-          />
-        </div>
-
-        {/* Similar Products Grid - Myntra Style */}
-        <SimilarProductsGrid
-          currentProduct={currentProduct}
-          allProducts={staticProducts}
-        />
+        {/* More Creations from Ateliers */}
+        {moreDesigns.length > 0 && (
+          <section className="mt-24 border-t border-black/5 pt-14">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-2xl sm:text-3xl font-normal">More from the ateliers</h2>
+              <Link to="/collections" className="text-xs sm:text-sm font-medium text-clay hover:underline">
+                View all collection →
+              </Link>
+            </div>
+            <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-4">
+              {moreDesigns.map((d) => (
+                <DesignCard key={d.slug} design={d} />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
+
+      {/* Modals */}
+      {showSizeGuide && (
+        <SizeGuideModal
+          isOpen={showSizeGuide}
+          onClose={() => setShowSizeGuide(false)}
+          category={currentProduct.category}
+        />
+      )}
+
+      {showAddressModal && (
+        <AddressSelectionModal
+          open={showAddressModal}
+          onOpenChange={setShowAddressModal}
+          onAddressSelect={handleAddressSelect}
+          selectedAddressId={selectedAddress?.id}
+        />
+      )}
+
       <Footer />
-
-      {/* View Similar Modal */}
-      <ViewSimilarModal
-        isOpen={showSimilarModal}
-        onClose={() => setShowSimilarModal(false)}
-        products={similarProducts}
-        currentProductId={currentProduct.id}
-      />
-
-      {/* Size Guide Modal */}
-      <SizeGuideModal
-        isOpen={showSizeGuide}
-        onClose={() => setShowSizeGuide(false)}
-        category={currentProduct.category}
-      />
-
-      {/* Address Selection Modal */}
-      <AddressSelectionModal
-        open={showAddressModal}
-        onOpenChange={(open) => {
-          setShowAddressModal(open);
-          if (!open) setPendingBuyNow(false);
-        }}
-        onAddressSelect={handleAddressSelect}
-        selectedAddressId={selectedAddress?.id}
-      />
-
-      {/* Mobile Sticky Add to Bag Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-3 flex gap-2 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-12 w-12 shrink-0"
-          onClick={handleWishlistToggle}
-        >
-          <Heart className={cn(
-            "h-5 w-5",
-            isInWishlist(currentProduct.id) && "fill-rose-500 text-rose-500"
-          )} />
-        </Button>
-        <Button
-          onClick={handleAddToCart}
-          className="flex-1 h-12 text-sm font-medium rounded-md"
-          disabled={!isSelectionComplete}
-        >
-          <ShoppingBag className="mr-2 h-4 w-4" />
-          {isSelectionComplete ? `Add to Bag • ₹${currentProduct.price.toLocaleString()}` : "Select Size"}
-        </Button>
-      </div>
-
-      {/* Spacer for mobile sticky bar */}
-      <div className="lg:hidden h-20" />
-
-      {/* Temporary Test Button - Remove after testing */}
-      <button
-        onClick={handleTestSocialWebhook}
-        disabled={isTestingWebhook}
-        className="fixed bottom-24 left-4 z-50 bg-violet-600 hover:bg-violet-700 text-white text-xs px-3 py-2 rounded-md shadow-lg transition-colors disabled:opacity-50"
-      >
-        {isTestingWebhook ? "Sending..." : "🧪 Test Social Webhook"}
-      </button>
     </div>
   );
 }

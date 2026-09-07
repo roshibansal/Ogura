@@ -281,18 +281,19 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted/30">
+    <div className="min-h-screen flex flex-col bg-ivory text-ink grain selection:bg-clay selection:text-white">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <span>Cart</span>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground font-medium">Checkout</span>
-          <ChevronRight className="h-4 w-4" />
+      <main className="flex-1 max-w-7xl mx-auto px-5 py-8 w-full">
+        {/* Checkout Steps */}
+        <div className="flex items-center gap-2 text-xs text-ink-soft mb-6">
+          <span>Shopping Bag</span>
+          <ChevronRight className="h-3 w-3" />
+          <span className="text-ink font-semibold">Checkout</span>
+          <ChevronRight className="h-3 w-3" />
           <span>Confirmation</span>
         </div>
 
-        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+        <h1 className="font-display text-3xl sm:text-4xl font-normal mb-6">Checkout</h1>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Address & Items */}

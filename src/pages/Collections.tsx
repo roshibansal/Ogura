@@ -1,278 +1,263 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
+import { useSearchParams, Link, useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { products as staticProducts } from "@/data/products";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Heart, X, ShoppingBag, PackageOpen } from "lucide-react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { useWishlist } from "@/contexts/WishlistContext";
-import { OptimizedImage } from "@/components/OptimizedImage";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
-import type { Product } from "@/types";
-
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-
-const EXTERNAL_API_URL = "https://pyesltzkemtranachpne.supabase.co/functions/v1/products";
-
-// TEST FREEZE: set to false to bring back external Seller Center products (fully reversible)
-const FREEZE_EXTERNAL_API = true;
-
-const categoryMapping: Record<string, string[]> = {
-  accessories: ["accessories", "bags"],
-  dresses: ["dresses"],
-  tops: ["tops"],
-  bottoms: ["bottoms"],
-  outerwear: ["outerwear"],
-  footwear: ["footwear"],
-  bags: ["bags"],
-};
-
-const subcategoryMapping: Record<string, string[]> = {
-  "bags-backpacks": ["bags"],
-  "jewelry": ["accessories"],
-};
-
-const categoryDisplayNames: Record<string, string> = {
-  accessories: "Accessories",
-  "bags-backpacks": "Bags & Backpacks",
-  dresses: "Dresses",
-  tops: "Tops",
-  bottoms: "Bottoms",
-  outerwear: "Outerwear",
-  footwear: "Footwear",
-  bags: "Bags",
-};
+import { DesignCard } from "@/components/Cards";
+import { useCatalogProducts } from "@/hooks/useCatalogProducts";
+import { CANONICAL_TAXONOMY, DesignVM } from "@/lib/adapters/productAdapter";
 
 export default function Collections() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { toggleItem, isInWishlist } = useWishlist();
-  const [apiProducts, setApiProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { category: routeCategory } = useParams();
+  const { data: catalogData, isLoading } = useCatalogProducts();
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      try {
-        // 1) Fetch live seller products from our Lovable Cloud DB
-        const { data: dbRows, error: dbErr } = await supabase
-          .from("products")
-          .select("*")
-          .in("status", ["live", "submitted"])
-          .eq("is_available", true);
-        if (dbErr) console.error("DB products fetch error:", dbErr);
-        console.log("[Collections] DB products:", dbRows?.length ?? 0, dbRows);
+  const activeCategory = searchParams.get("category") || routeCategory || "";
+  const activeAvailability = searchParams.get("availability") || "";
+  const activePrice = searchParams.get("price") || "";
+  const activeSort = searchParams.get("sort") === "high" ? "high" : "low";
 
-        const dbMapped: Product[] = (dbRows ?? []).map((p: any) => ({
-          id: String(p.id),
-          name: p.title ?? "Untitled",
-          brand: p.brand ?? "Ogura",
-          price: Number(p.price) || 0,
-          originalPrice: p.original_price ? Number(p.original_price) : undefined,
-          category: (p.category as Product["category"]) ?? "accessories",
-          images: (Array.isArray(p.images) && p.images.length ? p.images : ["/placeholder.svg"]) as string[],
-          tags: p.style_tags ?? [],
-          sizes: p.sizes ?? [],
-          colors: p.colors ?? [],
-          rating: 0,
-          reviews: 0,
-          inStock: p.is_available ?? true,
-          description: p.description ?? "",
-          material: p.material ?? p.fabric ?? "",
-          occasions: p.occasion_tags ?? [],
-        }));
+  const toggleParam = (key: string, value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (next.get(key) === value) {
+      next.delete(key);
+    } else {
+      next.set(key, value);
+    }
+    setSearchParams(next);
+  };
 
-        // 2) Also fetch external API as legacy source
-        let apiMapped: Product[] = [];
-        try {
-          const res = FREEZE_EXTERNAL_API ? null : await fetch(EXTERNAL_API_URL);
-          if (res && res.ok) {
-            const data = await res.json();
-            const items = Array.isArray(data) ? data : data?.products ?? data?.data ?? [];
-            apiMapped = items.map((p: any, i: number) => ({
-              id: p.id ?? `api-${i}`,
-              name: p.name ?? p.title ?? "Untitled",
-              brand: p.brand ?? "External",
-              price: Number(p.price) || 0,
-              originalPrice: p.original_price ? Number(p.original_price) : undefined,
-              category: (p.category as Product["category"]) ?? "accessories",
-              images: p.image_urls ?? (p.image_url ? [p.image_url] : p.images ?? ["/placeholder.svg"]),
-              tags: p.tags ?? [],
-              sizes: p.sizes ?? [],
-              colors: p.colors ?? [],
-              rating: 0,
-              reviews: 0,
-              inStock: true,
-              description: p.description ?? "",
-              material: p.material ?? "",
-              occasions: [],
-            }));
-          }
-        } catch (err) {
-          console.error("Failed to fetch external products:", err);
+  const setSort = (sortVal: "low" | "high") => {
+    const next = new URLSearchParams(searchParams);
+    if (sortVal === "low") {
+      next.delete("sort");
+    } else {
+      next.set("sort", sortVal);
+    }
+    setSearchParams(next);
+  };
+
+  const clearAllFilters = () => {
+    setSearchParams(new URLSearchParams());
+  };
+
+  const hasActiveFilters = Boolean(activeCategory || activeAvailability || activePrice);
+
+  const filteredDesigns = useMemo(() => {
+    const list = catalogData?.designs || [];
+
+    return list
+      .filter((d: DesignVM) => {
+        // Category filter
+        if (activeCategory) {
+          const normActive = activeCategory.toLowerCase();
+          const normItem = d.category.toLowerCase();
+          if (normActive !== normItem) return false;
         }
 
-        // Local DB items take precedence on duplicate ids
-        const dbIds = new Set(dbMapped.map((p) => p.id));
-        setApiProducts([...dbMapped, ...apiMapped.filter((p) => !dbIds.has(p.id))]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
+        // Availability filter
+        if (activeAvailability === "stock" && !d.readyStock) return false;
+        if (activeAvailability === "order" && d.readyStock) return false;
 
+        // Price filter
+        if (activePrice === "under3" && d.price >= 3000) return false;
+        if (activePrice === "3to7" && (d.price < 3000 || d.price > 7000)) return false;
+        if (activePrice === "over7" && d.price <= 7000) return false;
 
-  const categoryParam = searchParams.get("category");
-  const subcategoryParam = searchParams.get("subcategory");
-
-  const allProducts = useMemo(() => {
-    const apiIds = new Set(apiProducts.map((p) => p.id));
-    return [...apiProducts, ...staticProducts.filter((p) => !apiIds.has(p.id))];
-  }, [apiProducts]);
-
-  const filteredProducts = useMemo(() => {
-    if (subcategoryParam && subcategoryMapping[subcategoryParam]) {
-      return allProducts.filter((product) =>
-        subcategoryMapping[subcategoryParam].includes(product.category)
-      );
-    }
-    if (categoryParam && categoryMapping[categoryParam]) {
-      return allProducts.filter((product) =>
-        categoryMapping[categoryParam].includes(product.category)
-      );
-    }
-    return allProducts;
-  }, [categoryParam, subcategoryParam, allProducts]);
-
-  const getPageTitle = () => {
-    if (subcategoryParam) return categoryDisplayNames[subcategoryParam] || subcategoryParam;
-    if (categoryParam) return categoryDisplayNames[categoryParam] || categoryParam;
-    return "Shop All";
-  };
-
-  const clearFilters = () => setSearchParams({});
-  const clearFilter = (type: "category" | "subcategory") => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.delete(type);
-    if (type === "category") newParams.delete("subcategory");
-    setSearchParams(newParams);
-  };
-
-  const hasActiveFilters = categoryParam || subcategoryParam;
+        return true;
+      })
+      .sort((a, b) => (activeSort === "high" ? b.price - a.price : a.price - b.price));
+  }, [catalogData, activeCategory, activeAvailability, activePrice, activeSort]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-ivory text-ink grain flex flex-col selection:bg-clay selection:text-white">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild><Link to="/">Home</Link></BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            {categoryParam ? (
-              <>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild><Link to="/collections">Collections</Link></BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem><BreadcrumbPage>{getPageTitle()}</BreadcrumbPage></BreadcrumbItem>
-              </>
-            ) : (
-              <BreadcrumbItem><BreadcrumbPage>Collections</BreadcrumbPage></BreadcrumbItem>
-            )}
-          </BreadcrumbList>
-        </Breadcrumb>
 
-        <h1 className="text-2xl md:text-3xl font-bold mb-4">
-          {getPageTitle()} ({filteredProducts.length} items)
-        </h1>
+      <main className="flex-1 mx-auto w-full max-w-7xl px-5 py-10 sm:py-14">
+        {/* Page Title & Philosophy */}
+        <div className="max-w-3xl">
+          <span className="text-xs uppercase tracking-[0.2em] font-semibold text-clay">
+            Boutique Catalog
+          </span>
+          <h1 className="mt-2 font-display text-4xl sm:text-5xl font-normal tracking-tight">
+            The collection
+          </h1>
+          <p className="mt-3 text-base sm:text-lg text-ink-soft leading-relaxed">
+            Browse real pieces from independent Indian boutiques. Filter by studio stock to see what ships this week, or commission a piece made to your exact measurements.
+          </p>
+        </div>
 
-        {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {categoryParam && (
-              <Badge variant="secondary" className="flex items-center gap-1 px-3 py-1.5 cursor-pointer hover:bg-secondary/80" onClick={() => clearFilter("category")}>
-                {categoryDisplayNames[categoryParam] || categoryParam}<X className="h-3 w-3" />
-              </Badge>
-            )}
-            {subcategoryParam && (
-              <Badge variant="secondary" className="flex items-center gap-1 px-3 py-1.5 cursor-pointer hover:bg-secondary/80" onClick={() => clearFilter("subcategory")}>
-                {categoryDisplayNames[subcategoryParam] || subcategoryParam}<X className="h-3 w-3" />
-              </Badge>
-            )}
-            <button onClick={clearFilters} className="text-sm text-muted-foreground hover:text-foreground underline">Clear all</button>
+        {/* Faceted Sticky Filter Rail */}
+        <div className="sticky top-[75px] z-30 mt-8 rounded-2xl border border-black/5 bg-ivory/95 p-4 backdrop-blur-md shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* Category Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-none">
+              <button
+                type="button"
+                onClick={() => toggleParam("category", "")}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
+                  !activeCategory
+                    ? "bg-ink text-ivory"
+                    : "border border-ink/15 bg-white/60 text-ink hover:border-ink/40"
+                }`}
+              >
+                All Categories
+              </button>
+              {CANONICAL_TAXONOMY.map((cat) => {
+                const isActive = activeCategory.toLowerCase() === cat.toLowerCase();
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => toggleParam("category", cat)}
+                    className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
+                      isActive
+                        ? "bg-clay text-white"
+                        : "border border-ink/15 bg-white/60 text-ink hover:border-clay hover:text-clay"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Secondary Facets: Availability, Price, Sort */}
+            <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t border-black/5 w-full sm:border-t-0 sm:pt-0 sm:w-auto">
+              {/* Availability */}
+              <button
+                type="button"
+                onClick={() => toggleParam("availability", "stock")}
+                className={`rounded-full px-3 py-1 font-medium transition ${
+                  activeAvailability === "stock"
+                    ? "bg-forest text-white"
+                    : "border border-ink/15 text-ink-soft hover:text-ink"
+                }`}
+              >
+                Studio Stock
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleParam("availability", "order")}
+                className={`rounded-full px-3 py-1 font-medium transition ${
+                  activeAvailability === "order"
+                    ? "bg-ink text-white"
+                    : "border border-ink/15 text-ink-soft hover:text-ink"
+                }`}
+              >
+                Made on Order
+              </button>
+
+              {/* Price Band */}
+              <button
+                type="button"
+                onClick={() => toggleParam("price", "under3")}
+                className={`rounded-full px-3 py-1 font-medium transition ${
+                  activePrice === "under3"
+                    ? "bg-clay text-white"
+                    : "border border-ink/15 text-ink-soft hover:text-ink"
+                }`}
+              >
+                &lt; ₹3k
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleParam("price", "3to7")}
+                className={`rounded-full px-3 py-1 font-medium transition ${
+                  activePrice === "3to7"
+                    ? "bg-clay text-white"
+                    : "border border-ink/15 text-ink-soft hover:text-ink"
+                }`}
+              >
+                ₹3k–₹7k
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleParam("price", "over7")}
+                className={`rounded-full px-3 py-1 font-medium transition ${
+                  activePrice === "over7"
+                    ? "bg-clay text-white"
+                    : "border border-ink/15 text-ink-soft hover:text-ink"
+                }`}
+              >
+                &gt; ₹7k
+              </button>
+
+              {/* Sort toggle */}
+              <button
+                type="button"
+                onClick={() => setSort(activeSort === "high" ? "low" : "high")}
+                className="rounded-full border border-ink/15 px-3 py-1 text-ink font-medium hover:bg-parchment transition ml-auto sm:ml-0"
+              >
+                Price: {activeSort === "high" ? "High → Low" : "Low → High"}
+              </button>
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="text-xs text-clay underline font-medium hover:text-ink transition ml-2"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
-        )}
+        </div>
 
+        {/* Results Info */}
+        <div className="mt-8 flex items-center justify-between text-xs text-ink-soft">
+          <p>
+            Showing <span className="font-semibold text-ink">{filteredDesigns.length}</span> designs
+            {activeCategory && (
+              <span> in <span className="font-semibold text-ink">{activeCategory}</span></span>
+            )}
+          </p>
+        </div>
+
+        {/* Designs Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i} className="overflow-hidden">
-                <Skeleton className="aspect-[3/4] w-full" />
-                <div className="p-3 space-y-2">
-                  <Skeleton className="h-3 w-1/3" />
-                  <Skeleton className="h-4 w-2/3" />
-                  <Skeleton className="h-4 w-1/4" />
-                </div>
-              </Card>
+              <div key={i} className="animate-pulse space-y-3">
+                <div className="aspect-[4/5] rounded-lg bg-parchment" />
+                <div className="h-4 w-3/4 rounded bg-parchment" />
+                <div className="h-3 w-1/2 rounded bg-parchment" />
+              </div>
             ))}
           </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-            <PackageOpen className="h-16 w-16 mb-4" />
-            <p className="text-lg font-medium">No products available</p>
-            <p className="text-sm mt-1">Try adjusting your filters or check back later.</p>
+        ) : filteredDesigns.length > 0 ? (
+          <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+            {filteredDesigns.map((d: DesignVM) => (
+              <DesignCard key={d.slug} design={d} />
+            ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredProducts.map((product) => (
-              <Card
-                key={product.id}
-                onClick={() => navigate(`/product/${product.id}`)}
-                className="group cursor-pointer overflow-hidden border hover:shadow-lg transition-all duration-300"
+          <div className="mt-16 rounded-2xl border border-dashed border-ink/20 p-12 text-center max-w-xl mx-auto bg-parchment/30">
+            <h3 className="font-display text-2xl font-normal">No pieces found in this view</h3>
+            <p className="mt-2 text-sm text-ink-soft leading-relaxed">
+              This atelier collection is currently being curated, or no pieces match that filter combination. Clear the filters or request a call with our styling concierge to commission a custom creation.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="rounded-full bg-ink px-6 py-2.5 text-xs font-medium text-ivory hover:bg-clay transition"
+                >
+                  Reset All Filters
+                </button>
+              )}
+              <Link
+                to="/how-it-works"
+                className="rounded-full border border-ink/20 px-6 py-2.5 text-xs font-medium text-ink hover:bg-parchment transition"
               >
-                <div className="relative">
-                  <OptimizedImage src={product.images[0]} alt={product.name} aspectRatio="aspect-[3/4]" className="transition-transform duration-500 group-hover:scale-105" />
-                  <button
-                    className="absolute top-2 right-2 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => { e.stopPropagation(); toggleItem(product); }}
-                  >
-                    <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? "fill-destructive text-destructive" : ""}`} />
-                  </button>
-                </div>
-                <div className="p-3">
-                  <p className="text-xs text-muted-foreground mb-1">{product.brand}</p>
-                  <h3 className="font-medium text-sm mb-1 line-clamp-2">{product.name}</h3>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-semibold">₹{product.price.toLocaleString()}</span>
-                    {product.originalPrice && (
-                      <span className="text-xs text-muted-foreground line-through">₹{product.originalPrice.toLocaleString()}</span>
-                    )}
-                  </div>
-                  <Button
-                    size="sm"
-                    className="w-full gap-1.5"
-                    onClick={(e) => { e.stopPropagation(); navigate(`/product/${product.id}`); }}
-                  >
-                    <ShoppingBag className="h-3.5 w-3.5" /> Buy Now
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                Learn How to Commission
+              </Link>
+            </div>
           </div>
         )}
       </main>
+
       <Footer />
     </div>
   );

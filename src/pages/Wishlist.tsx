@@ -14,12 +14,14 @@ export default function Wishlist() {
   const navigate = useNavigate();
 
   const handleMoveToCart = (product: typeof items[0]) => {
-    if (product.sizes.length > 0 && product.colors.length > 0) {
-      addItem(product, product.sizes[0], product.colors[0].name, 1);
-      removeItem(product.id);
-      toast({ title: "Moved to cart", description: `${product.name} has been added to your cart` });
-    }
+    const size = product.sizes?.[0] || "Free Size";
+    const rawColor = product.colors?.[0];
+    const color = typeof rawColor === "string" ? rawColor : (rawColor?.name || "Studio Original");
+    addItem(product, size, color, 1);
+    removeItem(product.id);
+    toast({ title: "Moved to bag", description: `${product.name} (${size} · ${color}) added to your shopping bag` });
   };
+
 
   if (items.length === 0) {
     return (

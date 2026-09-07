@@ -32,14 +32,14 @@ export default function Cart() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen bg-ivory text-ink grain flex flex-col selection:bg-clay selection:text-white">
         <Header />
-        <main className="flex-1 container mx-auto px-4 py-16 flex items-center justify-center">
-          <div className="text-center">
-            <ShoppingBag className="mx-auto h-24 w-24 text-muted-foreground mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Your cart is empty</h2>
-            <p className="text-muted-foreground mb-6">Add some items to get started</p>
-            <Button onClick={() => navigate('/collections')}>Browse Collections</Button>
+        <main className="flex-1 max-w-7xl mx-auto px-5 py-24 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <ShoppingBag className="mx-auto h-16 w-16 text-ink-soft/40 mb-4" />
+            <h2 className="font-display text-3xl font-normal mb-2">Your shopping bag is empty</h2>
+            <p className="text-sm text-ink-soft mb-6">Explore our curated collections of bespoke boutique wear.</p>
+            <Button onClick={() => navigate('/collections')} className="rounded-full bg-ink px-7 py-3 text-xs font-medium text-ivory hover:bg-clay transition">Browse Designs</Button>
           </div>
         </main>
         <Footer />
@@ -48,10 +48,10 @@ export default function Cart() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-ivory text-ink grain flex flex-col selection:bg-clay selection:text-white">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Shopping Cart ({items.length} items)</h1>
+      <main className="flex-1 max-w-7xl mx-auto px-5 py-12 w-full">
+        <h1 className="font-display text-3xl sm:text-4xl font-normal mb-8">Shopping Bag ({items.length} {items.length === 1 ? 'piece' : 'pieces'})</h1>
 
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">

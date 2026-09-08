@@ -2,39 +2,32 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Designer } from "@/types";
 import { applyBoutiqueOverride } from "@/data/boutiqueOverrides";
+import { sellerToBoutique, SellerRow } from "@/lib/adapters/sellerToBoutique";
 
 export const useDesigners = (filters?: { search?: string; category?: string }) => {
   return useQuery({
     queryKey: ['designers', filters],
     queryFn: async () => {
+      // Boutiques come from `sellers`, not `designers`. Every product carries a
+      // seller_id (311/311) and no product has a designer_id, so listing
+      // designers gave boutique pages with no designs in them.
       let query = supabase
-        .from('designers')
-        .select('*')
+        .from('sellers')
+        .select('id, brand_name, city, description, profile_image, banner_image, instagram_handle, seller_type, is_verified, is_active, created_at, updated_at')
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      // Apply search filter
       if (filters?.search) {
-        query = query.or(`brand_name.ilike.%${filters.search}%,name.ilike.%${filters.search}%,city.ilike.%${filters.search}%,category.ilike.%${filters.search}%`);
-      }
-
-      // Apply category filter
-      if (filters?.category && filters.category !== 'All') {
-        query = query.eq('category', filters.category);
+        query = query.or(`brand_name.ilike.%${filters.search}%,city.ilike.%${filters.search}%`);
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      // Parse product_images from JSONB to array
-      return (data || []).map((designer) => applyBoutiqueOverride({
-        ...designer,
-        slug: designer.slug || '',
-        collection_name: designer.collection_name || '',
-        product_images: Array.isArray(designer.product_images) 
-          ? (designer.product_images as unknown as string[])
-          : []
-      })) as Designer[];
+      return (data || []).map((row) =>
+        applyBoutiqueOverride(sellerToBoutique(row as SellerRow)),
+      ) as Designer[];
     },
   });
 };
@@ -47,7 +40,18 @@ export const useDesigner = (id: string) => {
 
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-      // 1. Try designers table first
+      // 1. Sellers first — these are the boutiques the listing shows, and the
+      //    only ones with products behind them.
+      let sFirst = supabase
+        .from('sellers')
+        .select('id, brand_name, city, description, profile_image, banner_image, instagram_handle, seller_type, is_verified, is_active, created_at, updated_at');
+      sFirst = isUUID ? sFirst.eq('id', id) : sFirst.ilike('brand_name', id.replace(/-/g, ' '));
+      const { data: sellerRow } = await sFirst.maybeSingle();
+      if (sellerRow) {
+        return applyBoutiqueOverride(sellerToBoutique(sellerRow as SellerRow)) as Designer;
+      }
+
+      // 2. Fall back to the designers table for anything not in sellers.
       let dQuery = supabase.from('designers').select('*');
       if (isUUID) {
         dQuery = dQuery.eq('id', id);

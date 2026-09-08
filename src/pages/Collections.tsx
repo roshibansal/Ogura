@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useSearchParams, Link, useParams } from "react-router-dom";
+import { useSearchParams, Link, useParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { DesignCard } from "@/components/Cards";
@@ -10,6 +10,7 @@ import { Filter, X, Check, ChevronDown } from "lucide-react";
 export default function Collections() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { category: routeCategory } = useParams();
+  const navigate = useNavigate();
   const { data: catalogData, isLoading } = useCatalogProducts();
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
@@ -32,7 +33,12 @@ export default function Collections() {
     } else {
       next.set(key, value);
     }
-    setSearchParams(next);
+    if (routeCategory) {
+      const q = next.toString();
+      navigate(q ? `/marketplace?${q}` : "/marketplace");
+    } else {
+      setSearchParams(next);
+    }
   };
 
   const setParam = (key: string, value: string) => {
@@ -42,11 +48,20 @@ export default function Collections() {
     } else {
       next.set(key, value);
     }
-    setSearchParams(next);
+    if (routeCategory) {
+      const q = next.toString();
+      navigate(q ? `/marketplace?${q}` : "/marketplace");
+    } else {
+      setSearchParams(next);
+    }
   };
 
   const clearAllFilters = () => {
-    setSearchParams(new URLSearchParams());
+    if (routeCategory) {
+      navigate("/marketplace");
+    } else {
+      setSearchParams(new URLSearchParams());
+    }
   };
 
   const allDesigns = useMemo(() => catalogData?.designs || [], [catalogData]);
@@ -55,7 +70,7 @@ export default function Collections() {
   const facetCounts = useMemo(() => {
     const counts = {
       availability: { stock: 0, order: 0 },
-      price: { under12: 0, "12to14": 0, over14: 0 },
+      price: { under3k: 0, "3to6k": 0, over6k: 0 },
       categories: {} as Record<string, number>,
       ateliers: {} as Record<string, number>,
       cities: {} as Record<string, number>,
@@ -66,10 +81,10 @@ export default function Collections() {
       if (d.readyStock) counts.availability.stock++;
       else counts.availability.order++;
 
-      // Price
-      if (d.price < 12000) counts.price.under12++;
-      else if (d.price <= 14000) counts.price["12to14"]++;
-      else counts.price.over14++;
+      // Price: 1200 to 12000 range
+      if (d.price < 3000) counts.price.under3k++;
+      else if (d.price <= 6000) counts.price["3to6k"]++;
+      else counts.price.over6k++;
 
       // Category
       if (d.category) {
@@ -128,10 +143,10 @@ export default function Collections() {
         if (activeAvailability === "stock" && !d.readyStock) return false;
         if (activeAvailability === "order" && d.readyStock) return false;
 
-        // Price filter
-        if (activePrice === "under12" && d.price >= 12000) return false;
-        if (activePrice === "12to14" && (d.price < 12000 || d.price > 14000)) return false;
-        if (activePrice === "over14" && d.price <= 14000) return false;
+        // Price filter (1,200 to 12,000)
+        if (activePrice === "under3k" && d.price >= 3000) return false;
+        if (activePrice === "3to6k" && (d.price < 3000 || d.price > 6000)) return false;
+        if (activePrice === "over6k" && d.price <= 6000) return false;
 
         return true;
       })
@@ -155,7 +170,7 @@ export default function Collections() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8d2f9] text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
+    <div className="min-h-screen bg-white text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
       <Header />
 
       <main className="flex-1 max-w-[1440px] mx-auto w-full px-3 sm:px-6 py-5 sm:py-7">
@@ -164,17 +179,17 @@ export default function Collections() {
           <Link to="/" className="hover:text-ink transition">
             Home
           </Link>
-          <span className="mx-2 text-[#fcb8fd]">/</span>
+          <span className="mx-2 text-[#E2D1A3]">/</span>
           <span className="text-ink font-bold">
             {activeCategory || (searchQuery ? `Search: "${searchQuery}"` : "All Creations")}
           </span>
         </p>
 
         {/* Listing Header (.lhead) */}
-        <div className="flex flex-wrap items-baseline justify-between gap-4 pb-5 border-b border-[#fcb8fd]">
+        <div className="flex flex-wrap items-baseline justify-between gap-4 pb-4 border-b border-[#E2D1A3]">
           <div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif tracking-tight text-ink">
-              {activeCategory || (searchQuery ? `Search results for "${searchQuery}"` : "All Creations")}
+              {activeCategory || (searchQuery ? `Search results for "${searchQuery}"` : "Marketplace")}
             </h1>
             <p className="text-sm sm:text-base text-ink/80 mt-1.5 font-medium">
               <b className="text-ink font-extrabold">{filteredDesigns.length}</b> {filteredDesigns.length === 1 ? "piece" : "pieces"} from{" "}
@@ -188,7 +203,7 @@ export default function Collections() {
             <button
               type="button"
               onClick={() => setIsMobileFilterOpen(true)}
-              className="lg:hidden flex items-center gap-1.5 border border-line bg-white px-3 py-2 rounded-sm text-grey-soft hover:text-ink transition"
+              className="lg:hidden flex items-center gap-1.5 border border-[#E2D1A3] bg-white px-3 py-2 rounded-sm text-[#5A0A26] hover:border-[#5A0A26] transition font-bold"
             >
               <Filter className="h-3.5 w-3.5" />
               <span>Filters</span>
@@ -202,14 +217,136 @@ export default function Collections() {
               <select
                 value={activeSort}
                 onChange={(e) => setParam("sort", e.target.value)}
-                className="appearance-none border border-[#fcb8fd] bg-white px-3 py-2 pr-7 rounded-sm text-[#5A0A26] hover:border-[#5A0A26] focus:outline-none transition cursor-pointer text-xs font-bold shadow-xs"
+                className="appearance-none border border-[#E2D1A3] bg-white px-3 py-2 pr-7 rounded-sm text-[#5A0A26] hover:border-[#5A0A26] focus:outline-none transition cursor-pointer text-xs font-bold shadow-xs"
               >
                 <option value="low">Price: Low to High (Default)</option>
                 <option value="high">Price: High to Low</option>
                 <option value="new">Newly Added</option>
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-grey-muted pointer-events-none" />
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#5A0A26]/60 pointer-events-none" />
             </div>
+          </div>
+        </div>
+
+        {/* ============================================================ */}
+        {/* CATEGORIES IN MARKETPLACE (DIRECT VISUAL CATEGORY SELECTOR)  */}
+        {/* ============================================================ */}
+        <div className="py-4 border-b border-[#E2D1A3]">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-black uppercase tracking-[0.16em] text-[#B38F24]">
+              Browse Categories ({CANONICAL_TAXONOMY.length})
+            </span>
+            {activeCategory && (
+              <button
+                type="button"
+                onClick={() => setParam("category", "")}
+                className="text-xs font-bold text-rose hover:underline"
+              >
+                Clear category filter ×
+              </button>
+            )}
+          </div>
+          <div className="flex overflow-x-auto sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 gap-2 pb-2 sm:pb-0 scrollbar-none">
+            {/* All Items Card */}
+            <button
+              type="button"
+              onClick={() => clearAllFilters()}
+              className={`shrink-0 min-w-[125px] sm:min-w-0 p-2.5 rounded-sm border text-left transition flex flex-col justify-between ${
+                !activeCategory
+                  ? "bg-[#5A0A26] text-white border-[#5A0A26] shadow-xs"
+                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold hover:bg-neutral-50"
+              }`}
+            >
+              <span className="text-xs font-extrabold truncate">All Items</span>
+              <span className={`text-[10px] mt-1 ${!activeCategory ? "text-white/80" : "text-[#5A0A26]/60"}`}>
+                {allDesigns.length} pieces
+              </span>
+            </button>
+
+            {/* Individual Canonical Categories */}
+            {CANONICAL_TAXONOMY.map((cat) => {
+              const isSelected = activeCategoryCanonical === cat || activeCategory.toLowerCase() === cat.toLowerCase();
+              const count = facetCounts.categories[cat] || 0;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setParam("category", slugifyCategory(cat))}
+                  className={`shrink-0 min-w-[125px] sm:min-w-0 p-2.5 rounded-sm border text-left transition flex flex-col justify-between ${
+                    isSelected
+                      ? "bg-[#5A0A26] text-white border-[#5A0A26] shadow-xs"
+                      : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold hover:bg-neutral-50"
+                  }`}
+                >
+                  <span className="text-xs font-extrabold truncate">{cat}</span>
+                  <span className={`text-[10px] mt-1 ${isSelected ? "text-white/80" : "text-[#5A0A26]/60"}`}>
+                    {count} pieces
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Quick Filters Row: Price and Availability */}
+          <div className="mt-3 flex items-center gap-2 overflow-x-auto scrollbar-none pt-2.5 border-t border-[#E2D1A3]/50 text-xs">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A0A26]/70 shrink-0">
+              Price & Delivery:
+            </span>
+            <button
+              type="button"
+              onClick={() => toggleParam("price", "under3k")}
+              className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
+                activePrice === "under3k"
+                  ? "bg-[#FFA41C] text-[#0F1111] font-black border-[#FF8F00]"
+                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold font-bold"
+              }`}
+            >
+              Under ₹3,000 ({facetCounts.price.under3k})
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleParam("price", "3to6k")}
+              className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
+                activePrice === "3to6k"
+                  ? "bg-[#FFA41C] text-[#0F1111] font-black border-[#FF8F00]"
+                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold font-bold"
+              }`}
+            >
+              ₹3,000–₹6,000 ({facetCounts.price["3to6k"]})
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleParam("price", "over6k")}
+              className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
+                activePrice === "over6k"
+                  ? "bg-[#FFA41C] text-[#0F1111] font-black border-[#FF8F00]"
+                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold font-bold"
+              }`}
+            >
+              Over ₹6,000 ({facetCounts.price.over6k})
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleParam("availability", "stock")}
+              className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
+                activeAvailability === "stock"
+                  ? "bg-[#5A0A26] text-white font-bold border-[#5A0A26]"
+                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold font-bold"
+              }`}
+            >
+              In Studio (Ships 48h)
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleParam("availability", "order")}
+              className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
+                activeAvailability === "order"
+                  ? "bg-[#5A0A26] text-white font-bold border-[#5A0A26]"
+                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold font-bold"
+              }`}
+            >
+              Made on Order
+            </button>
           </div>
         </div>
 
@@ -249,11 +386,11 @@ export default function Collections() {
                 className="inline-flex items-center gap-1 border border-rose text-rose bg-white px-2.5 py-1 rounded-sm text-xs hover:bg-rose/5 transition"
               >
                 <span>
-                  {activePrice === "under12"
-                    ? "Under ₹12,000"
-                    : activePrice === "12to14"
-                    ? "₹12,000–₹14,000"
-                    : "Over ₹14,000"}
+                  {activePrice === "under3k"
+                    ? "Under ₹3,000"
+                    : activePrice === "3to6k"
+                    ? "₹3,000–₹6,000"
+                    : "Over ₹6,000"}
                 </span>
                 <X className="h-3 w-3" />
               </button>
@@ -305,9 +442,9 @@ export default function Collections() {
         {/* 2-Column Listing Layout (.listing) */}
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 items-start">
           {/* Left Filter Rail (.rail) */}
-          <aside className="hidden lg:block space-y-5 text-xs text-[#5A0A26] bg-white/95 border border-[#fcb8fd] p-4 rounded-sm shadow-xs">
+          <aside className="hidden lg:block space-y-5 text-xs text-[#5A0A26] bg-white/95 border border-[#E2D1A3] p-4 rounded-sm shadow-[0_0_12px_rgba(226,209,163,0.18)]">
             {/* Availability */}
-            <div className="border-b border-[#fcb8fd]/70 pb-4">
+            <div className="border-b border-[#E2D1A3]/60 pb-4">
               <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-[#5A0A26] mb-2.5">
                 Availability
               </h4>
@@ -360,59 +497,59 @@ export default function Collections() {
               <div className="space-y-1.5">
                 <button
                   type="button"
-                  onClick={() => toggleParam("price", "under12")}
+                  onClick={() => toggleParam("price", "under3k")}
                   className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
-                    activePrice === "under12" ? "font-bold text-ink" : ""
+                    activePrice === "under3k" ? "font-bold text-ink" : ""
                   }`}
                 >
                   <span
                     className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
-                      activePrice === "under12"
+                      activePrice === "under3k"
                         ? "bg-ink border-ink text-white"
                         : "border-line"
                     }`}
                   >
-                    {activePrice === "under12" && <Check className="h-2.5 w-2.5" />}
+                    {activePrice === "under3k" && <Check className="h-2.5 w-2.5" />}
                   </span>
-                  <span>Under ₹12,000 ({facetCounts.price.under12})</span>
+                  <span>Under ₹3,000 ({facetCounts.price.under3k})</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => toggleParam("price", "12to14")}
+                  onClick={() => toggleParam("price", "3to6k")}
                   className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
-                    activePrice === "12to14" ? "font-bold text-ink" : ""
+                    activePrice === "3to6k" ? "font-bold text-ink" : ""
                   }`}
                 >
                   <span
                     className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
-                      activePrice === "12to14"
+                      activePrice === "3to6k"
                         ? "bg-ink border-ink text-white"
                         : "border-line"
                     }`}
                   >
-                    {activePrice === "12to14" && <Check className="h-2.5 w-2.5" />}
+                    {activePrice === "3to6k" && <Check className="h-2.5 w-2.5" />}
                   </span>
-                  <span>₹12,000–₹14,000 ({facetCounts.price["12to14"]})</span>
+                  <span>₹3,000–₹6,000 ({facetCounts.price["3to6k"]})</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => toggleParam("price", "over14")}
+                  onClick={() => toggleParam("price", "over6k")}
                   className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
-                    activePrice === "over14" ? "font-bold text-ink" : ""
+                    activePrice === "over6k" ? "font-bold text-ink" : ""
                   }`}
                 >
                   <span
                     className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
-                      activePrice === "over14"
+                      activePrice === "over6k"
                         ? "bg-ink border-ink text-white"
                         : "border-line"
                     }`}
                   >
-                    {activePrice === "over14" && <Check className="h-2.5 w-2.5" />}
+                    {activePrice === "over6k" && <Check className="h-2.5 w-2.5" />}
                   </span>
-                  <span>Over ₹14,000 ({facetCounts.price.over14})</span>
+                  <span>Over ₹6,000 ({facetCounts.price.over6k})</span>
                 </button>
               </div>
             </div>

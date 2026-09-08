@@ -20,50 +20,35 @@ export const Header = () => {
     }
   };
 
-  const navLinks = [
-    { label: "Marketplace", path: "/collections" },
-    { label: "Lehengas", path: "/collections?category=lehengas" },
-    { label: "Sarees", path: "/collections?category=sarees" },
-    { label: "Western Dresses", path: "/collections?category=dresses" },
-    { label: "Bags", path: "/collections?category=bags" },
-    { label: "Shoes", path: "/collections?category=shoes" },
-    { label: "Made on Order", path: "/collections?availability=order" },
-    { label: "Under ₹12,000", path: "/collections?price=under12" },
-    { label: "Our Shops", path: "/designers" },
-    { label: "How It Works", path: "/how-it-works" },
-  ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#f8d2f9] border-b border-[#fcb8fd] shadow-[0_2px_12px_rgba(252,184,253,0.3)]">
-      {/* 1. Top Announcement Bar - Simple Plain English */}
-      <div className="bg-[#fcb8fd]/60 text-[#5A0A26] border-b border-[#fcb8fd] flex items-center justify-center gap-4 sm:gap-8 py-2 px-3 text-xs sm:text-sm font-bold tracking-wide overflow-hidden whitespace-nowrap">
+    <header className="sticky top-0 z-50 w-full bg-white border-b border-[#E2D1A3] shadow-[0_2px_12px_rgba(226,209,163,0.15)]">
+      {/* 1. Top Announcement Bar - Clean on both mobile & desktop */}
+      <div className="bg-[#FAFAFA] text-[#5A0A26] border-b border-[#E2D1A3]/60 flex items-center justify-center gap-3 sm:gap-8 py-1.5 px-3 text-[11px] sm:text-xs md:text-sm font-bold tracking-wide text-center">
         <span>Free delivery on orders over ₹2,500</span>
         <span className="hidden sm:inline text-[#5A0A26]/30">|</span>
-        <span>Talk to the shop before you order</span>
+        <span className="hidden sm:inline">Talk to the shop before you order</span>
         <span className="hidden md:inline text-[#5A0A26]/30">|</span>
         <span className="hidden md:inline">7-Day Free Size Help & Returns</span>
       </div>
 
       {/* 2. Main Header Bar */}
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-3.5 flex items-center gap-4 sm:gap-6 justify-between">
-        <div className="flex items-center gap-3">
+      <div className="max-w-[1360px] mx-auto px-3 sm:px-8 py-2.5 sm:py-3.5 flex items-center gap-3 sm:gap-6 justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Mobile Menu Button */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-[#5A0A26] hover:text-[#B38F24] transition"
+            className="md:hidden p-1.5 text-[#5A0A26] hover:text-[#B38F24] transition rounded-sm"
             aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          {/* OGURA Brand Logo */}
-          <Link to="/" className="flex items-baseline gap-2 group" aria-label="OGURA Home">
-            <span className="font-serif font-bold text-3xl sm:text-4xl tracking-tight text-[#5A0A26] group-hover:text-[#B38F24] transition">
+          {/* OGURA Brand Logo - pure clean logo without marketplace */}
+          <Link to="/" className="flex items-baseline group" aria-label="OGURA Home">
+            <span className="font-serif font-bold text-2xl sm:text-4xl tracking-tight text-[#5A0A26] group-hover:text-[#B38F24] transition">
               OGURA
-            </span>
-            <span className="hidden sm:inline-block text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 rounded-xs bg-white text-[#5A0A26] border border-[#E2D1A3] font-black">
-              Marketplace
             </span>
           </Link>
         </div>
@@ -92,17 +77,23 @@ export const Header = () => {
         </div>
 
         {/* Right Utility Bar */}
-        <div className="flex items-center gap-3 sm:gap-5 text-sm font-semibold text-[#5A0A26]">
+        <div className="flex items-center gap-2 sm:gap-3.5 text-sm font-semibold text-[#5A0A26]">
+          {/* Marketplace Button right beside search bar */}
           <Link
-            to="/how-it-works"
-            className="hidden sm:inline-block hover:text-[#B38F24] transition text-sm font-bold"
+            to="/marketplace"
+            className={`inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-sm font-bold transition text-xs sm:text-sm border ${
+              location.pathname === "/marketplace" || location.pathname === "/collections"
+                ? "bg-[#5A0A26] text-white border-[#5A0A26] shadow-xs"
+                : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-[#B38F24] hover:text-[#B38F24] shadow-xs"
+            }`}
           >
-            Help & Delivery
+            <span>Marketplace</span>
           </Link>
 
+          {/* Sell on Ogura */}
           <a
             href="/seller-login"
-            className="hidden lg:inline-flex items-center gap-1 px-3 py-1.5 rounded-sm bg-white border border-[#E2D1A3] text-[#5A0A26] hover:border-[#B38F24] hover:text-[#B38F24] font-bold transition shadow-xs text-sm"
+            className="hidden sm:inline-flex items-center gap-1 px-3 sm:px-3.5 py-1.5 rounded-sm bg-white border border-[#E2D1A3] text-[#5A0A26] hover:border-[#B38F24] hover:text-[#B38F24] font-bold transition shadow-xs text-xs sm:text-sm"
           >
             Sell on Ogura
           </a>
@@ -115,7 +106,7 @@ export const Header = () => {
             <Heart className="h-5 w-5" />
             <span className="hidden sm:inline">Saved</span>
             {wishlistItems.length > 0 && (
-              <span className="text-xs font-bold text-[#5A0A26] bg-[#fcb8fd] px-1.5 py-0.2 rounded-full">
+              <span className="text-xs font-bold text-[#5A0A26] bg-neutral-100 border border-[#E2D1A3] px-1.5 py-0.2 rounded-full">
                 {wishlistItems.length}
               </span>
             )}
@@ -127,10 +118,10 @@ export const Header = () => {
           {/* Shopping Bag */}
           <Link
             to="/cart"
-            className="flex items-center gap-2 px-4 py-2 rounded-sm bg-[#0F1111] text-white hover:bg-[#232F3E] transition shadow-xs"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-sm bg-[#0F1111] text-white hover:bg-[#232F3E] transition shadow-xs shrink-0"
           >
             <ShoppingBag className="h-4 w-4 text-[#FFA41C]" />
-            <span className="font-extrabold text-sm">
+            <span className="font-extrabold text-xs sm:text-sm">
               Bag <span className="text-[#FFA41C]">({totalItems})</span>
             </span>
           </Link>
@@ -151,81 +142,49 @@ export const Header = () => {
             placeholder="Search clothes, sarees, lehengas..."
             className="w-full bg-transparent text-[#5A0A26] placeholder:text-[#5A0A26]/50 text-sm focus:outline-none"
           />
-          <button type="submit" className="text-xs font-bold text-[#5A0A26] bg-[#fcb8fd] px-2.5 py-1 rounded-xs">
+          <button type="submit" className="text-xs font-bold text-[#5A0A26] bg-neutral-100 border border-[#E2D1A3] px-2.5 py-1 rounded-xs">
             Go
           </button>
         </form>
       </div>
 
-      {/* 3. Clean, Well-Placed Navigation Rail (No Dropdown) */}
-      <nav className="bg-[#f8d2f9] border-t border-[#fcb8fd] px-4 sm:px-8 text-sm font-semibold tracking-wide">
-        <div className="max-w-[1360px] mx-auto flex items-center justify-between gap-2 overflow-x-auto scrollbar-none py-2">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {navLinks.map((link) => {
-              const isActive =
-                link.path === "/collections"
-                  ? location.pathname === "/collections" && !location.search
-                  : `${location.pathname}${location.search}` === link.path;
-
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`shrink-0 py-1.5 px-3 sm:px-3.5 rounded-sm text-xs sm:text-sm font-bold transition-all border ${
-                    isActive
-                      ? "bg-white text-[#5A0A26] border-[#E2D1A3] shadow-xs"
-                      : "bg-transparent text-[#5A0A26]/85 hover:bg-white/70 hover:text-[#5A0A26] border-transparent"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Sale Highlight Badge on the Right */}
-          <Link
-            to="/collections?price=under12"
-            className="shrink-0 py-1.5 px-3 text-[#5A0A26] font-extrabold transition rounded-sm text-xs sm:text-sm flex items-center gap-1.5 bg-white border border-[#E2D1A3] hover:border-[#FFA41C] shadow-2xs"
-          >
-            <span className="inline-block px-1.5 py-0.2 rounded-xs bg-[#FFA41C] text-[#0F1111] text-xs font-black">
-              %
-            </span>
-            <span>Sale Deals</span>
-          </Link>
-        </div>
-      </nav>
-
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-[#f8d2f9] border-t border-[#fcb8fd] px-5 py-4 space-y-3 max-h-[75vh] overflow-y-auto">
+        <div className="md:hidden bg-white border-t border-[#E2D1A3] px-5 py-4 space-y-3 max-h-[75vh] overflow-y-auto shadow-md">
           <p className="text-xs font-black uppercase tracking-wider text-[#5A0A26] mb-2">
-            Categories
+            Menu
           </p>
           <div className="flex flex-col gap-2 text-sm font-bold text-[#5A0A26]">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="py-1.5 px-2 rounded-xs hover:bg-white transition"
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link
+              to="/marketplace"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="py-2.5 px-3 rounded-sm bg-neutral-50 hover:bg-neutral-100 transition flex items-center justify-between border border-[#E2D1A3]/60 font-black"
+            >
+              <span>Marketplace</span>
+              <span className="text-xs font-semibold text-[#5A0A26]/70">Explore all styles →</span>
+            </Link>
+            <Link
+              to="/marketplace?price=under3k"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="py-2 px-3 rounded-sm hover:bg-neutral-50 transition flex items-center gap-2 border border-[#E2D1A3]/60"
+            >
+              <span className="px-1.5 py-0.2 bg-[#FFA41C] text-[#0F1111] font-black rounded-xs text-xs">%</span>
+              <span>Sale Deals (Under ₹3,000)</span>
+            </Link>
+            <Link
+              to="/wishlist"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="py-2 px-3 rounded-sm hover:bg-neutral-50 transition flex items-center gap-2 border border-[#E2D1A3]/60"
+            >
+              <Heart className="h-4 w-4" />
+              <span>Saved Pieces ({wishlistItems.length})</span>
+            </Link>
           </div>
 
-          <div className="pt-3 border-t border-[#fcb8fd] flex flex-col gap-2 text-sm font-bold text-[#5A0A26]">
-            <Link
-              to="/how-it-works"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="py-1.5 px-2 hover:bg-white transition"
-            >
-              How It Works & Delivery Help
-            </Link>
+          <div className="pt-3 border-t border-[#E2D1A3] flex flex-col gap-2 text-sm font-bold text-[#5A0A26]">
             <a
               href="/seller-login"
-              className="py-1.5 px-2 text-[#9F1239] font-black hover:bg-white transition"
+              className="py-2.5 px-3 text-[#9F1239] font-black hover:bg-neutral-50 transition rounded-sm border border-[#E2D1A3] text-center"
             >
               Sell on Ogura
             </a>

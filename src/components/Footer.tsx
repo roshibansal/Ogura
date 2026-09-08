@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 export const Footer = () => {
   return (
-    <footer className="mt-10 bg-[#f8d2f9] border-t border-[#fcb8fd] shadow-[0_-2px_14px_rgba(252,184,253,0.3)] text-[#5A0A26]">
+    <footer className="mt-10 bg-white border-t border-[#E2D1A3] shadow-[0_-2px_14px_rgba(226,209,163,0.15)] text-[#5A0A26]">
       <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-10 sm:py-14">
         <div className="flex flex-col md:flex-row justify-between gap-8 lg:gap-14 flex-wrap">
           {/* Brand & Blurb */}
@@ -26,11 +26,11 @@ export const Footer = () => {
                 Marketplace
               </b>
               <ul className="space-y-2.5 font-semibold text-[#5A0A26]/85">
-                <li><Link to="/collections?sort=new" className="hover:text-[#B38F24] transition">New in this week</Link></li>
-                <li><Link to="/collections?category=Lehengas" className="hover:text-[#B38F24] transition">Lehengas</Link></li>
-                <li><Link to="/collections?category=Sarees" className="hover:text-[#B38F24] transition">Sarees</Link></li>
-                <li><Link to="/collections?availability=order" className="hover:text-[#B38F24] transition">Made on order</Link></li>
-                <li><Link to="/collections" className="hover:text-[#B38F24] transition">All 311 creations</Link></li>
+                <li><Link to="/marketplace?sort=new" className="hover:text-[#B38F24] transition">New in this week</Link></li>
+                <li><Link to="/marketplace?category=lehengas" className="hover:text-[#B38F24] transition">Lehengas</Link></li>
+                <li><Link to="/marketplace?category=sarees" className="hover:text-[#B38F24] transition">Sarees</Link></li>
+                <li><Link to="/marketplace?availability=order" className="hover:text-[#B38F24] transition">Made on order</Link></li>
+                <li><Link to="/marketplace" className="hover:text-[#B38F24] transition">All 311 creations</Link></li>
               </ul>
             </div>
 
@@ -40,23 +40,22 @@ export const Footer = () => {
                 Help & Support
               </b>
               <ul className="space-y-2.5 font-semibold text-[#5A0A26]/85">
-                <li><Link to="/how-it-works" className="hover:text-[#B38F24] transition">Fast home delivery</Link></li>
-                <li><Link to="/how-it-works" className="hover:text-[#B38F24] transition">Free size alterations</Link></li>
-                <li><Link to="/how-it-works" className="hover:text-[#B38F24] transition">Custom sizing help</Link></li>
+                <li><Link to="/cart" className="hover:text-[#B38F24] transition">Track your order</Link></li>
                 <li><Link to="/contact" className="hover:text-[#B38F24] transition">Contact customer care</Link></li>
+                <li><Link to="/terms" className="hover:text-[#B38F24] transition">Free size alterations</Link></li>
+                <li><Link to="/terms" className="hover:text-[#B38F24] transition">Fast home delivery</Link></li>
               </ul>
             </div>
 
             {/* Ogura Column */}
             <div>
               <b className="block mb-3 text-xs sm:text-sm font-black uppercase tracking-[0.16em] text-[#B38F24]">
-                Boutique Shops
+                Sell With Us
               </b>
               <ul className="space-y-2.5 font-semibold text-[#5A0A26]/85">
-                <li><Link to="/how-it-works" className="hover:text-[#B38F24] transition">How it works</Link></li>
                 <li><a href="/seller-login" className="text-[#9F1239] font-black hover:underline">Sell on Ogura</a></li>
-                <li><Link to="/designers" className="hover:text-[#B38F24] transition">Our 40 shops</Link></li>
                 <li><Link to="/seller-program" className="hover:text-[#B38F24] transition">Shop waitlist</Link></li>
+                <li><a href="/seller/dashboard" className="hover:text-[#B38F24] transition">Seller Dashboard</a></li>
               </ul>
             </div>
 
@@ -75,7 +74,7 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-10 pt-5 border-t border-[#fcb8fd] flex flex-wrap items-center justify-between gap-4 text-xs sm:text-sm font-medium text-[#5A0A26]/80">
+        <div className="mt-10 pt-5 border-t border-[#E2D1A3] flex flex-wrap items-center justify-between gap-4 text-xs sm:text-sm font-medium text-[#5A0A26]/80">
           <p>© {new Date().getFullYear()} OGURA. Verified independent Indian fashion marketplace.</p>
           <div className="flex items-center gap-4 font-bold text-[#5A0A26]">
             <span>40 Verified Shops</span>

@@ -12,22 +12,22 @@ All colors MUST be HSL.
   }
 
   :root {
-    --background: 298 73% 90%;
+    --background: 0 0% 100%;
     --foreground: 340 80% 19%;
 
-    --card: 298 60% 95%;
+    --card: 0 0% 100%;
     --card-foreground: 340 80% 19%;
 
-    --popover: 298 60% 95%;
+    --popover: 0 0% 100%;
     --popover-foreground: 340 80% 19%;
 
     --primary: 340 80% 19%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 346 45% 91%;
+    --secondary: 0 0% 97%;
     --secondary-foreground: 340 80% 19%;
 
-    --muted: 346 45% 91%;
+    --muted: 0 0% 97%;
     --muted-foreground: 340 40% 45%;
 
     --accent: 43 65% 52%;
@@ -36,8 +36,8 @@ All colors MUST be HSL.
     --destructive: 350 84% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 346 38% 85%;
-    --input: 346 38% 85%;
+    --border: 43 55% 77%;
+    --input: 43 55% 77%;
     --ring: 43 65% 52%;
 
     --radius: 0.75rem;

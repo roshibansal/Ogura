@@ -5,6 +5,7 @@ import {
   transformProductToDesignStrict,
   normalizeProductColors,
   normalizeProductSizes,
+  normalizeCatalogPrice,
   DesignVM,
 } from "@/lib/adapters/productAdapter";
 
@@ -25,15 +26,14 @@ export function useCatalogProducts() {
         }
 
         const dbProducts: Product[] = (dbRows || []).map((p: any) => {
-          const authoritativePrice =
-            typeof p.price === "number" && p.price > 0 ? p.price : 0;
+          const { price, originalPrice } = normalizeCatalogPrice(p.price, p.id || p.title);
 
           return {
             id: String(p.id),
             name: p.title || "Artisanal Creation",
             brand: p.brand || "OGURA Atelier",
-            price: authoritativePrice,
-            originalPrice: p.original_price ? Number(p.original_price) : Math.round(authoritativePrice * 1.3),
+            price,
+            originalPrice,
             category: (p.category || "dresses") as Product["category"],
             images: Array.isArray(p.images) && p.images.length > 0 ? p.images : ["/placeholder.svg"],
             sizes: normalizeProductSizes(p.sizes),
@@ -68,13 +68,13 @@ export function useCatalogProducts() {
                 for (const cp of customItems) {
                   const idStr = String(cp.id);
                   if (!seen.has(idStr)) {
-                    seen.add(idStr);
+                    const { price: customPrice, originalPrice: customOriginalPrice } = normalizeCatalogPrice(cp.price, idStr || cp.title);
                     deduplicated.push({
                       id: idStr,
                       name: cp.title || "Artisanal Creation",
                       brand: cp.brand || "OGURA Atelier",
-                      price: Number(cp.price) || 0,
-                      originalPrice: cp.original_price ? Number(cp.original_price) : Math.round((Number(cp.price) || 0) * 1.3),
+                      price: customPrice,
+                      originalPrice: customOriginalPrice,
                       category: (cp.category || "dresses") as Product["category"],
                       images: Array.isArray(cp.images) && cp.images.length > 0 ? cp.images : ["/placeholder.svg"],
                       sizes: normalizeProductSizes(cp.sizes),

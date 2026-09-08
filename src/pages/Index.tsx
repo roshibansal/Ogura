@@ -135,15 +135,14 @@ export default function Index() {
   }, [designs]);
 
   return (
-    <div className="min-h-screen bg-[#f8d2f9] text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
-      {/* Clean Pink Header */}
+    <div className="min-h-screen bg-white text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink overflow-x-hidden w-full">
       <Header />
 
-      <main className="flex-1 w-full space-y-8 sm:space-y-12 pb-16">
+      <main className="flex-1 w-full space-y-8 sm:space-y-12 pb-16 overflow-x-hidden">
         {/* ============================================================ */}
         {/* SECTION 1: HERO LOOKBOOK (PROUD, EXPANSIVE & READABLE)       */}
         {/* ============================================================ */}
-        <section className="relative h-[560px] sm:h-[640px] lg:h-[700px] w-full overflow-hidden flex items-center justify-center border-b border-[#fcb8fd] shadow-[0_4px_20px_rgba(252,184,253,0.3)]">
+        <section className="relative h-[560px] sm:h-[640px] lg:h-[700px] w-full overflow-hidden flex items-center justify-center border-b border-[#E2D1A3] shadow-[0_4px_20px_rgba(226,209,163,0.15)]">
           {/* Rotating Lookbook Background Images with Smooth Cross-Fade */}
           {HERO_LOOKS.map((look, idx) => (
             <img
@@ -199,16 +198,10 @@ export default function Index() {
               {/* Amazon Psychology Buying Button & Outline */}
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link
-                  to="/collections"
+                  to="/marketplace"
                   className="rounded-sm bg-[#FFA41C] hover:bg-[#FF8F00] active:bg-[#E07E00] px-9 py-4 text-base font-extrabold text-[#0F1111] tracking-wider uppercase transition shadow-md border border-[#FF8F00]"
                 >
                   Explore Marketplace
-                </Link>
-                <Link
-                  to="/how-it-works"
-                  className="rounded-sm bg-white/20 backdrop-blur-md border border-white/90 px-8 py-4 text-base font-bold text-white tracking-wider uppercase hover:bg-white/30 transition"
-                >
-                  How it works
                 </Link>
               </div>
             </div>
@@ -232,8 +225,8 @@ export default function Index() {
             </span>
           </div>
 
-          {/* Floating "Shop This Look" Card with Faded Pink Glow */}
-          <div className="hidden lg:block absolute right-8 bottom-6 z-20 bg-white/95 rounded-sm p-6 min-w-[340px] shadow-2xl border border-[#fcb8fd] shadow-[0_0_20px_rgba(252,184,253,0.35)] backdrop-blur-md transition-all duration-500">
+          {/* Floating "Shop This Look" Card with Faded Gold Glow */}
+          <div className="hidden lg:block absolute right-8 bottom-6 z-20 bg-white/95 rounded-sm p-6 min-w-[340px] shadow-2xl border border-[#E2D1A3] shadow-[0_0_20px_rgba(226,209,163,0.28)] backdrop-blur-md transition-all duration-500">
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold tracking-widest uppercase text-[#5A0A26]">
                 {activeLook.boutique} | {activeLook.city}
@@ -263,73 +256,74 @@ export default function Index() {
         </section>
 
         {/* ============================================================ */}
-        {/* SECTION 2: POPULAR WAYS TO SHOP (BIGGER WIDGETS)             */}
         {/* ============================================================ */}
-        <section className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-2">
-          <div className="mb-6 flex items-end justify-between border-b border-[#fcb8fd] pb-3">
+        {/* SECTION 2: POPULAR WAYS TO SHOP                              */}
+        {/* ============================================================ */}
+        <section className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-2 w-full">
+          <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end justify-between border-b border-[#E2D1A3] pb-3 gap-1.5">
             <div>
-              <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#B38F24]">
+              <span className="text-[11px] sm:text-xs font-black uppercase tracking-[0.2em] text-[#B38F24]">
                 WAYS TO SHOP
               </span>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#5A0A26] tracking-tight mt-1">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif text-[#5A0A26] tracking-tight mt-0.5">
                 Find Your Perfect Style
               </h2>
             </div>
-            <p className="hidden sm:block text-sm sm:text-base font-semibold text-[#5A0A26]/80">
+            <p className="text-xs sm:text-sm font-semibold text-[#5A0A26]/80">
               Ready to ship | Custom size stitching | Budget-friendly prices
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Tile 1: Under 12k */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-6">
+            {/* Tile 1: Under 3k */}
             <Link
-              to="/collections?price=under12"
-              className="group relative aspect-[16/10] min-h-[290px] sm:min-h-[320px] overflow-hidden bg-white rounded-sm border border-[#fcb8fd] shadow-[0_0_15px_rgba(252,184,253,0.3)] hover:shadow-[0_0_25px_rgba(252,184,253,0.55)] transition-all hover:border-[#fe84ff]"
+              to="/marketplace?price=under3k"
+              className="group relative min-h-[190px] xs:min-h-[210px] sm:min-h-[260px] md:min-h-[290px] md:aspect-[16/10] overflow-hidden bg-white rounded-sm border border-[#E2D1A3] shadow-[0_0_12px_rgba(226,209,163,0.2)] hover:shadow-[0_0_22px_rgba(226,209,163,0.35)] transition-all hover:border-[#D4AF37]"
             >
               <img
                 src="/mockup-assets/tops-western-09.jpg"
-                alt="Under ₹12,000"
+                alt="Under ₹3,000"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-106"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#4A091E]/95 via-[#4A091E]/60 to-transparent" />
-              <div className="absolute left-7 top-1/2 -translate-y-1/2 text-white">
-                <span className="text-xs font-black uppercase tracking-widest text-[#FFA41C] block mb-1">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#4A091E]/95 via-[#4A091E]/70 to-transparent" />
+              <div className="absolute inset-0 p-4 sm:p-7 flex flex-col justify-center text-white z-10 max-w-full">
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#FFA41C] block mb-0.5">
                   % SALE SPECIAL
                 </span>
-                <b className="block text-3xl sm:text-4xl lg:text-5xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs">
-                  Under ₹12,000
+                <b className="block text-2xl sm:text-3xl lg:text-4xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs leading-tight">
+                  Under ₹3,000
                 </b>
-                <p className="text-sm sm:text-base text-white/95 mt-2 max-w-[280px] leading-relaxed font-medium">
+                <p className="text-xs sm:text-sm text-white/95 mt-1 sm:mt-1.5 max-w-[270px] sm:max-w-xs leading-snug font-medium line-clamp-2">
                   Beautiful sarees, dresses and tops at easy everyday prices.
                 </p>
-                <span className="inline-block mt-4 text-sm font-extrabold text-[#FFA41C] border-b-2 border-[#FFA41C] pb-0.5">
-                  See pieces under ₹12k →
+                <span className="inline-block mt-2 sm:mt-3 text-xs sm:text-sm font-extrabold text-[#FFA41C] border-b border-[#FFA41C] pb-0.5 self-start">
+                  See pieces under ₹3k →
                 </span>
               </div>
             </Link>
 
             {/* Tile 2: Made to order */}
             <Link
-              to="/collections?availability=order"
-              className="group relative aspect-[16/10] min-h-[290px] sm:min-h-[320px] overflow-hidden bg-white rounded-sm border border-[#fcb8fd] shadow-[0_0_15px_rgba(252,184,253,0.3)] hover:shadow-[0_0_25px_rgba(252,184,253,0.55)] transition-all hover:border-[#fe84ff]"
+              to="/marketplace?availability=order"
+              className="group relative min-h-[190px] xs:min-h-[210px] sm:min-h-[260px] md:min-h-[290px] md:aspect-[16/10] overflow-hidden bg-white rounded-sm border border-[#E2D1A3] shadow-[0_0_12px_rgba(226,209,163,0.2)] hover:shadow-[0_0_22px_rgba(226,209,163,0.35)] transition-all hover:border-[#D4AF37]"
             >
               <img
                 src="/mockup-assets/lengha-07.jpg"
                 alt="Made to order"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-106"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#4A091E]/95 via-[#4A091E]/60 to-transparent" />
-              <div className="absolute left-7 top-1/2 -translate-y-1/2 text-white">
-                <span className="text-xs font-black uppercase tracking-widest text-gold block mb-1">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#4A091E]/95 via-[#4A091E]/70 to-transparent" />
+              <div className="absolute inset-0 p-4 sm:p-7 flex flex-col justify-center text-white z-10 max-w-full">
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gold block mb-0.5">
                   CUSTOM STITCHING
                 </span>
-                <b className="block text-3xl sm:text-4xl lg:text-5xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs">
+                <b className="block text-2xl sm:text-3xl lg:text-4xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs leading-tight">
                   Made on order
                 </b>
-                <p className="text-sm sm:text-base text-white/95 mt-2 max-w-[280px] leading-relaxed font-medium">
+                <p className="text-xs sm:text-sm text-white/95 mt-1 sm:mt-1.5 max-w-[270px] sm:max-w-xs leading-snug font-medium line-clamp-2">
                   Stitched to your exact measurements directly by boutique tailors.
                 </p>
-                <span className="inline-block mt-4 text-sm font-extrabold text-gold border-b-2 border-gold pb-0.5">
+                <span className="inline-block mt-2 sm:mt-3 text-xs sm:text-sm font-extrabold text-gold border-b border-gold pb-0.5 self-start">
                   See custom fit pieces →
                 </span>
               </div>
@@ -337,26 +331,26 @@ export default function Index() {
 
             {/* Tile 3: Ships in 48 hrs */}
             <Link
-              to="/collections?availability=stock"
-              className="group relative aspect-[16/10] min-h-[290px] sm:min-h-[320px] overflow-hidden bg-white rounded-sm border border-[#fcb8fd] shadow-[0_0_15px_rgba(252,184,253,0.3)] hover:shadow-[0_0_25px_rgba(252,184,253,0.55)] transition-all hover:border-[#fe84ff]"
+              to="/marketplace?availability=stock"
+              className="group relative min-h-[190px] xs:min-h-[210px] sm:min-h-[260px] md:min-h-[290px] md:aspect-[16/10] overflow-hidden bg-white rounded-sm border border-[#E2D1A3] shadow-[0_0_12px_rgba(226,209,163,0.2)] hover:shadow-[0_0_22px_rgba(226,209,163,0.35)] transition-all hover:border-[#D4AF37]"
             >
               <img
                 src="/mockup-assets/bags-14.jpg"
                 alt="Ships in 48 hrs"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-106"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#4A091E]/95 via-[#4A091E]/60 to-transparent" />
-              <div className="absolute left-7 top-1/2 -translate-y-1/2 text-white">
-                <span className="text-xs font-black uppercase tracking-widest text-[#FFA41C] block mb-1">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#4A091E]/95 via-[#4A091E]/70 to-transparent" />
+              <div className="absolute inset-0 p-4 sm:p-7 flex flex-col justify-center text-white z-10 max-w-full">
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#FFA41C] block mb-0.5">
                   FAST DELIVERY
                 </span>
-                <b className="block text-3xl sm:text-4xl lg:text-5xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs">
+                <b className="block text-2xl sm:text-3xl lg:text-4xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs leading-tight">
                   Ships in 48 hrs
                 </b>
-                <p className="text-sm sm:text-base text-white/95 mt-2 max-w-[280px] leading-relaxed font-medium">
+                <p className="text-xs sm:text-sm text-white/95 mt-1 sm:mt-1.5 max-w-[270px] sm:max-w-xs leading-snug font-medium line-clamp-2">
                   Ready in shop right now. Packed and dispatched quickly to your door.
                 </p>
-                <span className="inline-block mt-4 text-sm font-extrabold text-[#FFA41C] border-b-2 border-[#FFA41C] pb-0.5">
+                <span className="inline-block mt-2 sm:mt-3 text-xs sm:text-sm font-extrabold text-[#FFA41C] border-b border-[#FFA41C] pb-0.5 self-start">
                   See ready-to-ship pieces →
                 </span>
               </div>
@@ -368,7 +362,7 @@ export default function Index() {
         {/* SECTION 3: SHOP BY CATEGORY                                  */}
         {/* ============================================================ */}
         <section className="max-w-[1360px] mx-auto px-4 sm:px-8">
-          <div className="flex items-end justify-between mb-6 border-b border-[#fcb8fd] pb-3">
+          <div className="flex items-end justify-between mb-6 border-b border-[#E2D1A3] pb-3">
             <div>
               <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#B38F24]">
                 POPULAR CATEGORIES
@@ -381,7 +375,7 @@ export default function Index() {
               </p>
             </div>
             <Link
-              to="/collections"
+              to="/marketplace"
               className="text-sm font-extrabold text-[#5A0A26] hover:text-[#B38F24] transition border-b-2 border-[#B38F24] pb-0.5 shrink-0"
             >
               Browse All 311 Pieces →
@@ -393,7 +387,7 @@ export default function Index() {
               <Link
                 key={i}
                 to={c.path}
-                className="group relative aspect-[4/3] min-h-[210px] overflow-hidden bg-white rounded-sm border border-[#fcb8fd] shadow-[0_0_12px_rgba(252,184,253,0.25)] hover:shadow-[0_0_20px_rgba(252,184,253,0.45)] transition-all hover:border-[#fe84ff]"
+                className="group relative aspect-[4/3] sm:min-h-[210px] overflow-hidden bg-white rounded-sm border border-[#E2D1A3] shadow-[0_0_12px_rgba(226,209,163,0.2)] hover:shadow-[0_0_20px_rgba(226,209,163,0.35)] transition-all hover:border-[#D4AF37]"
               >
                 <img
                   src={c.image}
@@ -415,18 +409,18 @@ export default function Index() {
           </div>
 
           {/* Quick Taxonomy Links Bar */}
-          <div className="mt-4 pt-3 border-t border-[#fcb8fd] flex flex-wrap items-center justify-between gap-3 text-sm text-[#5A0A26]">
+          <div className="mt-4 pt-3 border-t border-[#E2D1A3] flex flex-wrap items-center justify-between gap-3 text-sm text-[#5A0A26]">
             <span className="font-extrabold text-xs sm:text-sm uppercase tracking-wider text-[#5A0A26]/80">
               More Styles:
             </span>
             <div className="flex flex-wrap items-center gap-4 font-bold">
-              <Link to="/collections?category=Jumpsuits" className="hover:text-[#B38F24] transition">Jumpsuits (4)</Link>
+              <Link to="/marketplace?category=Jumpsuits" className="hover:text-[#B38F24] transition">Jumpsuits (4)</Link>
               <span>|</span>
-              <Link to="/collections?category=Bottoms" className="hover:text-[#B38F24] transition">Bottoms (6)</Link>
+              <Link to="/marketplace?category=Bottoms" className="hover:text-[#B38F24] transition">Bottoms (6)</Link>
               <span>|</span>
-              <Link to="/collections?category=Western%20Co-ords" className="hover:text-[#B38F24] transition">Western Co-ords (7)</Link>
+              <Link to="/marketplace?category=Western%20Co-ords" className="hover:text-[#B38F24] transition">Western Co-ords (7)</Link>
             </div>
-            <Link to="/collections" className="font-extrabold text-[#B38F24] hover:underline ml-auto">
+            <Link to="/marketplace" className="font-extrabold text-[#B38F24] hover:underline ml-auto">
               View All 11 Categories →
             </Link>
           </div>
@@ -437,8 +431,8 @@ export default function Index() {
         {/* ============================================================ */}
         {salePieces.length > 0 && (
           <section className="max-w-[1360px] mx-auto px-4 sm:px-8">
-            <div className="bg-white/95 border border-[#fcb8fd] shadow-[0_0_20px_rgba(252,184,253,0.3)] rounded-sm p-6 sm:p-10">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-[#fcb8fd] pb-4">
+            <div className="bg-white/95 border border-[#E2D1A3] shadow-[0_0_20px_rgba(226,209,163,0.22)] rounded-sm p-6 sm:p-10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-[#E2D1A3] pb-4">
                 <div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs bg-[#FFA41C] text-[#0F1111] font-black text-xs sm:text-sm uppercase tracking-wider mb-2 shadow-2xs">
                     <span className="text-sm font-black">%</span> Special Sale Deals
@@ -452,7 +446,7 @@ export default function Index() {
                 </div>
 
                 <Link
-                  to="/collections?price=under12"
+                  to="/marketplace?price=under3k"
                   className="rounded-sm bg-[#0F1111] hover:bg-[#232F3E] text-white px-7 py-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition shrink-0 self-start sm:self-auto border border-gold shadow-xs"
                 >
                   View All Sale Items →
@@ -469,90 +463,10 @@ export default function Index() {
         )}
 
         {/* ============================================================ */}
-        {/* SECTION 5: MEET OUR SHOPS & DESIGNERS                        */}
+        {/* SECTION 5: FRESH STUDIO RELEASES (NEW IN THIS WEEK)          */}
         {/* ============================================================ */}
         <section className="max-w-[1360px] mx-auto px-4 sm:px-8">
-          <div className="flex items-end justify-between mb-6 border-b border-[#fcb8fd] pb-3">
-            <div>
-              <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#B38F24]">
-                GENUINE SHOPS & CREATORS
-              </span>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#5A0A26] tracking-tight mt-1">
-                Meet Our Boutiques & Designers
-              </h2>
-              <p className="text-sm sm:text-base text-[#5A0A26]/80 mt-1">
-                Buy directly from real shops in Jaipur, Chennai, Hyderabad, Goa and more.
-              </p>
-            </div>
-            <Link
-              to="/designers"
-              className="text-sm font-extrabold text-[#B38F24] hover:underline transition border-b-2 border-[#B38F24] pb-0.5 shrink-0"
-            >
-              Meet all 40 shops →
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {FEATURED_ATELIERS.slice(0, 4).map((a, i) => (
-              <Link
-                key={i}
-                to={`/collections?atelier=${encodeURIComponent(a.name)}`}
-                className="group block cursor-pointer bg-white/95 p-4 rounded-sm border border-[#fcb8fd] shadow-[0_0_15px_rgba(252,184,253,0.25)] hover:shadow-[0_0_22px_rgba(252,184,253,0.45)] transition-all hover:border-[#fe84ff]"
-              >
-                <div className="aspect-[4/3] overflow-hidden rounded-sm bg-stone border border-[#fcb8fd]/70">
-                  <img
-                    src={a.image}
-                    alt={a.name}
-                    className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-105"
-                  />
-                </div>
-                <div className="mt-3.5">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xl font-serif italic text-[#5A0A26] group-hover:text-gold transition leading-snug font-normal">
-                      {a.name}
-                    </p>
-                    <span className="text-xs font-mono font-extrabold text-gold uppercase px-1.5 py-0.5 rounded-xs bg-[#5A0A26] text-white">
-                      VERIFIED
-                    </span>
-                  </div>
-                  <p className="text-sm text-[#5A0A26]/85 mt-1 font-semibold">
-                    {a.city} | {a.pieces} pieces
-                  </p>
-                  <p className="text-xs sm:text-sm text-[#5A0A26]/75 mt-0.5 font-mono truncate">
-                    Specialty: {a.craft}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {/* Regional Hubs Row */}
-          <div className="mt-4 pt-3 border-t border-[#fcb8fd] flex items-center justify-between text-sm text-[#5A0A26]">
-            <span className="font-extrabold text-xs sm:text-sm uppercase tracking-wider text-[#5A0A26]/80">
-              Shop by City:
-            </span>
-            <div className="flex flex-wrap items-center gap-4 font-bold">
-              <Link to="/collections?atelier=Thaila%20Co." className="hover:text-[#B38F24] transition">Jaipur</Link>
-              <span>|</span>
-              <Link to="/collections?atelier=Atelier%20Vindhya" className="hover:text-[#B38F24] transition">Hyderabad</Link>
-              <span>|</span>
-              <Link to="/collections?atelier=Kamala%20House" className="hover:text-[#B38F24] transition">Chennai</Link>
-              <span>|</span>
-              <Link to="/collections?atelier=Noor%20Bagh" className="hover:text-[#B38F24] transition">Lucknow</Link>
-              <span>|</span>
-              <Link to="/collections?atelier=Ruh%20Studio" className="hover:text-[#B38F24] transition">Goa</Link>
-            </div>
-            <Link to="/designers" className="font-extrabold text-[#B38F24] hover:underline">
-              View All 40 Shops →
-            </Link>
-          </div>
-        </section>
-
-        {/* ============================================================ */}
-        {/* SECTION 6: FRESH STUDIO RELEASES (NEW IN THIS WEEK)          */}
-        {/* ============================================================ */}
-        <section className="max-w-[1360px] mx-auto px-4 sm:px-8">
-          <div className="flex items-end justify-between mb-6 border-b border-[#fcb8fd] pb-3">
+          <div className="flex items-end justify-between mb-6 border-b border-[#E2D1A3] pb-3">
             <div>
               <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#B38F24]">
                 JUST ARRIVED
@@ -565,7 +479,7 @@ export default function Index() {
               </p>
             </div>
             <Link
-              to="/collections?sort=new"
+              to="/marketplace?sort=new"
               className="text-sm font-extrabold text-[#B38F24] hover:underline transition border-b-2 border-[#B38F24] pb-0.5 shrink-0"
             >
               Shop All New In →
@@ -584,8 +498,8 @@ export default function Index() {
         {/* ============================================================ */}
         <section className="max-w-[1360px] mx-auto px-4 sm:px-8 space-y-6 sm:space-y-8">
           {/* Why Ogura Box */}
-          <div className="bg-white/95 border border-[#fcb8fd] shadow-[0_0_20px_rgba(252,184,253,0.3)] rounded-sm p-6 sm:p-10">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#fcb8fd] pb-3 gap-2">
+          <div className="bg-white/95 border border-[#E2D1A3] shadow-[0_0_20px_rgba(226,209,163,0.22)] rounded-sm p-6 sm:p-10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#E2D1A3] pb-3 gap-2">
               <div>
                 <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#B38F24]">
                   SAFE & RELIABLE SHOPPING
@@ -635,36 +549,6 @@ export default function Index() {
                   Chat with the designer to customize your measurements, plus 7-day free size adjustments if needed.
                 </p>
               </div>
-            </div>
-          </div>
-
-          {/* Seller Onboarding Banner */}
-          <div className="bg-white/95 border border-[#fcb8fd] shadow-[0_0_18px_rgba(252,184,253,0.25)] rounded-sm p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-5">
-            <div>
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-[#B38F24] block">
-                DO YOU OWN A BOUTIQUE OR CLOTHING BRAND?
-              </span>
-              <h3 className="font-serif text-2xl sm:text-3xl text-[#5A0A26] leading-snug mt-1">
-                Sell to shoppers all across India directly from your shop.
-              </h3>
-              <p className="text-sm sm:text-base text-[#5A0A26]/80 mt-1.5 max-w-xl">
-                No listing charges. Keep your clothes in your own store. Fast and reliable payouts directly to your bank account.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4 shrink-0">
-              <a
-                href="/seller-login"
-                className="rounded-sm bg-[#0F1111] hover:bg-[#232F3E] px-8 py-3.5 text-sm font-extrabold text-white tracking-wider uppercase transition shadow-sm border border-gold"
-              >
-                Start Selling
-              </a>
-              <Link
-                to="/how-it-works"
-                className="rounded-sm bg-white border border-[#fcb8fd] px-6 py-3.5 text-sm font-extrabold text-[#5A0A26] hover:border-[#fe84ff] transition"
-              >
-                Learn more
-              </Link>
             </div>
           </div>
         </section>

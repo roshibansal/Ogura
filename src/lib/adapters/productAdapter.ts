@@ -253,17 +253,59 @@ export function getAtelierCity(brandName?: string): string {
   return "Jaipur";
 }
 
+export function normalizeCatalogPrice(
+  rawPrice?: number | null,
+  idOrTitle?: string | number | null
+): { price: number; originalPrice: number } {
+  const str = String(idOrTitle || rawPrice || "item");
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const absHash = Math.abs(hash);
+  const ratio = (absHash % 1000) / 1000;
+
+  let price: number;
+  if (ratio < 0.65) {
+    // 65% of products are in the cheaper tier (< ₹3,000, between 1,200 and 2,999)
+    const cheapPrices = [
+      1299, 1399, 1499, 1599, 1699, 1799, 1899, 1999, 2199, 2299, 2499, 2599, 2799, 2899, 2999
+    ];
+    price = cheapPrices[absHash % cheapPrices.length];
+  } else if (ratio < 0.85) {
+    // 20% of products are in the mid tier (₹3,000 to ₹5,999)
+    const midPrices = [
+      3299, 3499, 3699, 3999, 4299, 4499, 4799, 4999, 5299, 5499, 5899
+    ];
+    price = midPrices[absHash % midPrices.length];
+  } else {
+    // 15% of products are in the upper tier (₹6,000 to ₹12,000)
+    const highPrices = [
+      6499, 6999, 7499, 7999, 8499, 8999, 9499, 9999, 10499, 11499, 11999
+    ];
+    price = highPrices[absHash % highPrices.length];
+  }
+
+  // Realistic MRP / original price (25% - 40% markup, ending in 99)
+  const markupPercent = 1.25 + ((absHash % 15) / 100);
+  const rawOriginal = price * markupPercent;
+  const originalPrice = Math.max(price + 400, Math.round(rawOriginal / 100) * 100 - 1);
+
+  return { price, originalPrice };
+}
+
 export function transformProductToDesignStrict(product: Product): DesignVM {
   const isReady = Boolean(product.inStock);
   const paletteIndex = Math.abs((product.id || "").split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)) % PALETTES.length;
   const palette = PALETTES[paletteIndex];
   
-  // Authoritative DB price preservation: DB is sole commercial truth
-  const price = typeof product.price === "number" && product.price > 0 ? product.price : 0;
+  // Set all prices between 1200 to 12000, and keep more in the cheaper, less than 3000
+  const { price, originalPrice } = normalizeCatalogPrice(product.price, product.id || product.name);
 
   const normalizedColors = normalizeProductColors(product.colors);
   const normalizedSizes = normalizeProductSizes(product.sizes);
-  const normalizedRaw = { ...product, price, colors: normalizedColors, sizes: normalizedSizes };
+  const normalizedRaw = { ...product, price, originalPrice, colors: normalizedColors, sizes: normalizedSizes };
 
   const mappedCat = mapCategoryToNewTaxonomy(product.category) || (product.category as any) || "Lehengas";
   const catDefaults = CATEGORY_IMAGE_MAP[mappedCat] || CATEGORY_IMAGE_MAP["Lehengas"];
@@ -291,7 +333,7 @@ export function transformProductToDesignStrict(product: Product): DesignVM {
     subtitle: product.description ? product.description.slice(0, 60) + (product.description.length > 60 ? "..." : "") : "",
     category: mappedCat,
     price,
-    originalPrice: product.originalPrice ? Math.round(price * 1.3) : undefined,
+    originalPrice,
     fabric: product.material || "Artisanal Fabric",
     colours: normalizedColors.map((c) => c.name),
     sizes: normalizedSizes,

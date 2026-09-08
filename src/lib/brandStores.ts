@@ -1,5 +1,6 @@
 import type { Product } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeCatalogPrice } from "@/lib/adapters/productAdapter";
 
 export interface BrandStoreProduct extends Product {
   storeName?: string;
@@ -33,12 +34,15 @@ const mapApiProduct = (p: any, i: number): BrandStoreProduct => {
     ? p.images
     : ["/placeholder.svg"];
 
+  const idStr = String(p?.id ?? `api-${i}`);
+  const { price, originalPrice } = normalizeCatalogPrice(p?.price, idStr || p?.name);
+
   return {
-    id: String(p?.id ?? `api-${i}`),
+    id: idStr,
     name: p?.name ?? p?.title ?? "Untitled",
     brand: storeName ?? "OGURA",
-    price: Number(p?.price) || 0,
-    originalPrice: p?.mrp ? Number(p.mrp) : undefined,
+    price,
+    originalPrice,
     category: (p?.category as Product["category"]) ?? "accessories",
     images,
     tags: p?.tags ?? [],

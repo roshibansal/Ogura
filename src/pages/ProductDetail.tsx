@@ -10,7 +10,7 @@ import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { useDesigners } from "@/hooks/useDesigners";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types";
-import { normalizeProductSizes, normalizeProductColors, getAtelierCity } from "@/lib/adapters/productAdapter";
+import { normalizeProductSizes, normalizeProductColors, getAtelierCity, normalizeCatalogPrice } from "@/lib/adapters/productAdapter";
 import { Heart, Check, MapPin, MessageCircle, ShoppingBag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -28,29 +28,57 @@ export default function ProductDetail() {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [pincode, setPincode] = useState("560001");
   const [pincodeCity, setPincodeCity] = useState("Bengaluru");
+  const [showPincodeChange, setShowPincodeChange] = useState(false);
   const [isEditingPincode, setIsEditingPincode] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  // Catalog products for instant fallback & "More from this Atelier"
+  const { data: catalogData, isLoading: isCatalogLoading } = useCatalogProducts();
+  const allDesigns = useMemo(() => catalogData?.designs || [], [catalogData]);
 
-  // Fetch product directly from Supabase
+  // Fetch product directly from Supabase or catalog
   useEffect(() => {
+    let isCancelled = false;
+
     const fetchProduct = async () => {
       if (!id) return;
+
+      // 1. Instant check from already-loaded catalog products
+      if (catalogData?.rawProducts?.length) {
+        const cached = catalogData.rawProducts.find(
+          (p) => String(p.id) === String(id)
+        );
+        if (cached) {
+          if (!isCancelled) {
+            setApiProduct(cached);
+            setIsApiLoading(false);
+          }
+          return;
+        }
+      }
+
       setIsApiLoading(true);
 
       try {
-        const { data: row, error } = await supabase
-          .from("products")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        
+        let query = supabase.from('products').select('*');
+        if (isUuid) {
+          query = query.eq('id', id);
+        } else {
+          query = query.ilike('title', `%${id.replace(/-/g, ' ')}%`);
+        }
 
-        if (error) console.error("[PDP] DB error:", error);
+        const { data: row, error } = await query.maybeSingle();
 
-        if (row) {
-          const authoritativePrice =
-            typeof (row as any).price === "number" && (row as any).price > 0
-              ? (row as any).price
-              : 0;
+        if (error) {
+          console.error("[PDP] DB query error:", error);
+        }
+
+        if (row && !isCancelled) {
+          const { price: authoritativePrice, originalPrice: computedOriginalPrice } = normalizeCatalogPrice(
+            (row as any).price,
+            row.id || (row as any).title
+          );
 
           const rawImages = Array.isArray((row as any).images) && (row as any).images.length
             ? ((row as any).images as string[]).filter(Boolean)
@@ -60,9 +88,7 @@ export default function ProductDetail() {
             id: String(row.id),
             name: (row as any).title ?? "Artisanal Piece",
             price: authoritativePrice,
-            originalPrice: (row as any).original_price
-              ? Number((row as any).original_price)
-              : Math.round(authoritativePrice * 1.3),
+            originalPrice: computedOriginalPrice,
             images: rawImages.length > 0 ? rawImages : ["/mockup-assets/lengha-03.jpg"],
             videoUrl: (row as any).video_url ?? undefined,
             brand: (row as any).brand ?? "OGURA Atelier",
@@ -80,18 +106,70 @@ export default function ProductDetail() {
           } as Product;
 
           setApiProduct(mapped);
+        } else if (!row && !isCancelled) {
+          // Check local custom products (created via seller portal)
+          try {
+            const localCustom = localStorage.getItem("ogura_custom_catalog_products");
+            if (localCustom) {
+              const customItems = JSON.parse(localCustom);
+              const foundCustom = customItems.find((cp: any) => String(cp.id) === String(id));
+              if (foundCustom) {
+                const { price: customPrice, originalPrice: customOriginalPrice } = normalizeCatalogPrice(
+                  foundCustom.price,
+                  foundCustom.id || foundCustom.title
+                );
+                setApiProduct({
+                  id: String(foundCustom.id),
+                  name: foundCustom.title || "Artisanal Creation",
+                  brand: foundCustom.brand || "OGURA Atelier",
+                  price: customPrice,
+                  originalPrice: customOriginalPrice,
+                  category: (foundCustom.category || "dresses") as Product["category"],
+                  images: Array.isArray(foundCustom.images) && foundCustom.images.length > 0 ? foundCustom.images : ["/placeholder.svg"],
+                  sizes: normalizeProductSizes(foundCustom.sizes),
+                  colors: normalizeProductColors(foundCustom.colors),
+                  description: foundCustom.description || "",
+                  material: foundCustom.material || foundCustom.fabric || "Pure silk / handloom textile",
+                  inStock: true,
+                  tags: Array.isArray(foundCustom.style_tags) ? foundCustom.style_tags : [],
+                  occasions: Array.isArray(foundCustom.occasion_tags) ? foundCustom.occasion_tags : [],
+                  rating: 5.0,
+                  reviews: 1,
+                });
+              }
+            }
+          } catch {}
         }
       } catch (err) {
         console.error("[PDP] Fetch error:", err);
       } finally {
-        setIsApiLoading(false);
+        if (!isCancelled) {
+          setIsApiLoading(false);
+        }
       }
     };
 
     fetchProduct();
-  }, [id]);
 
-  const currentProduct = apiProduct;
+    return () => {
+      isCancelled = true;
+    };
+  }, [id, catalogData]);
+
+
+  // Fallback chain: apiProduct -> rawProducts -> allDesigns -> null
+  const currentProduct = useMemo(() => {
+    if (apiProduct) return apiProduct;
+    if (id && catalogData?.rawProducts?.length) {
+      const fromRaw = catalogData.rawProducts.find((p) => String(p.id) === String(id));
+      if (fromRaw) return fromRaw;
+    }
+    if (id && allDesigns.length) {
+      const fromDesign = allDesigns.find((d) => String(d.slug) === String(id));
+      if (fromDesign?.rawProduct) return fromDesign.rawProduct;
+    }
+    return null;
+  }, [apiProduct, id, catalogData, allDesigns]);
 
   // Set default size and color
   useEffect(() => {
@@ -102,10 +180,6 @@ export default function ProductDetail() {
       setSelectedColor((prev) => (prev && colors.some((c) => c.name === prev) ? prev : colors[0]?.name || "Studio Original"));
     }
   }, [currentProduct]);
-
-  // Catalog products for "More from this Atelier"
-  const { data: catalogData } = useCatalogProducts();
-  const allDesigns = useMemo(() => catalogData?.designs || [], [catalogData]);
 
   const sameAtelierDesigns = useMemo(() => {
     if (!currentProduct) return [];
@@ -132,18 +206,18 @@ export default function ProductDetail() {
     );
   }, [designers, currentProduct]);
 
-  if (isApiLoading) {
+  if ((isApiLoading || isCatalogLoading) && !currentProduct) {
     return (
-      <div className="min-h-screen bg-paper text-ink flex flex-col">
+      <div className="min-h-screen bg-white text-[#5A0A26] flex flex-col">
         <Header />
         <main className="flex-1 max-w-[1320px] mx-auto px-4 sm:px-8 py-10 w-full">
           <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10">
-            <Skeleton className="aspect-[3/4] rounded-sm bg-stone" />
+            <Skeleton className="aspect-[3/4] rounded-sm bg-neutral-200" />
             <div className="space-y-4">
-              <Skeleton className="h-4 w-32 bg-stone" />
-              <Skeleton className="h-10 w-3/4 bg-stone" />
-              <Skeleton className="h-6 w-24 bg-stone" />
-              <Skeleton className="h-24 w-full bg-stone" />
+              <Skeleton className="h-4 w-32 bg-neutral-200" />
+              <Skeleton className="h-10 w-3/4 bg-neutral-200" />
+              <Skeleton className="h-6 w-24 bg-neutral-200" />
+              <Skeleton className="h-24 w-full bg-neutral-200" />
             </div>
           </div>
         </main>
@@ -154,17 +228,17 @@ export default function ProductDetail() {
 
   if (!currentProduct) {
     return (
-      <div className="min-h-screen bg-paper text-ink flex flex-col">
+      <div className="min-h-screen bg-white text-[#5A0A26] flex flex-col">
         <Header />
         <main className="flex-1 max-w-[1320px] mx-auto px-4 sm:px-8 py-20 text-center">
-          <h1 className="font-serif italic text-3xl font-normal">Piece not found</h1>
-          <p className="mt-2 text-xs text-grey-soft">
+          <h1 className="font-serif italic text-3xl font-normal text-[#5A0A26]">Piece not found</h1>
+          <p className="mt-2 text-xs text-[#5A0A26]/70">
             This creation is no longer active in the atelier catalogue.
           </p>
           <div className="mt-6">
             <Link
-              to="/collections"
-              className="rounded-sm bg-ink px-6 py-2.5 text-xs font-semibold text-white hover:bg-rose transition"
+              to="/marketplace"
+              className="rounded-sm bg-[#5A0A26] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#881337] transition"
             >
               Browse All Creations
             </Link>
@@ -226,18 +300,18 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8d2f9] text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
+    <div className="min-h-screen bg-white text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
       <Header />
 
-      <main className="flex-1 max-w-[1360px] mx-auto w-full px-4 sm:px-8 py-6 sm:py-8">
+      <main className="flex-1 max-w-[1360px] mx-auto w-full px-4 sm:px-8 pt-6 pb-24 sm:py-8">
         {/* Breadcrumbs (.crumbs) */}
         <p className="text-sm text-ink/75 mb-5 font-semibold">
           <Link to="/" className="hover:text-ink transition">Home</Link>
-          <span className="mx-2 text-[#fcb8fd]">/</span>
-          <Link to={`/collections?category=${encodeURIComponent(currentProduct.category)}`} className="hover:text-ink transition">
+          <span className="mx-2 text-[#E2D1A3]">/</span>
+          <Link to={`/marketplace?category=${encodeURIComponent(currentProduct.category)}`} className="hover:text-ink transition">
             {currentProduct.category}
           </Link>
-          <span className="mx-2 text-[#fcb8fd]">/</span>
+          <span className="mx-2 text-[#E2D1A3]">/</span>
           <span className="text-ink font-bold">{currentProduct.name}</span>
         </p>
 
@@ -507,7 +581,7 @@ export default function ProductDetail() {
             </div>
 
             {/* The 4 Trust Invariants (.trust) */}
-            <div className="bg-white/95 border border-[#fcb8fd] p-5 space-y-3 text-sm text-ink/85 rounded-sm shadow-xs">
+            <div className="bg-white/95 border border-[#E2D1A3] p-5 space-y-3 text-sm text-ink/85 rounded-sm shadow-xs">
               <div className="flex items-start gap-3">
                 <span className="text-emerald-700 font-extrabold text-base leading-none">✓</span>
                 <span>
@@ -584,6 +658,25 @@ export default function ProductDetail() {
           </section>
         )}
       </main>
+
+      {/* Mobile Sticky Buy & Add-to-Bag Bar */}
+      <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/98 backdrop-blur-md border-t border-[#E2D1A3] p-2.5 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          className="flex-1 py-3 bg-[#0F1111] hover:bg-[#232F3E] active:bg-black text-white font-extrabold text-xs rounded-sm transition flex items-center justify-center gap-1.5 shadow-xs"
+        >
+          <ShoppingBag className="h-3.5 w-3.5 text-[#FFA41C]" />
+          <span>Add to Bag</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleBuyNow}
+          className="flex-1 py-3 bg-[#FFA41C] hover:bg-[#FF8F00] active:bg-[#E07E00] text-[#0F1111] font-black text-xs rounded-sm transition border border-[#FF8F00] flex items-center justify-center shadow-md"
+        >
+          <span>Buy Now ({formatINR(currentProduct.price)})</span>
+        </button>
+      </div>
 
       <Footer />
     </div>

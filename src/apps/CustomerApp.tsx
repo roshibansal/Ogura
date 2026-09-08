@@ -50,6 +50,8 @@ const CustomerApp = () => {
         {/* Public Routes */}
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/marketplace" element={<Collections />} />
+        <Route path="/marketplace/:category" element={<Collections />} />
         <Route path="/collections" element={<Collections />} />
         <Route path="/collections/:category" element={<Collections />} />
         <Route path="/designs" element={<Collections />} />

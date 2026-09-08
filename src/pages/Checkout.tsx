@@ -299,7 +299,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FCE8EE] text-[#5A0A26] selection:bg-gold selection:text-ink">
+    <div className="min-h-screen flex flex-col bg-white text-[#5A0A26] selection:bg-gold selection:text-ink">
       <Header />
       <main className="flex-1 max-w-[1360px] mx-auto px-4 sm:px-8 py-10 w-full">
         {/* Checkout Steps */}

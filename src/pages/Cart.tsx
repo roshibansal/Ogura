@@ -32,7 +32,7 @@ export default function Cart() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-[#FCE8EE] text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
+      <div className="min-h-screen bg-white text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
         <Header />
         <main className="flex-1 max-w-7xl mx-auto px-5 py-24 flex items-center justify-center">
           <div className="text-center max-w-md bg-white/95 p-8 rounded-sm border border-[#E2D1A3] shadow-[0_0_16px_rgba(226,209,163,0.22)]">
@@ -48,7 +48,7 @@ export default function Cart() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FCE8EE] text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
+    <div className="min-h-screen bg-white text-[#5A0A26] flex flex-col selection:bg-gold selection:text-ink">
       <Header />
       <main className="flex-1 max-w-[1360px] mx-auto px-4 sm:px-8 py-10 w-full">
         <h1 className="font-serif text-3xl sm:text-5xl font-normal mb-6 text-[#5A0A26]">Shopping Bag ({items.length} {items.length === 1 ? 'piece' : 'pieces'})</h1>

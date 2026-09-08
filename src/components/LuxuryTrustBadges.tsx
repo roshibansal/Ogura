@@ -31,8 +31,8 @@ export const LuxuryTrustBadges = () => {
             <Tilt3D key={index} max={8} scale={1.03} style={{ opacity: 0 }}>
               <div data-reveal>
                 <div className="text-center museum-card museum-spotlight px-6 py-10">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full border border-[rgba(233,212,163,0.4)] mb-6 transition-all duration-500 hover:border-[#e9d4a3]">
-                    <feature.icon className="h-6 w-6 text-[#e9d4a3]" strokeWidth={1.25} />
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full border border-[rgba(233,212,163,0.4)] mb-6 transition-all duration-500 hover:border-[#EAE3D9]">
+                    <feature.icon className="h-6 w-6 text-[#EAE3D9]" strokeWidth={1.25} />
                   </div>
                   <h3 className="text-[#f4efe6] font-serif italic text-lg tracking-wide mb-2">
                     {feature.title}

@@ -88,7 +88,8 @@ export default function ProductDetail() {
         if (row && !isCancelled) {
           const { price: authoritativePrice, originalPrice: computedOriginalPrice } = normalizeCatalogPrice(
             (row as any).price,
-            row.id || (row as any).title
+            row.id || (row as any).title,
+            (row as any).category
           );
 
           const rawImages = Array.isArray((row as any).images) && (row as any).images.length
@@ -127,7 +128,8 @@ export default function ProductDetail() {
               if (foundCustom) {
                 const { price: customPrice, originalPrice: customOriginalPrice } = normalizeCatalogPrice(
                   foundCustom.price,
-                  foundCustom.id || foundCustom.title
+                  foundCustom.id || foundCustom.title,
+                  foundCustom.category
                 );
                 setApiProduct({
                   id: String(foundCustom.id),
@@ -320,11 +322,11 @@ export default function ProductDetail() {
         {/* Breadcrumbs (.crumbs) */}
         <p className="text-sm text-ink/75 mb-5 font-semibold">
           <Link to="/" className="hover:text-ink transition">Home</Link>
-          <span className="mx-2 text-[#E2D1A3]">/</span>
+          <span className="mx-2 text-[#EAE3D9]">/</span>
           <Link to={`/marketplace?category=${encodeURIComponent(currentProduct.category)}`} className="hover:text-ink transition">
             {currentProduct.category}
           </Link>
-          <span className="mx-2 text-[#E2D1A3]">/</span>
+          <span className="mx-2 text-[#EAE3D9]">/</span>
           <span className="text-ink font-bold">{currentProduct.name}</span>
         </p>
 
@@ -413,8 +415,7 @@ export default function ProductDetail() {
                 </span>
                 {currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.price && (
                   <div className="flex items-center gap-2.5">
-                    <span className="text-xs sm:text-sm font-black text-[#0F1111] bg-[#FFA41C] border border-[#FF8F00] px-2.5 py-1 rounded-xs flex items-center gap-1 shadow-xs">
-                      <span className="text-sm font-black">%</span>
+                    <span className="text-xs sm:text-sm font-black text-white bg-[#D6285F] border border-[#B01F4C] px-2.5 py-1 rounded-xs flex items-center gap-1 shadow-xs">
                       <span>SAVE {discountPercent}%</span>
                     </span>
                     <span className="text-base text-ink/40 line-through font-normal">
@@ -425,26 +426,42 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Verified Atelier Box with Faded Gold Glow */}
-            <div className="flex items-center gap-4 border border-[#E2D1A3] rounded-sm p-4 bg-white/95 shadow-[0_0_15px_rgba(226,209,163,0.22)]">
-              <div className="h-12 w-12 rounded-full overflow-hidden bg-stone shrink-0 border-2 border-[#E2D1A3]">
+            {/* Verified Atelier Box — the photo, name and badge all lead to the
+                boutique, so a shopper can see everything else they make. */}
+            <div className="flex items-center gap-4 border border-[#EAE3D9] rounded-sm p-4 bg-white/95 shadow-[0_0_15px_rgba(226,209,163,0.22)]">
+              <Link
+                to={atelierInfo?.id ? `/designers/${atelierInfo.id}` : `/collections?atelier=${encodeURIComponent(currentProduct.brand || "")}`}
+                className="h-12 w-12 rounded-full overflow-hidden bg-stone shrink-0 border-2 border-[#EAE3D9] hover:border-[#D6285F] transition"
+                aria-label={`View all pieces by ${currentProduct.brand}`}
+              >
                 <img
                   src={atelierInfo?.profile_image || "/mockup-assets/lengha-30.jpg"}
                   alt={currentProduct.brand}
                   className="h-full w-full object-cover"
                 />
-              </div>
+              </Link>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-base font-bold text-ink truncate">{currentProduct.brand}</span>
-                  <span className="text-xs font-mono font-extrabold text-gold border border-[#E2D1A3] rounded-sm px-2 py-0.5 uppercase tracking-wider bg-white">
+                <Link
+                  to={atelierInfo?.id ? `/designers/${atelierInfo.id}` : `/collections?atelier=${encodeURIComponent(currentProduct.brand || "")}`}
+                  className="group flex items-center gap-2 flex-wrap"
+                >
+                  <span className="text-base font-bold text-ink truncate group-hover:text-[#D6285F] transition">
+                    {currentProduct.brand}
+                  </span>
+                  <span className="text-xs font-mono font-extrabold text-gold border border-[#EAE3D9] rounded-sm px-2 py-0.5 uppercase tracking-wider bg-white">
                     VERIFIED ATELIER
                   </span>
-                </div>
+                </Link>
                 <p className="text-xs sm:text-sm text-ink/80 mt-0.5 truncate font-medium">
                   {atelierCity} · Handcrafted in studio · replies in ~2h
                 </p>
+                <Link
+                  to={atelierInfo?.id ? `/designers/${atelierInfo.id}` : `/collections?atelier=${encodeURIComponent(currentProduct.brand || "")}`}
+                  className="inline-block mt-1 text-xs font-bold text-[#D6285F] hover:underline underline-offset-2"
+                >
+                  See everything from this boutique →
+                </Link>
               </div>
 
               <button
@@ -453,7 +470,7 @@ export default function ProductDetail() {
                 className={`text-xs sm:text-sm font-bold px-4 py-2 rounded-sm transition border shrink-0 ${
                   isFollowing
                     ? "bg-ink text-white border-ink"
-                    : "border-[#E2D1A3] text-ink hover:border-gold hover:text-gold bg-white"
+                    : "border-[#EAE3D9] text-ink hover:border-gold hover:text-gold bg-white"
                 }`}
               >
                 {isFollowing ? "Following" : "Follow"}
@@ -500,7 +517,7 @@ export default function ProductDetail() {
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-[#B38F24] font-bold hover:underline"
+                  className="text-xs text-[#D6285F] font-bold hover:underline"
                 >
                   Free Size Help →
                 </a>
@@ -532,7 +549,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handleBuyNow}
-                  className="w-full py-4 bg-[#FFA41C] hover:bg-[#FF8F00] active:bg-[#E07E00] text-[#0F1111] font-extrabold text-base rounded-sm transition shadow-md flex items-center justify-center gap-2 border border-[#FF8F00] group"
+                  className="w-full py-4 bg-[#D6285F] hover:bg-[#B01F4C] active:bg-[#96143E] text-white font-extrabold text-base rounded-sm transition shadow-md flex items-center justify-center gap-2 border border-[#B01F4C] group"
                 >
                   <span>Buy Now — {formatINR(currentProduct.price)}</span>
                 </button>
@@ -540,7 +557,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  className="w-full py-4 bg-[#0F1111] hover:bg-[#232F3E] text-white font-bold text-base rounded-sm transition shadow-md flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-[#2B0F1E] hover:bg-[#3D1A2A] text-white font-bold text-base rounded-sm transition shadow-md flex items-center justify-center gap-2"
                 >
                   <ShoppingBag className="h-5 w-5 text-white" />
                   <span>Add to Bag</span>
@@ -553,7 +570,7 @@ export default function ProductDetail() {
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3.5 bg-white border border-[#E2D1A3] text-ink font-bold text-sm rounded-sm hover:border-gold transition flex items-center justify-center gap-2.5 shadow-[0_0_10px_rgba(226,209,163,0.15)]"
+                className="w-full py-3.5 bg-white border border-[#EAE3D9] text-ink font-bold text-sm rounded-sm hover:border-gold transition flex items-center justify-center gap-2.5 shadow-[0_0_10px_rgba(226,209,163,0.15)]"
               >
                 <MessageCircle className="h-4 w-4 text-gold" />
                 <span>Talk to Ogura&apos;s designer first</span>
@@ -562,7 +579,7 @@ export default function ProductDetail() {
             </div>
 
             {/* Delivery Pincode Checker (.pin) */}
-            <div className="flex items-center justify-between bg-white/95 border border-[#E2D1A3] p-4 text-sm text-ink rounded-sm shadow-[0_0_12px_rgba(226,209,163,0.18)]">
+            <div className="flex items-center justify-between bg-white/95 border border-[#EAE3D9] p-4 text-sm text-ink rounded-sm shadow-[0_0_12px_rgba(226,209,163,0.18)]">
               <div className="flex items-center gap-2.5">
                 <MapPin className="h-4 w-4 text-ink shrink-0" />
                 <span>Deliver to <b>{pincode} · {pincodeCity}</b></span>
@@ -584,7 +601,7 @@ export default function ProductDetail() {
                     maxLength={6}
                     value={pincode}
                     onChange={(e) => setPincode(e.target.value)}
-                    className="w-20 bg-white border border-[#E2D1A3] px-2 py-1 text-sm text-ink rounded-sm font-bold"
+                    className="w-20 bg-white border border-[#EAE3D9] px-2 py-1 text-sm text-ink rounded-sm font-bold"
                   />
                   <button type="submit" className="text-sm font-extrabold text-rose">
                     Check
@@ -594,7 +611,7 @@ export default function ProductDetail() {
             </div>
 
             {/* The 4 Trust Invariants (.trust) */}
-            <div className="bg-white/95 border border-[#E2D1A3] p-5 space-y-3 text-sm text-ink/85 rounded-sm shadow-xs">
+            <div className="bg-white/95 border border-[#EAE3D9] p-5 space-y-3 text-sm text-ink/85 rounded-sm shadow-xs">
               <div className="flex items-start gap-3">
                 <span className="text-emerald-700 font-extrabold text-base leading-none">✓</span>
                 <span>
@@ -673,19 +690,19 @@ export default function ProductDetail() {
       </main>
 
       {/* Mobile Sticky Buy & Add-to-Bag Bar */}
-      <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/98 backdrop-blur-md border-t border-[#E2D1A3] p-2.5 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] flex items-center gap-2">
+      <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/98 backdrop-blur-md border-t border-[#EAE3D9] p-2.5 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] flex items-center gap-2">
         <button
           type="button"
           onClick={handleAddToCart}
-          className="flex-1 py-3 bg-[#0F1111] hover:bg-[#232F3E] active:bg-black text-white font-extrabold text-xs rounded-sm transition flex items-center justify-center gap-1.5 shadow-xs"
+          className="flex-1 py-3 bg-[#2B0F1E] hover:bg-[#3D1A2A] active:bg-black text-white font-extrabold text-xs rounded-sm transition flex items-center justify-center gap-1.5 shadow-xs"
         >
-          <ShoppingBag className="h-3.5 w-3.5 text-[#FFA41C]" />
+          <ShoppingBag className="h-3.5 w-3.5 text-[#D6285F]" />
           <span>Add to Bag</span>
         </button>
         <button
           type="button"
           onClick={handleBuyNow}
-          className="flex-1 py-3 bg-[#FFA41C] hover:bg-[#FF8F00] active:bg-[#E07E00] text-[#0F1111] font-black text-xs rounded-sm transition border border-[#FF8F00] flex items-center justify-center shadow-md"
+          className="flex-1 py-3 bg-[#D6285F] hover:bg-[#B01F4C] active:bg-[#96143E] text-white font-black text-xs rounded-sm transition border border-[#B01F4C] flex items-center justify-center shadow-md"
         >
           <span>Buy Now ({formatINR(currentProduct.price)})</span>
         </button>

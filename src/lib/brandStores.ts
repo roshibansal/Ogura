@@ -35,7 +35,7 @@ const mapApiProduct = (p: any, i: number): BrandStoreProduct => {
     : ["/placeholder.svg"];
 
   const idStr = String(p?.id ?? `api-${i}`);
-  const { price, originalPrice } = normalizeCatalogPrice(p?.price, idStr || p?.name);
+  const { price, originalPrice } = normalizeCatalogPrice(p?.price, idStr || p?.name, p?.category);
 
   return {
     id: idStr,

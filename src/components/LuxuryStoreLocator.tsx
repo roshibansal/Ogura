@@ -55,7 +55,7 @@ export const LuxuryStoreLocator = () => {
             <Tilt3D key={index} max={10} scale={1.04} className="flex-1" style={{ opacity: 0 }}>
               <div data-reveal>
                 <div className="text-left museum-card museum-spotlight px-8 py-9">
-                  <MapPin className="h-5 w-5 text-[#e9d4a3] mb-5 relative z-10" strokeWidth={1.25} />
+                  <MapPin className="h-5 w-5 text-[#EAE3D9] mb-5 relative z-10" strokeWidth={1.25} />
                   <p className="text-[10px] text-[#c9a56b] italic tracking-[0.32em] uppercase mb-3 font-serif">
                     {store.city}
                   </p>

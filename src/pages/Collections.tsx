@@ -7,6 +7,62 @@ import { useCatalogProducts } from "@/hooks/useCatalogProducts";
 import { CANONICAL_TAXONOMY, DesignVM, resolveCategoryFromSlug, slugifyCategory } from "@/lib/adapters/productAdapter";
 import { Filter, X, Check, ChevronDown } from "lucide-react";
 
+/**
+ * How well does this piece match what was typed?
+ * A title match counts for far more than a word buried in a care note, so
+ * "Blue Embellished Dress" ranks above a cheap piece that merely mentions blue.
+ */
+/**
+ * Ordering for the unfiltered catalogue. Tops and Indian Co-ords lead, and
+ * inside those the 9 Sept studio drop comes first — that photography is the
+ * closest thing on the site to what Ogura actually sells, so it should be the
+ * first thing anyone sees rather than sitting wherever its price falls.
+ */
+const featuredRank = (d: { category?: string; image?: string }) => {
+  const c = (d.category || "").toLowerCase();
+  const isDrop = (d.image || "").startsWith("/catalogue/");
+  const isTop = c.includes("top");
+  const isCoord = c.includes("kurta set") || c.includes("indian co");
+  if (isDrop && isCoord) return 0;
+  if (isDrop && isTop) return 1;
+  if (isCoord) return 2;
+  if (isTop) return 3;
+  return 4;
+};
+
+function relevance(d: DesignVM, query: string): number {
+  const q = query.toLowerCase().trim();
+  const words = q.split(/\s+/).filter(Boolean);
+  const title = (d.title || "").toLowerCase();
+  const subtitle = (d.subtitle || "").toLowerCase();
+  const category = (d.category || "").toLowerCase();
+  const boutique = (d.boutique || "").toLowerCase();
+  const detail = [
+    d.fabric,
+    Array.isArray(d.colours) ? d.colours.join(" ") : "",
+    d.city,
+    d.note,
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  let score = 0;
+  if (title === q) score += 400;
+  else if (title.startsWith(q)) score += 250;
+  else if (title.includes(q)) score += 180;
+
+  if (words.length > 1 && words.every((w) => title.includes(w))) score += 120;
+
+  for (const w of words) {
+    if (title.includes(w)) score += 40;
+    else if (subtitle.includes(w)) score += 18;
+    else if (category.includes(w)) score += 14;
+    else if (boutique.includes(w)) score += 12;
+    else if (detail.includes(w)) score += 4;
+  }
+
+  if (d.readyStock) score += 5;
+  return score;
+}
+
 export default function Collections() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { category: routeCategory } = useParams();
@@ -70,7 +126,7 @@ export default function Collections() {
   const facetCounts = useMemo(() => {
     const counts = {
       availability: { stock: 0, order: 0 },
-      price: { under3k: 0, "3to6k": 0, over6k: 0 },
+      price: { under2k: 0, "2to3k": 0, over3k: 0 },
       categories: {} as Record<string, number>,
       ateliers: {} as Record<string, number>,
       cities: {} as Record<string, number>,
@@ -82,9 +138,9 @@ export default function Collections() {
       else counts.availability.order++;
 
       // Price: 1200 to 12000 range
-      if (d.price < 3000) counts.price.under3k++;
-      else if (d.price <= 6000) counts.price["3to6k"]++;
-      else counts.price.over6k++;
+      if (d.price < 2000) counts.price.under2k++;
+      else if (d.price <= 3000) counts.price["2to3k"]++;
+      else counts.price.over3k++;
 
       // Category
       if (d.category) {
@@ -109,13 +165,34 @@ export default function Collections() {
   const filteredDesigns = useMemo(() => {
     return allDesigns
       .filter((d: DesignVM) => {
-        // Search query filter
+        // Search: every word must appear somewhere in the piece.
+        // Previously the whole phrase had to match one field, so "red silk"
+        // found nothing even when both words were present.
         if (searchQuery) {
-          const q = searchQuery.toLowerCase();
-          const matchTitle = d.title.toLowerCase().includes(q);
-          const matchBrand = d.boutique.toLowerCase().includes(q);
-          const matchCategory = d.category.toLowerCase().includes(q);
-          if (!matchTitle && !matchBrand && !matchCategory) return false;
+          const haystack = [
+            d.title,
+            d.subtitle,
+            d.boutique,
+            d.city,
+            d.category,
+            d.fabric,
+            Array.isArray(d.colours) ? d.colours.join(" ") : "",
+            Array.isArray(d.sizes) ? d.sizes.join(" ") : "",
+            d.note,
+            d.customisable ? "made to order custom" : "",
+            d.readyStock ? "in studio ready ships" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+          const hit = (w: string) =>
+            haystack.includes(w) ||
+            (w.endsWith("s") && haystack.includes(w.slice(0, -1))) ||  // sarees → saree
+            (!w.endsWith("s") && haystack.includes(w + "s"));           // saree → sarees
+
+          if (!words.every(hit)) return false;
         }
 
         // Category filter with slug resolution
@@ -144,16 +221,30 @@ export default function Collections() {
         if (activeAvailability === "order" && d.readyStock) return false;
 
         // Price filter (1,200 to 12,000)
-        if (activePrice === "under3k" && d.price >= 3000) return false;
-        if (activePrice === "3to6k" && (d.price < 3000 || d.price > 6000)) return false;
-        if (activePrice === "over6k" && d.price <= 6000) return false;
+        if (activePrice === "under2k" && d.price >= 2000) return false;
+        if (activePrice === "2to3k" && (d.price < 2000 || d.price > 3000)) return false;
+        if (activePrice === "over3k" && d.price <= 3000) return false;
 
         return true;
       })
       .sort((a, b) => {
+        // An explicit sort choice always wins.
         if (activeSort === "high") return b.price - a.price;
         if (activeSort === "new") return b.title.localeCompare(a.title);
-        // Default: Price low to high
+
+        // When searching, order by how well the piece matches — not by price.
+        if (searchQuery) {
+          const diff = relevance(b, searchQuery) - relevance(a, searchQuery);
+          if (diff !== 0) return diff;
+        }
+
+        // With no search and no category filter, lead with Tops and Indian
+        // Co-ords. Inside a category that ranking is meaningless, so it falls
+        // straight through to price.
+        if (!activeCategory) {
+          const diff = featuredRank(a) - featuredRank(b);
+          if (diff !== 0) return diff;
+        }
         return a.price - b.price;
       });
   }, [allDesigns, activeCategory, activeAtelier, activeAvailability, activePrice, activeCity, activeSort, searchQuery]);
@@ -179,22 +270,44 @@ export default function Collections() {
           <Link to="/" className="hover:text-ink transition">
             Home
           </Link>
-          <span className="mx-2 text-[#E2D1A3]">/</span>
+          <span className="mx-2 text-[#EAE3D9]">/</span>
           <span className="text-ink font-bold">
             {activeCategory || (searchQuery ? `Search: "${searchQuery}"` : "All Creations")}
           </span>
         </p>
 
         {/* Listing Header (.lhead) */}
-        <div className="flex flex-wrap items-baseline justify-between gap-4 pb-4 border-b border-[#E2D1A3]">
+        <div className="flex flex-wrap items-baseline justify-between gap-4 pb-4 border-b border-[#EAE3D9]">
           <div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif tracking-tight text-ink">
-              {activeCategory || (searchQuery ? `Search results for "${searchQuery}"` : "Marketplace")}
-            </h1>
-            <p className="text-sm sm:text-base text-ink/80 mt-1.5 font-medium">
-              <b className="text-ink font-extrabold">{filteredDesigns.length}</b> {filteredDesigns.length === 1 ? "piece" : "pieces"} from{" "}
-              <b className="text-ink font-extrabold">{distinctAteliersCount}</b> {distinctAteliersCount === 1 ? "shop" : "shops"}
-            </p>
+            {activeAtelier ? (
+              <>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#D6285F]">
+                  Verified atelier
+                </p>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif tracking-tight text-ink mt-1">
+                  {activeAtelier}
+                </h1>
+                <p className="text-sm sm:text-base text-ink/80 mt-1.5 font-medium">
+                  {filteredDesigns[0]?.city ? <>{filteredDesigns[0].city} · </> : null}
+                  <b className="text-ink font-extrabold">{filteredDesigns.length}</b>{" "}
+                  {filteredDesigns.length === 1 ? "piece" : "pieces"} made in this studio
+                </p>
+                <p className="text-sm text-ink/70 mt-2 max-w-xl">
+                  Every piece here is made by the same hands. Ask about a size, a colour or a
+                  change before you order — the studio replies in a few hours.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif tracking-tight text-ink">
+                  {activeCategory || (searchQuery ? `Search results for "${searchQuery}"` : "Marketplace")}
+                </h1>
+                <p className="text-sm sm:text-base text-ink/80 mt-1.5 font-medium">
+                  <b className="text-ink font-extrabold">{filteredDesigns.length}</b> {filteredDesigns.length === 1 ? "piece" : "pieces"} from{" "}
+                  <b className="text-ink font-extrabold">{distinctAteliersCount}</b> {distinctAteliersCount === 1 ? "shop" : "shops"}
+                </p>
+              </>
+            )}
           </div>
 
           {/* Sort Selector and Filter Trigger */}
@@ -203,7 +316,7 @@ export default function Collections() {
             <button
               type="button"
               onClick={() => setIsMobileFilterOpen(true)}
-              className="lg:hidden flex items-center gap-1.5 border border-[#E2D1A3] bg-white px-3 py-2 rounded-sm text-[#5A0A26] hover:border-[#5A0A26] transition font-bold"
+              className="lg:hidden flex items-center gap-1.5 border border-[#EAE3D9] bg-white px-3 py-2 rounded-sm text-[#5A0A26] hover:border-[#5A0A26] transition font-bold"
             >
               <Filter className="h-3.5 w-3.5" />
               <span>Filters</span>
@@ -217,7 +330,7 @@ export default function Collections() {
               <select
                 value={activeSort}
                 onChange={(e) => setParam("sort", e.target.value)}
-                className="appearance-none border border-[#E2D1A3] bg-white px-3 py-2 pr-7 rounded-sm text-[#5A0A26] hover:border-[#5A0A26] focus:outline-none transition cursor-pointer text-xs font-bold shadow-xs"
+                className="appearance-none border border-[#EAE3D9] bg-white px-3 py-2 pr-7 rounded-sm text-[#5A0A26] hover:border-[#5A0A26] focus:outline-none transition cursor-pointer text-xs font-bold shadow-xs"
               >
                 <option value="low">Price: Low to High (Default)</option>
                 <option value="high">Price: High to Low</option>
@@ -231,9 +344,9 @@ export default function Collections() {
         {/* ============================================================ */}
         {/* CATEGORIES IN MARKETPLACE (DIRECT VISUAL CATEGORY SELECTOR)  */}
         {/* ============================================================ */}
-        <div className="py-4 border-b border-[#E2D1A3]">
+        <div className="py-4 border-b border-[#EAE3D9]">
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-xs font-black uppercase tracking-[0.16em] text-[#B38F24]">
+            <span className="text-xs font-black uppercase tracking-[0.16em] text-[#D6285F]">
               Browse Categories ({CANONICAL_TAXONOMY.length})
             </span>
             {activeCategory && (
@@ -254,7 +367,7 @@ export default function Collections() {
               className={`shrink-0 min-w-[125px] sm:min-w-0 p-2.5 rounded-sm border text-left transition flex flex-col justify-between ${
                 !activeCategory
                   ? "bg-[#5A0A26] text-white border-[#5A0A26] shadow-xs"
-                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold hover:bg-neutral-50"
+                  : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold hover:bg-neutral-50"
               }`}
             >
               <span className="text-xs font-extrabold truncate">All Items</span>
@@ -275,7 +388,7 @@ export default function Collections() {
                   className={`shrink-0 min-w-[125px] sm:min-w-0 p-2.5 rounded-sm border text-left transition flex flex-col justify-between ${
                     isSelected
                       ? "bg-[#5A0A26] text-white border-[#5A0A26] shadow-xs"
-                      : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold hover:bg-neutral-50"
+                      : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold hover:bg-neutral-50"
                   }`}
                 >
                   <span className="text-xs font-extrabold truncate">{cat}</span>
@@ -288,42 +401,42 @@ export default function Collections() {
           </div>
 
           {/* Quick Filters Row: Price and Availability */}
-          <div className="mt-3 flex items-center gap-2 overflow-x-auto scrollbar-none pt-2.5 border-t border-[#E2D1A3]/50 text-xs">
+          <div className="mt-3 flex items-center gap-2 overflow-x-auto scrollbar-none pt-2.5 border-t border-[#EAE3D9]/50 text-xs">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#5A0A26]/70 shrink-0">
               Price & Delivery:
             </span>
             <button
               type="button"
-              onClick={() => toggleParam("price", "under3k")}
+              onClick={() => toggleParam("price", "under2k")}
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
-                activePrice === "under3k"
-                  ? "bg-[#FFA41C] text-[#0F1111] font-black border-[#FF8F00]"
-                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold font-bold"
+                activePrice === "under2k"
+                  ? "bg-[#D6285F] text-white font-black border-[#B01F4C]"
+                  : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >
-              Under ₹3,000 ({facetCounts.price.under3k})
+              Under ₹2,000 ({facetCounts.price.under2k})
             </button>
             <button
               type="button"
-              onClick={() => toggleParam("price", "3to6k")}
+              onClick={() => toggleParam("price", "2to3k")}
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
-                activePrice === "3to6k"
-                  ? "bg-[#FFA41C] text-[#0F1111] font-black border-[#FF8F00]"
-                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold font-bold"
+                activePrice === "2to3k"
+                  ? "bg-[#D6285F] text-white font-black border-[#B01F4C]"
+                  : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >
-              ₹3,000–₹6,000 ({facetCounts.price["3to6k"]})
+              ₹2,000–₹3,000 ({facetCounts.price["2to3k"]})
             </button>
             <button
               type="button"
-              onClick={() => toggleParam("price", "over6k")}
+              onClick={() => toggleParam("price", "over3k")}
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
-                activePrice === "over6k"
-                  ? "bg-[#FFA41C] text-[#0F1111] font-black border-[#FF8F00]"
-                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold font-bold"
+                activePrice === "over3k"
+                  ? "bg-[#D6285F] text-white font-black border-[#B01F4C]"
+                  : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >
-              Over ₹6,000 ({facetCounts.price.over6k})
+              Over ₹3,000 ({facetCounts.price.over3k})
             </button>
             <button
               type="button"
@@ -331,7 +444,7 @@ export default function Collections() {
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
                 activeAvailability === "stock"
                   ? "bg-[#5A0A26] text-white font-bold border-[#5A0A26]"
-                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold font-bold"
+                  : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >
               In Studio (Ships 48h)
@@ -342,7 +455,7 @@ export default function Collections() {
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
                 activeAvailability === "order"
                   ? "bg-[#5A0A26] text-white font-bold border-[#5A0A26]"
-                  : "bg-white text-[#5A0A26] border-[#E2D1A3] hover:border-gold font-bold"
+                  : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >
               Made on Order
@@ -386,11 +499,11 @@ export default function Collections() {
                 className="inline-flex items-center gap-1 border border-rose text-rose bg-white px-2.5 py-1 rounded-sm text-xs hover:bg-rose/5 transition"
               >
                 <span>
-                  {activePrice === "under3k"
-                    ? "Under ₹3,000"
-                    : activePrice === "3to6k"
-                    ? "₹3,000–₹6,000"
-                    : "Over ₹6,000"}
+                  {activePrice === "under2k"
+                    ? "Under ₹2,000"
+                    : activePrice === "2to3k"
+                    ? "₹2,000–₹3,000"
+                    : "Over ₹3,000"}
                 </span>
                 <X className="h-3 w-3" />
               </button>
@@ -442,9 +555,9 @@ export default function Collections() {
         {/* 2-Column Listing Layout (.listing) */}
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 items-start">
           {/* Left Filter Rail (.rail) */}
-          <aside className="hidden lg:block space-y-5 text-xs text-[#5A0A26] bg-white/95 border border-[#E2D1A3] p-4 rounded-sm shadow-[0_0_12px_rgba(226,209,163,0.18)]">
+          <aside className="hidden lg:block space-y-5 text-xs text-[#5A0A26] bg-white/95 border border-[#EAE3D9] p-4 rounded-sm shadow-[0_0_12px_rgba(226,209,163,0.18)]">
             {/* Availability */}
-            <div className="border-b border-[#E2D1A3]/60 pb-4">
+            <div className="border-b border-[#EAE3D9]/60 pb-4">
               <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-[#5A0A26] mb-2.5">
                 Availability
               </h4>
@@ -497,59 +610,59 @@ export default function Collections() {
               <div className="space-y-1.5">
                 <button
                   type="button"
-                  onClick={() => toggleParam("price", "under3k")}
+                  onClick={() => toggleParam("price", "under2k")}
                   className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
-                    activePrice === "under3k" ? "font-bold text-ink" : ""
+                    activePrice === "under2k" ? "font-bold text-ink" : ""
                   }`}
                 >
                   <span
                     className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
-                      activePrice === "under3k"
+                      activePrice === "under2k"
                         ? "bg-ink border-ink text-white"
                         : "border-line"
                     }`}
                   >
-                    {activePrice === "under3k" && <Check className="h-2.5 w-2.5" />}
+                    {activePrice === "under2k" && <Check className="h-2.5 w-2.5" />}
                   </span>
-                  <span>Under ₹3,000 ({facetCounts.price.under3k})</span>
+                  <span>Under ₹2,000 ({facetCounts.price.under2k})</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => toggleParam("price", "3to6k")}
+                  onClick={() => toggleParam("price", "2to3k")}
                   className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
-                    activePrice === "3to6k" ? "font-bold text-ink" : ""
+                    activePrice === "2to3k" ? "font-bold text-ink" : ""
                   }`}
                 >
                   <span
                     className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
-                      activePrice === "3to6k"
+                      activePrice === "2to3k"
                         ? "bg-ink border-ink text-white"
                         : "border-line"
                     }`}
                   >
-                    {activePrice === "3to6k" && <Check className="h-2.5 w-2.5" />}
+                    {activePrice === "2to3k" && <Check className="h-2.5 w-2.5" />}
                   </span>
-                  <span>₹3,000–₹6,000 ({facetCounts.price["3to6k"]})</span>
+                  <span>₹2,000–₹3,000 ({facetCounts.price["2to3k"]})</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => toggleParam("price", "over6k")}
+                  onClick={() => toggleParam("price", "over3k")}
                   className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
-                    activePrice === "over6k" ? "font-bold text-ink" : ""
+                    activePrice === "over3k" ? "font-bold text-ink" : ""
                   }`}
                 >
                   <span
                     className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
-                      activePrice === "over6k"
+                      activePrice === "over3k"
                         ? "bg-ink border-ink text-white"
                         : "border-line"
                     }`}
                   >
-                    {activePrice === "over6k" && <Check className="h-2.5 w-2.5" />}
+                    {activePrice === "over3k" && <Check className="h-2.5 w-2.5" />}
                   </span>
-                  <span>Over ₹6,000 ({facetCounts.price.over6k})</span>
+                  <span>Over ₹3,000 ({facetCounts.price.over3k})</span>
                 </button>
               </div>
             </div>

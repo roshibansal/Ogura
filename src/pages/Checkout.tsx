@@ -173,6 +173,8 @@ export default function Checkout() {
               color: item.color,
             })),
             customer_id: user?.id,
+            // The server revalidates this code and computes the discount itself.
+            discount_code: appliedDiscount?.code ?? null,
             shipping_address: selectedAddress ? {
               full_name: selectedAddress.full_name,
               mobile: selectedAddress.mobile,
@@ -328,10 +330,10 @@ export default function Checkout() {
           {/* Left Column - Address & Items */}
           <div className="lg:col-span-2 space-y-6">
             {/* Delivery Address Section */}
-            <div className="p-6 rounded-sm bg-white/95 border border-[#E2D1A3] shadow-[0_0_14px_rgba(226,209,163,0.18)]">
+            <div className="p-6 rounded-sm bg-white/95 border border-[#EAE3D9] shadow-[0_0_14px_rgba(226,209,163,0.18)]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-sm bg-[#5A0A26]/5 flex items-center justify-center border border-[#E2D1A3]/60">
+                  <div className="h-10 w-10 rounded-sm bg-[#5A0A26]/5 flex items-center justify-center border border-[#EAE3D9]/60">
                     <MapPin className="h-5 w-5 text-gold" />
                   </div>
                   <div>
@@ -343,7 +345,7 @@ export default function Checkout() {
                   variant="outline" 
                   size="sm"
                   onClick={() => setShowAddressModal(true)}
-                  className="rounded-sm border-[#E2D1A3] font-bold text-sm text-[#5A0A26]"
+                  className="rounded-sm border-[#EAE3D9] font-bold text-sm text-[#5A0A26]"
                 >
                   {selectedAddress ? 'Change Address' : 'Add Address'}
                 </Button>
@@ -358,7 +360,7 @@ export default function Checkout() {
               ) : (
                 <button
                   onClick={() => setShowAddressModal(true)}
-                  className="w-full border-2 border-dashed border-[#E2D1A3] rounded-sm p-6 flex flex-col items-center justify-center gap-2 text-[#5A0A26]/70 hover:border-gold hover:text-[#5A0A26] transition-colors"
+                  className="w-full border-2 border-dashed border-[#EAE3D9] rounded-sm p-6 flex flex-col items-center justify-center gap-2 text-[#5A0A26]/70 hover:border-gold hover:text-[#5A0A26] transition-colors"
                 >
                   <MapPin className="h-8 w-8 text-gold" />
                   <span className="font-bold text-base">Add Delivery Address</span>
@@ -368,9 +370,9 @@ export default function Checkout() {
             </div>
 
             {/* Order Items */}
-            <div className="p-6 rounded-sm bg-white/95 border border-[#E2D1A3] shadow-[0_0_14px_rgba(226,209,163,0.18)]">
+            <div className="p-6 rounded-sm bg-white/95 border border-[#EAE3D9] shadow-[0_0_14px_rgba(226,209,163,0.18)]">
               <div className="flex items-center gap-3 mb-5">
-                <div className="h-10 w-10 rounded-sm bg-[#5A0A26]/5 flex items-center justify-center border border-[#E2D1A3]/60">
+                <div className="h-10 w-10 rounded-sm bg-[#5A0A26]/5 flex items-center justify-center border border-[#EAE3D9]/60">
                   <ShoppingBag className="h-5 w-5 text-gold" />
                 </div>
                 <div>
@@ -422,7 +424,7 @@ export default function Checkout() {
 
           {/* Right Column - Payment Summary */}
           <div className="lg:col-span-1">
-            <div className="p-6 sticky top-24 rounded-sm bg-white/95 border border-[#E2D1A3] shadow-[0_0_18px_rgba(226,209,163,0.22)]">
+            <div className="p-6 sticky top-24 rounded-sm bg-white/95 border border-[#EAE3D9] shadow-[0_0_18px_rgba(226,209,163,0.22)]">
               <h2 className="font-serif text-xl sm:text-2xl font-normal text-[#5A0A26] mb-4">Payment Summary</h2>
 
               {/* Discount Code */}
@@ -432,10 +434,10 @@ export default function Checkout() {
                     placeholder="Discount code"
                     value={discountCode}
                     onChange={e => setDiscountCode(e.target.value)}
-                    className="uppercase text-sm rounded-sm border-[#E2D1A3]"
+                    className="uppercase text-sm rounded-sm border-[#EAE3D9]"
                     onKeyDown={e => e.key === "Enter" && handleApplyDiscount()}
                   />
-                  <Button variant="outline" size="sm" onClick={handleApplyDiscount} disabled={applyingDiscount} className="rounded-sm border-[#E2D1A3] font-bold text-xs">
+                  <Button variant="outline" size="sm" onClick={handleApplyDiscount} disabled={applyingDiscount} className="rounded-sm border-[#EAE3D9] font-bold text-xs">
                     {applyingDiscount ? <Loader2 className="h-3 w-3 animate-spin" /> : "Apply"}
                   </Button>
                 </div>
@@ -459,14 +461,14 @@ export default function Checkout() {
                     <span>-₹{discountAmount.toLocaleString()}</span>
                   </div>
                 )}
-                <div className="border-t border-[#E2D1A3]/60 pt-3 flex justify-between font-bold text-xl text-[#5A0A26]">
+                <div className="border-t border-[#EAE3D9]/60 pt-3 flex justify-between font-bold text-xl text-[#5A0A26]">
                   <span>Total</span>
                   <span>₹{finalTotal.toLocaleString()}</span>
                 </div>
               </div>
 
               <Button 
-                className="w-full mt-6 py-4 text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-sm bg-[#FFA41C] hover:bg-[#FF8F00] text-[#0F1111] border border-[#FF8F00] shadow-md transition" 
+                className="w-full mt-6 py-4 text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-sm bg-[#D6285F] hover:bg-[#B01F4C] text-white border border-[#B01F4C] shadow-md transition" 
                 size="lg"
                 onClick={handlePayment}
                 disabled={isProcessing || !razorpayLoaded}

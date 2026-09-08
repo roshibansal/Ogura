@@ -8,12 +8,12 @@ const TOTAL_SECONDS = 24 * 60 * 60;
 const pad = (n: number) => String(n).padStart(2, "0");
 
 const particles = [
-  { color: "#ec4899", size: 18, top: "8%", left: "5%", dur: "7s", delay: "0s" },
+  { color: "#D6285F", size: 18, top: "8%", left: "5%", dur: "7s", delay: "0s" },
   { color: "#facc15", size: 14, top: "15%", left: "85%", dur: "9s", delay: "1s" },
   { color: "#3b82f6", size: 20, top: "70%", left: "10%", dur: "8s", delay: "2s" },
   { color: "#a855f7", size: 12, top: "80%", left: "90%", dur: "6s", delay: "0.5s" },
   { color: "#f97316", size: 16, top: "25%", left: "50%", dur: "10s", delay: "3s" },
-  { color: "#ec4899", size: 10, top: "60%", left: "30%", dur: "7.5s", delay: "1.5s" },
+  { color: "#D6285F", size: 10, top: "60%", left: "30%", dur: "7.5s", delay: "1.5s" },
   { color: "#facc15", size: 22, top: "40%", left: "75%", dur: "8.5s", delay: "2.5s" },
   { color: "#3b82f6", size: 15, top: "90%", left: "55%", dur: "9.5s", delay: "0.8s" },
   { color: "#a855f7", size: 13, top: "5%", left: "40%", dur: "6.5s", delay: "4s" },

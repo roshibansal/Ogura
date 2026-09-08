@@ -38,7 +38,7 @@ export const MTOHeroSection = ({ onStartJourney }: MTOHeroSectionProps) => {
         <div className="max-w-3xl">
           {/* Headline */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-light tracking-wide mb-6">
-            <span className="bg-gradient-to-r from-[#F5E6C8] via-[#D4AF37] to-[#F5E6C8] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#F5E6C8] via-[#C9A56B] to-[#F5E6C8] bg-clip-text text-transparent">
               Designed With
             </span>
             <br />
@@ -55,7 +55,7 @@ export const MTOHeroSection = ({ onStartJourney }: MTOHeroSectionProps) => {
           <Button
             onClick={onStartJourney}
             size="lg"
-            className="bg-gradient-to-r from-[#D4AF37] to-[#B8860B] hover:from-[#B8860B] hover:to-[#8B6914] text-white border-0 px-8 py-6 text-lg font-medium rounded-full shadow-lg shadow-black/20 transition-all duration-300 hover:scale-105"
+            className="bg-gradient-to-r from-[#C9A56B] to-[#D6285F] hover:from-[#D6285F] hover:to-[#8B6914] text-white border-0 px-8 py-6 text-lg font-medium rounded-full shadow-lg shadow-black/20 transition-all duration-300 hover:scale-105"
           >
             Design With a Fashion Designer
           </Button>

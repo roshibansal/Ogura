@@ -87,10 +87,10 @@ export const MTOInspirationUpload = ({ onProceed }: MTOInspirationUploadProps) =
 
           {/* Style Cues Detected (Placeholder) */}
           {state.inspirationImages.length > 0 && (
-            <Card className="p-4 bg-[#D4AF37]/5 border-[#D4AF37]/20">
+            <Card className="p-4 bg-[#C9A56B]/5 border-[#C9A56B]/20">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#D4AF37]/10 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+                <div className="w-10 h-10 rounded-full bg-[#C9A56B]/10 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-[#C9A56B]" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Style Cues Detected</p>
@@ -125,7 +125,7 @@ export const MTOInspirationUpload = ({ onProceed }: MTOInspirationUploadProps) =
             <div className="space-y-4">
               <Label>
                 Budget Range:{" "}
-                <span className="text-[#D4AF37] font-medium">
+                <span className="text-[#C9A56B] font-medium">
                   {formatPrice(localBudget[0])} - {formatPrice(500000)}+
                 </span>
               </Label>
@@ -161,7 +161,7 @@ export const MTOInspirationUpload = ({ onProceed }: MTOInspirationUploadProps) =
               onClick={onProceed}
               disabled={!canProceed}
               size="lg"
-              className="bg-gradient-to-r from-[#D4AF37] to-[#B8860B] hover:from-[#B8860B] hover:to-[#8B6914] text-white px-8"
+              className="bg-gradient-to-r from-[#C9A56B] to-[#D6285F] hover:from-[#D6285F] hover:to-[#8B6914] text-white px-8"
             >
               Find Matching Designers
               <ArrowRight className="w-4 h-4 ml-2" />

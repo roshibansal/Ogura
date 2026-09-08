@@ -26,7 +26,7 @@ const GoldSweep = () => (
     className="pointer-events-none absolute inset-0 overflow-hidden z-[3] motion-reduce:hidden"
   >
     <div
-      className="absolute -inset-y-8 -left-1/2 w-1/2 rotate-12 bg-gradient-to-tr from-transparent via-[#e9d4a3]/25 to-transparent mix-blend-screen opacity-0 transition-[transform,opacity] duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[300%] group-hover:opacity-100"
+      className="absolute -inset-y-8 -left-1/2 w-1/2 rotate-12 bg-gradient-to-tr from-transparent via-[#EAE3D9]/25 to-transparent mix-blend-screen opacity-0 transition-[transform,opacity] duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-[300%] group-hover:opacity-100"
     />
   </div>
 );
@@ -84,12 +84,12 @@ export const HiddenGemsSection = () => {
                 {/* Editorial typography */}
                 <div className="absolute inset-0 z-10 flex flex-col justify-end p-8 md:p-12 lg:p-16">
                   <div className="transform transition-transform duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-2">
-                    <p className="museum-eyebrow text-[10px] mb-5 text-[#e9d4a3]">
+                    <p className="museum-eyebrow text-[10px] mb-5 text-[#EAE3D9]">
                       OGURA Social · Featured
                     </p>
                     <h3 className="museum-display-sm mb-5">
                       Hidden{" "}
-                      <em className="text-[#e9d4a3] [text-shadow:0_0_24px_rgba(201,165,107,0.35)]">
+                      <em className="text-[#EAE3D9] [text-shadow:0_0_24px_rgba(201,165,107,0.35)]">
                         Gems
                       </em>
                     </h3>
@@ -145,7 +145,7 @@ export const HiddenGemsSection = () => {
                     <div className="absolute inset-x-0 bottom-0 z-10 p-4 md:p-5">
                       {/* Glass name plate on hover */}
                       <div className="backdrop-blur-md bg-white/5 border-l-2 border-[#c9a56b] px-3 py-2 translate-y-2 opacity-0 transition-[opacity,transform] duration-[500ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-y-0 group-hover:opacity-100">
-                        <p className="font-serif text-[11px] tracking-[0.32em] uppercase text-[#e9d4a3]">
+                        <p className="font-serif text-[11px] tracking-[0.32em] uppercase text-[#EAE3D9]">
                           {brand.name}
                         </p>
                       </div>

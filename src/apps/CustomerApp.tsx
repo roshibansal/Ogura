@@ -36,8 +36,7 @@ import Contact from "@/pages/Contact";
 import Careers from "@/pages/Careers";
 import OAuthConsent from "@/pages/OAuthConsent";
 import BrandWaitlist from "@/pages/BrandWaitlist";
-import SellerLogin from "@/pages/seller/SellerLogin";
-import SellerSignup from "@/pages/seller/SellerSignup";
+import SellerGateway from "@/pages/seller/SellerGateway";
 import SellerApp from "@/apps/SellerApp";
 import { PushNotificationManager } from "@/components/notifications/PushNotificationManager";
 
@@ -78,11 +77,14 @@ const CustomerApp = () => {
         <Route path="/terms" element={<TermsOfUse />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/careers" element={<Careers />} />
-        <Route path="/seller-program" element={<BrandWaitlist />} />
-        <Route path="/waitlist" element={<Navigate to="/seller-program" replace />} />
-        <Route path="/seller-login" element={<SellerLogin />} />
-        <Route path="/seller-signup" element={<SellerSignup />} />
-        <Route path="/seller/login" element={<SellerLogin />} />
+        {/* One seller entry point. The marketing page, the login page and the
+            signup page were three doors into the same place. */}
+        <Route path="/sell" element={<SellerGateway />} />
+        <Route path="/seller-program" element={<Navigate to="/sell" replace />} />
+        <Route path="/waitlist" element={<Navigate to="/sell" replace />} />
+        <Route path="/seller-login" element={<Navigate to="/sell" replace />} />
+        <Route path="/seller-signup" element={<Navigate to="/sell" replace />} />
+        <Route path="/seller/login" element={<Navigate to="/sell" replace />} />
         <Route path="/seller/*" element={<SellerApp />} />
 
         <Route path="/auth/pinterest/callback" element={<PinterestCallback />} />

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useSellerStatus } from "@/hooks/useSellerStatus";
 import {
   Package,
   ShoppingCart,
@@ -20,6 +21,7 @@ import {
   Sparkles,
   BarChart3,
   PieChart,
+  BadgeCheck,
 } from "lucide-react";
 
 interface Stats {
@@ -106,20 +108,15 @@ const SellerDashboardHome = () => {
   });
   const [products, setProducts] = useState<ProductItem[]>(DEFAULT_PRODUCTS);
 
+  const { identity, seller: sellerRecord, isDemo } = useSellerStatus();
+
   const sellerDisplayName = useMemo(() => {
-    if (user?.name) {
-      return user.name.split(" ")[0];
-    }
-    const session = localStorage.getItem("ogura_seller_session");
-    if (session) {
-      try {
-        const parsed = JSON.parse(session);
-        if (parsed.brandName) return parsed.brandName;
-        if (parsed.email) return parsed.email.split("@")[0];
-      } catch {}
-    }
-    return "dhruv";
-  }, [user]);
+    const name = identity?.name ?? user?.name;
+    if (name) return name.split(" ")[0];
+    return sellerRecord?.brand_name ?? "there";
+  }, [identity?.name, user?.name, sellerRecord?.brand_name]);
+
+  const isDemoAccount = isDemo;
 
   useEffect(() => {
     let active = true;
@@ -236,14 +233,23 @@ const SellerDashboardHome = () => {
         (p) => p.status === "disabled" || p.status === "draft"
       ).length;
 
+      // A demo account has no rows behind it, so the order and revenue queries
+      // return zero while the trajectory chart below shows sample months. Left
+      // as-is the header would read "Revenue Rs 0" directly above a chart
+      // reading Rs 2,36,000. Keep the demo internally consistent instead.
+      const demoLatest = REVENUE_TIMELINE[REVENUE_TIMELINE.length - 1];
+      const demoPrevious = REVENUE_TIMELINE[REVENUE_TIMELINE.length - 2];
+
       setStats({
         total: combinedProducts.length,
         live: liveCount,
         pending: pendingCount,
         disabled: disabledCount,
-        orders: totalOrderCount,
-        revenueThisMonth: monthRevenue,
-        revenueLastMonth: prevMonthRevenue,
+        orders: isDemoAccount && totalOrderCount === 0 ? demoLatest.orders : totalOrderCount,
+        revenueThisMonth:
+          isDemoAccount && monthRevenue === 0 ? demoLatest.gmv : monthRevenue,
+        revenueLastMonth:
+          isDemoAccount && prevMonthRevenue === 0 ? demoPrevious.gmv : prevMonthRevenue,
       });
 
       setProducts(combinedProducts);
@@ -254,7 +260,7 @@ const SellerDashboardHome = () => {
     return () => {
       active = false;
     };
-  }, [user?.id]);
+  }, [user?.id, isDemoAccount]);
 
   const growth =
     stats.revenueLastMonth > 0
@@ -298,6 +304,23 @@ const SellerDashboardHome = () => {
       {/* ============================================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/60 pb-6">
         <div>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            {sellerRecord?.is_verified && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0C7A54]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#0C7A54]">
+                <BadgeCheck className="h-3.5 w-3.5" /> Verified atelier
+              </span>
+            )}
+            {sellerRecord?.city && (
+              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                {sellerRecord.brand_name} · {sellerRecord.city}
+              </span>
+            )}
+            {isDemo && (
+              <span className="inline-flex items-center rounded-full border border-border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                Demo account
+              </span>
+            )}
+          </div>
           <h1 className="text-3xl sm:text-4xl font-serif italic text-foreground tracking-tight">
             Welcome, {sellerDisplayName}!
           </h1>

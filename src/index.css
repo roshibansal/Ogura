@@ -87,7 +87,7 @@ All colors MUST be HSL.
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 25 95% 53%;
+    --accent: 342 68% 52%;   /* Ogura rose — was a leftover orange default */
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -411,7 +411,7 @@ All colors MUST be HSL.
     --museum-bg: #08070a;
     --museum-espresso: #15110d;
     --museum-gold: #c9a56b;
-    --museum-gold-bright: #e9d4a3;
+    --museum-gold-bright: #EAE3D9;
     --museum-ivory: #f4efe6;
     --museum-glass: rgba(244, 239, 230, 0.04);
     --museum-glass-line: rgba(233, 212, 163, 0.18);
@@ -480,7 +480,7 @@ All colors MUST be HSL.
   .museum-display em,
   .museum-display .accent {
     font-style: italic;
-    color: var(--museum-gold-bright, #e9d4a3);
+    color: var(--museum-gold-bright, #EAE3D9);
   }
   .museum-display-sm {
     font-family: 'Cormorant Garamond', 'Times New Roman', serif;
@@ -490,7 +490,7 @@ All colors MUST be HSL.
     color: var(--museum-ivory, #f4efe6);
     font-size: clamp(26px, 3.4vw, 48px);
   }
-  .museum-display-sm em { font-style: italic; color: var(--museum-gold-bright, #e9d4a3); }
+  .museum-display-sm em { font-style: italic; color: var(--museum-gold-bright, #EAE3D9); }
 
   .museum-lede {
     font-family: 'Manrope', system-ui, sans-serif;
@@ -577,7 +577,7 @@ All colors MUST be HSL.
   }
   .museum-cta:hover {
     border-color: var(--museum-gold, #c9a56b);
-    color: var(--museum-gold-bright, #e9d4a3);
+    color: var(--museum-gold-bright, #EAE3D9);
     transform: translateY(-2px);
     box-shadow: 0 12px 40px -10px rgba(201, 165, 107, 0.55);
   }

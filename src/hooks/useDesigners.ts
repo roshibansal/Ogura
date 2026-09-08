@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Designer } from "@/types";
+import { applyBoutiqueOverride } from "@/data/boutiqueOverrides";
 
 export const useDesigners = (filters?: { search?: string; category?: string }) => {
   return useQuery({
@@ -26,12 +27,12 @@ export const useDesigners = (filters?: { search?: string; category?: string }) =
       if (error) throw error;
 
       // Parse product_images from JSONB to array
-      return (data || []).map((designer) => ({
+      return (data || []).map((designer) => applyBoutiqueOverride({
         ...designer,
         slug: designer.slug || '',
         collection_name: designer.collection_name || '',
         product_images: Array.isArray(designer.product_images) 
-          ? designer.product_images 
+          ? (designer.product_images as unknown as string[])
           : []
       })) as Designer[];
     },
@@ -57,12 +58,14 @@ export const useDesigner = (id: string) => {
       const { data: dData, error: dError } = await dQuery.maybeSingle();
 
       if (dData) {
-        return {
+        return applyBoutiqueOverride({
           ...dData,
           slug: dData.slug || dData.id,
           collection_name: dData.collection_name || '',
-          product_images: Array.isArray(dData.product_images) ? dData.product_images : [],
-        } as Designer;
+          product_images: Array.isArray(dData.product_images)
+            ? (dData.product_images as unknown as string[])
+            : [],
+        }) as Designer;
       }
 
       // 2. Fallback to sellers table with public-safe columns (preserves bank details privacy)

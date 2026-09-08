@@ -122,7 +122,7 @@ function getColorName(hexColor: string): string {
     "#8B0000": "Maroon",
     "#4169E1": "Royal Blue",
     "#50C878": "Emerald",
-    "#D4AF37": "Gold",
+    "#C9A56B": "Gold",
     "#FFB6C1": "Blush Pink",
     "#FFFFF0": "Ivory",
     "#722F37": "Burgundy",

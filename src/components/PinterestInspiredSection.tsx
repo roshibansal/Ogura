@@ -70,7 +70,7 @@ export const PinterestInspiredSection = () => {
                       <span className="museum-cta">Shop This Look</span>
                       <span className="text-[#f4efe6]/85 text-xs line-clamp-1 tracking-wide">{product.name}</span>
                       <span
-                        className="text-[#e9d4a3] font-light text-xl italic"
+                        className="text-[#EAE3D9] font-light text-xl italic"
                         style={{ fontFamily: "'Cormorant Garamond', serif" }}
                       >
                         ₹{product.price.toLocaleString("en-IN")}
@@ -87,7 +87,7 @@ export const PinterestInspiredSection = () => {
                     </div>
 
                     {/* Brand tag */}
-                    <div className="absolute bottom-3 left-3 museum-glass rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-[#e9d4a3] italic font-serif opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <div className="absolute bottom-3 left-3 museum-glass rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-[#EAE3D9] italic font-serif opacity-0 group-hover:opacity-100 transition-opacity z-10">
                       {product.brand || "Ogura"}
                     </div>
                   </div>

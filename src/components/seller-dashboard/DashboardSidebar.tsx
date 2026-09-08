@@ -73,7 +73,7 @@ export const DashboardSidebar = ({ activeTab, setActiveTab }: DashboardSidebarPr
     <aside className="w-[220px] bg-gradient-to-b from-[#1A1A1A] via-[#1F1F1F] to-[#141414] text-[#E3E5E7] flex flex-col shrink-0 overflow-y-auto">
       {/* Store name */}
       <div className="px-5 py-5 border-b border-white/10">
-        <span className="text-sm font-bold tracking-widest uppercase text-[#D4AF37]">Ogura Store</span>
+        <span className="text-sm font-bold tracking-widest uppercase text-[#C9A56B]">Ogura Store</span>
       </div>
 
       <nav className="flex-1 py-2 px-2 space-y-0.5">
@@ -96,7 +96,7 @@ export const DashboardSidebar = ({ activeTab, setActiveTab }: DashboardSidebarPr
                 className={cn(
                   "w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-all duration-200",
                   active
-                    ? "bg-white/15 text-white border-l-2 border-[#D4AF37] pl-2"
+                    ? "bg-white/15 text-white border-l-2 border-[#C9A56B] pl-2"
                     : "text-[#B5B5B5] hover:bg-white/8 hover:text-white"
                 )}
               >
@@ -119,7 +119,7 @@ export const DashboardSidebar = ({ activeTab, setActiveTab }: DashboardSidebarPr
                       className={cn(
                         "w-full text-left px-2.5 py-1.5 rounded-md text-[13px] transition-all duration-200",
                         isActive(child.id)
-                          ? "bg-white/15 text-white font-medium border-l-2 border-[#D4AF37] pl-2"
+                          ? "bg-white/15 text-white font-medium border-l-2 border-[#C9A56B] pl-2"
                           : "text-[#B5B5B5] hover:bg-white/8 hover:text-white"
                       )}
                     >

@@ -46,9 +46,9 @@ export const MTOProgressIndicator = ({
                     className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300",
                       isCompleted &&
-                        "bg-[#D4AF37] text-white",
+                        "bg-[#C9A56B] text-white",
                       isCurrent &&
-                        "bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-white ring-4 ring-[#D4AF37]/20",
+                        "bg-gradient-to-r from-[#C9A56B] to-[#D6285F] text-white ring-4 ring-[#C9A56B]/20",
                       !isCompleted &&
                         !isCurrent &&
                         "bg-muted text-muted-foreground"
@@ -64,7 +64,7 @@ export const MTOProgressIndicator = ({
                     className={cn(
                       "text-xs mt-1 whitespace-nowrap hidden md:block",
                       isCurrent
-                        ? "text-[#D4AF37] font-medium"
+                        ? "text-[#C9A56B] font-medium"
                         : "text-muted-foreground"
                     )}
                   >
@@ -77,7 +77,7 @@ export const MTOProgressIndicator = ({
                   <div
                     className={cn(
                       "w-8 md:w-12 h-0.5 mx-1",
-                      isCompleted ? "bg-[#D4AF37]" : "bg-muted"
+                      isCompleted ? "bg-[#C9A56B]" : "bg-muted"
                     )}
                   />
                 )}

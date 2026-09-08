@@ -21,7 +21,7 @@ const BOUTIQUE_PALETTES = [
   { from: "#24402f", to: "#415c4d", accent: "#a3853f" },
   { from: "#17130f", to: "#473b32", accent: "#b0512c" },
   { from: "#3d211e", to: "#69403b", accent: "#d98a63" },
-  { from: "#1a2c3a", to: "#3b5266", accent: "#c59f60" },
+  { from: "#1a2c3a", to: "#3b5266", accent: "#C9A56B" },
 ];
 
 export function getBoutiquePriceRange(id: string): string {

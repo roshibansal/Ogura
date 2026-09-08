@@ -26,14 +26,17 @@ export interface DesignVM {
   rawProduct: Product;
 }
 
+// Indian Co-ords and Tops lead: that is where the studio drop sits, and it is
+// the work that looks most like what Ogura actually sells. This array drives
+// the Browse Categories facets and the sidebar filters everywhere.
 export const CANONICAL_TAXONOMY = [
+  "Indian Co-ords",
+  "Tops",
   "Lehengas",
   "Sarees",
   "Indo-Western",
-  "Indian Co-ords",
   "Western Dresses",
   "Western Co-ords",
-  "Tops",
   "Bottoms",
   "Jumpsuits",
   "Bags",
@@ -92,7 +95,7 @@ const PALETTES = [
   { from: "#17130f", to: "#4a3e35", accent: "#b0512c" },
   { from: "#24402f", to: "#4a6352", accent: "#a3853f" },
   { from: "#42281d", to: "#8a5840", accent: "#d98a63" },
-  { from: "#29243b", to: "#594f7c", accent: "#c59f60" },
+  { from: "#29243b", to: "#594f7c", accent: "#C9A56B" },
   { from: "#5c2a2a", to: "#9c5252", accent: "#e2a76f" },
 ];
 
@@ -116,7 +119,7 @@ export const COLOR_HEX_MAP: Record<string, string> = {
   maroon: "#881337",
   grey: "#6B7280",
   gray: "#6B7280",
-  gold: "#C59F60",
+  gold: "#C9A56B",
   silver: "#9CA3AF",
   ivory: "#F5F0EA",
   emerald: "#047857",
@@ -240,6 +243,7 @@ export function getAtelierCity(brandName?: string): string {
   if (norm.includes("navira")) return "Jaipur";
   if (norm.includes("vindhya")) return "Hyderabad";
   if (norm.includes("kamala")) return "Chennai";
+  if (norm.includes("meher")) return "Delhi";
   if (norm.includes("noor")) return "Lucknow";
   if (norm.includes("ruh")) return "Goa";
   if (norm.includes("thaila")) return "Jaipur";
@@ -250,12 +254,64 @@ export function getAtelierCity(brandName?: string): string {
   if (norm.includes("punit")) return "Jaipur";
   if (norm.includes("gauri")) return "Delhi";
   if (norm.includes("roshi")) return "Mumbai";
-  return "Jaipur";
+
+  // The eight renamed boutiques. These must agree with the `designers` rows,
+  // or a card says Jaipur while the boutique page says Delhi. Checked before
+  // the generic "noor" rule above would have caught Meher & Noor.
+  if (norm.includes("aranya")) return "Mumbai";
+  if (norm.includes("sootra")) return "Delhi";
+  if (norm.includes("kaarigari")) return "Kolkata";
+  if (norm.includes("baagh")) return "Jaipur";
+  if (norm.includes("meher")) return "Delhi";
+  if (norm.includes("anant")) return "Mumbai";
+  if (norm.includes("kanthaa")) return "Delhi";
+  if (norm.includes("ranghar")) return "Mumbai";
+
+  // Everything else fell through to a hardcoded "Jaipur", so ~40 of the shops
+  // showed the same city and the marketplace read as a single-city catalogue —
+  // directly against the cross-city promise in the hero. Spread them
+  // deterministically instead, so a brand always resolves to the same city.
+  const CITIES = [
+    "Jaipur", "Mumbai", "Delhi", "Kolkata", "Chennai", "Lucknow",
+    "Hyderabad", "Bengaluru", "Ahmedabad", "Amritsar", "Varanasi", "Goa",
+  ];
+  let hash = 0;
+  for (let i = 0; i < norm.length; i++) {
+    hash = (hash << 5) - hash + norm.charCodeAt(i);
+    hash |= 0;
+  }
+  return CITIES[Math.abs(hash) % CITIES.length];
 }
+
+/**
+ * Price bands by category, set by the founder on 9 Sept 2026.
+ *
+ *   Lehengas, Sarees          4,000 - 5,000
+ *   Indo-Western, Indian Co-ords   2,000 - 3,000
+ *   Everything else           1,500 - 3,000
+ *
+ * The band is chosen from the product's category, then a price inside it is
+ * picked deterministically from the id — so a piece never changes price
+ * between renders, and the whole catalogue stays inside the stated range.
+ *
+ * NOTE: supabase/functions/razorpay-create-order/index.ts holds a copy of this
+ * logic, because the server recomputes the charge rather than trusting the
+ * browser. Change one and you must change the other, or the amount taken at
+ * checkout will not match the price on screen.
+ */
+const PRICE_BANDS: Record<string, number[]> = {
+  Lehengas: [3999, 4199, 4299, 4499, 4599, 4799, 4899, 4999],
+  Sarees: [3999, 4199, 4299, 4499, 4599, 4799, 4899, 4999],
+  "Indo-Western": [1999, 2199, 2299, 2499, 2599, 2799, 2899, 2999],
+  "Indian Co-ords": [1999, 2199, 2299, 2499, 2599, 2799, 2899, 2999],
+};
+
+const DEFAULT_BAND = [1499, 1599, 1699, 1799, 1899, 1999, 2199, 2399, 2599, 2799, 2999];
 
 export function normalizeCatalogPrice(
   rawPrice?: number | null,
-  idOrTitle?: string | number | null
+  idOrTitle?: string | number | null,
+  category?: string | null
 ): { price: number; originalPrice: number } {
   const str = String(idOrTitle || rawPrice || "item");
   let hash = 0;
@@ -264,36 +320,18 @@ export function normalizeCatalogPrice(
     hash |= 0;
   }
   const absHash = Math.abs(hash);
-  const ratio = (absHash % 1000) / 1000;
 
-  let price: number;
-  if (ratio < 0.65) {
-    // 65% of products are in the cheaper tier (< ₹3,000, between 1,200 and 2,999)
-    const cheapPrices = [
-      1299, 1399, 1499, 1599, 1699, 1799, 1899, 1999, 2199, 2299, 2499, 2599, 2799, 2899, 2999
-    ];
-    price = cheapPrices[absHash % cheapPrices.length];
-  } else if (ratio < 0.85) {
-    // 20% of products are in the mid tier (₹3,000 to ₹5,999)
-    const midPrices = [
-      3299, 3499, 3699, 3999, 4299, 4499, 4799, 4999, 5299, 5499, 5899
-    ];
-    price = midPrices[absHash % midPrices.length];
-  } else {
-    // 15% of products are in the upper tier (₹6,000 to ₹12,000)
-    const highPrices = [
-      6499, 6999, 7499, 7999, 8499, 8999, 9499, 9999, 10499, 11499, 11999
-    ];
-    price = highPrices[absHash % highPrices.length];
-  }
+  const canonical = mapCategoryToNewTaxonomy(category || undefined);
+  const band = (canonical && PRICE_BANDS[canonical]) || DEFAULT_BAND;
+  const price = band[absHash % band.length];
 
-  // Realistic MRP / original price (25% - 40% markup, ending in 99)
-  const markupPercent = 1.25 + ((absHash % 15) / 100);
-  const rawOriginal = price * markupPercent;
-  const originalPrice = Math.max(price + 400, Math.round(rawOriginal / 100) * 100 - 1);
+  // A 20-35% "was" price, deterministic from the same hash.
+  const markup = 1.2 + ((absHash >> 4) % 16) / 100;
+  const originalPrice = Math.round((price * markup) / 100) * 100 + 99;
 
   return { price, originalPrice };
 }
+
 
 export function transformProductToDesignStrict(product: Product): DesignVM {
   const isReady = Boolean(product.inStock);
@@ -301,7 +339,7 @@ export function transformProductToDesignStrict(product: Product): DesignVM {
   const palette = PALETTES[paletteIndex];
   
   // Set all prices between 1200 to 12000, and keep more in the cheaper, less than 3000
-  const { price, originalPrice } = normalizeCatalogPrice(product.price, product.id || product.name);
+  const { price, originalPrice } = normalizeCatalogPrice(product.price, product.id || product.name, product.category);
 
   const normalizedColors = normalizeProductColors(product.colors);
   const normalizedSizes = normalizeProductSizes(product.sizes);
@@ -318,9 +356,11 @@ export function transformProductToDesignStrict(product: Product): DesignVM {
     ? rawImages[0] 
     : catDefaults.primary;
 
+  // Only ever use a genuine second photograph of THIS product. Falling back to a
+  // category default meant hovering showed a different garment entirely.
   const altImage = (rawImages[1] && !rawImages[1].includes("placeholder"))
     ? rawImages[1]
-    : catDefaults.alt;
+    : "";
 
   const boutique = product.brand || "OGURA Atelier";
   const city = getAtelierCity(boutique);

@@ -28,10 +28,47 @@ serve(async (req) => {
       );
     }
 
-// Deterministic sample pricing generator (mirrors client-side catalog pricing)
+// Deterministic pricing, mirroring normalizeCatalogPrice() in
+// src/lib/adapters/productAdapter.ts. The server never trusts the browser about
+// money, so it recomputes the charge from the catalogue — which means these
+// bands must stay identical to the client's, or the amount taken at checkout
+// will not match the price the customer saw.
+//
+//   Lehengas, Sarees              4,000 - 5,000
+//   Indo-Western, Indian Co-ords  2,000 - 3,000
+//   Everything else               1,500 - 3,000
+const PRICE_BANDS: Record<string, number[]> = {
+  Lehengas: [3999, 4199, 4299, 4499, 4599, 4799, 4899, 4999],
+  Sarees: [3999, 4199, 4299, 4499, 4599, 4799, 4899, 4999],
+  "Indo-Western": [1999, 2199, 2299, 2499, 2599, 2799, 2899, 2999],
+  "Indian Co-ords": [1999, 2199, 2299, 2499, 2599, 2799, 2899, 2999],
+};
+
+const DEFAULT_BAND = [1499, 1599, 1699, 1799, 1899, 1999, 2199, 2399, 2599, 2799, 2999];
+
+function mapCategoryToBand(rawCategory?: string | null): number[] {
+  const c = (rawCategory || "").toLowerCase().trim();
+  if (c.includes("lehenga") || c.includes("ghagra")) return PRICE_BANDS.Lehengas;
+  if (c.includes("saree") || c.includes("sari")) return PRICE_BANDS.Sarees;
+  if (c.includes("indo-western") || c.includes("indowestern") || c.includes("fusion")) {
+    return PRICE_BANDS["Indo-Western"];
+  }
+  if (
+    c.includes("indian co-ord") || c.includes("kurta set") ||
+    c.includes("ethnic set") || c.includes("anarkali set") ||
+    c.includes("co-ord") || c.includes("coord")
+  ) {
+    // "western co-ord" is priced with everything else.
+    if (c.includes("western co-ord") || c.includes("pant suit")) return DEFAULT_BAND;
+    return PRICE_BANDS["Indian Co-ords"];
+  }
+  return DEFAULT_BAND;
+}
+
 function getAuthoritativeSamplePrice(
   rawPrice?: number | null,
-  idOrTitle?: string | number | null
+  idOrTitle?: string | number | null,
+  category?: string | null
 ): number {
   const str = String(idOrTitle || rawPrice || "item");
   let hash = 0;
@@ -39,32 +76,13 @@ function getAuthoritativeSamplePrice(
     hash = (hash << 5) - hash + str.charCodeAt(i);
     hash |= 0;
   }
-  const absHash = Math.abs(hash);
-  const ratio = (absHash % 1000) / 1000;
-
-  if (ratio < 0.65) {
-    // 65% in affordable tier (< ₹3,000)
-    const cheapPrices = [
-      1299, 1399, 1499, 1599, 1699, 1799, 1899, 1999, 2199, 2299, 2499, 2599, 2799, 2899, 2999
-    ];
-    return cheapPrices[absHash % cheapPrices.length];
-  } else if (ratio < 0.85) {
-    // 20% in mid tier (₹3,000 to ₹5,999)
-    const midPrices = [
-      3299, 3499, 3699, 3999, 4299, 4499, 4799, 4999, 5299, 5499, 5899
-    ];
-    return midPrices[absHash % midPrices.length];
-  } else {
-    // 15% in upper tier (₹6,000 to ₹12,000)
-    const highPrices = [
-      6499, 6999, 7499, 7999, 8499, 8999, 9499, 9999, 10499, 11499, 11999
-    ];
-    return highPrices[absHash % highPrices.length];
-  }
+  const band = mapCategoryToBand(category);
+  return band[Math.abs(hash) % band.length];
 }
 
+
     // Client-supplied amount is explicitly discarded to enforce server financial authority
-    const { currency = 'INR', receipt, notes, items, customer_id, shipping_address } = await req.json();
+    const { currency = 'INR', receipt, notes, items, customer_id, shipping_address, discount_code } = await req.json();
 
     if (!Array.isArray(items) || items.length === 0) {
       return new Response(
@@ -86,7 +104,7 @@ function getAuthoritativeSamplePrice(
     // Reconstruct authoritative charge from database
     const { data: dbProducts, error: dbErr } = await supabase
       .from('products')
-      .select('id, title, price, is_available')
+      .select('id, title, price, is_available, category')
       .in('id', productIds);
 
     if (dbErr || !dbProducts || dbProducts.length === 0) {
@@ -115,14 +133,48 @@ function getAuthoritativeSamplePrice(
         );
       }
 
-      const authoritativeUnitPrice = getAuthoritativeSamplePrice(dbProd.price, dbProd.id || dbProd.title);
+      const authoritativeUnitPrice = getAuthoritativeSamplePrice(dbProd.price, dbProd.id || dbProd.title, dbProd.category);
       const qty = Math.max(1, parseInt(it.quantity) || 1);
       computedSubtotal += authoritativeUnitPrice * qty;
     }
 
-    const deliveryFee = Math.max(0, Number(notes?.deliveryFee) || 0);
-    const rawDiscount = Math.max(0, Number(notes?.discount) || 0);
-    const discount = Math.min(computedSubtotal, rawDiscount);
+    // Delivery is free across the catalogue today. Deriving it here rather than
+    // from `notes` means a tampered client cannot invent a negative fee.
+    const deliveryFee = 0;
+
+    // The client sends a discount CODE, never an amount. The value is looked up
+    // and revalidated here, because `notes.discount` is attacker-controlled: a
+    // forged request could otherwise claim a discount equal to the whole basket
+    // and check out a 12,000 rupee piece for the price of the delivery fee.
+    let discount = 0;
+    if (discount_code) {
+      const { data: promo } = await supabase
+        .from('discounts')
+        .select('code, type, value, status, min_purchase, usage_limit, usage_count')
+        .eq('code', String(discount_code).trim().toUpperCase())
+        .eq('status', 'active')
+        .maybeSingle();
+
+      const usable =
+        promo &&
+        (!promo.usage_limit || (promo.usage_count ?? 0) < promo.usage_limit) &&
+        (!promo.min_purchase || computedSubtotal >= promo.min_purchase);
+
+      if (usable) {
+        if (promo.type === 'free_shipping') {
+          discount = deliveryFee;
+        } else if (String(promo.type).includes('percentage')) {
+          discount = Math.round(computedSubtotal * (Number(promo.value) / 100));
+        } else {
+          discount = Math.min(Number(promo.value), computedSubtotal);
+        }
+      } else {
+        console.warn('[CreateOrder] Discount code rejected server-side:', discount_code);
+      }
+    }
+
+    // Never let a discount reduce the charge below a real payable amount.
+    discount = Math.min(Math.max(0, discount), computedSubtotal);
     const finalChargeAmount = computedSubtotal + deliveryFee - discount;
 
     if (!finalChargeAmount || finalChargeAmount <= 0) {

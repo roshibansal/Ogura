@@ -66,7 +66,7 @@ export const CategoryHeroBanner = ({
         <h1 
           className={`text-3xl md:text-4xl lg:text-6xl font-serif tracking-wide mb-2 md:mb-4 animate-fade-in ${
             hasVideo 
-              ? "text-transparent bg-clip-text bg-gradient-to-r from-[#F5E6C8] via-[#D4AF37] to-[#F5E6C8]" 
+              ? "text-transparent bg-clip-text bg-gradient-to-r from-[#F5E6C8] via-[#C9A56B] to-[#F5E6C8]" 
               : "text-white"
           }`}
         >
@@ -88,7 +88,7 @@ export const CategoryHeroBanner = ({
             <button 
               className={`px-6 md:px-8 py-2.5 md:py-3 border-2 font-medium tracking-widest uppercase text-sm transition-all duration-300 animate-fade-in [animation-delay:400ms] ${
                 hasVideo 
-                  ? "border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black hover:shadow-[0_0_25px_rgba(212,175,55,0.5)]" 
+                  ? "border-[#C9A56B] text-[#C9A56B] hover:bg-[#C9A56B] hover:text-black hover:shadow-[0_0_25px_rgba(212,175,55,0.5)]" 
                   : "border-white text-white hover:bg-white hover:text-black"
               }`}
             >

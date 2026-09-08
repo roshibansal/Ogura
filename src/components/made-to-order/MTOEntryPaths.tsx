@@ -63,18 +63,18 @@ export const MTOEntryPaths = ({ onSelectPath }: MTOEntryPathsProps) => {
               className={cn(
                 "group relative p-8 md:p-10 cursor-pointer",
                 "bg-card hover:bg-card/80",
-                "border border-border/50 hover:border-[#D4AF37]/50",
+                "border border-border/50 hover:border-[#C9A56B]/50",
                 "rounded-2xl shadow-sm hover:shadow-xl hover:shadow-black/5",
                 "transition-all duration-300 hover:-translate-y-1"
               )}
             >
               {/* Icon */}
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#D4AF37]/10 to-[#D4AF37]/5 flex items-center justify-center mb-6 text-[#D4AF37] group-hover:scale-110 transition-transform duration-300">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#C9A56B]/10 to-[#C9A56B]/5 flex items-center justify-center mb-6 text-[#C9A56B] group-hover:scale-110 transition-transform duration-300">
                 {path.icon}
               </div>
 
               {/* Title */}
-              <h3 className="text-xl font-medium mb-3 group-hover:text-[#D4AF37] transition-colors">
+              <h3 className="text-xl font-medium mb-3 group-hover:text-[#C9A56B] transition-colors">
                 {path.title}
               </h3>
 
@@ -85,7 +85,7 @@ export const MTOEntryPaths = ({ onSelectPath }: MTOEntryPathsProps) => {
 
               {/* Hover Indicator */}
               <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-[#C9A56B] flex items-center justify-center">
                   <svg
                     className="w-4 h-4 text-white"
                     fill="none"

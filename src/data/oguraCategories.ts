@@ -36,28 +36,6 @@ export interface OguraCategory {
 }
 
 // Celebrity data for Celebrity Fashion page
-export interface Celebrity {
-  name: string;
-  image: string;
-  category: string; // "indian" or "hollywood"
-}
-
-export const celebrities: Celebrity[] = [
-  // Indian Celebrities
-  { name: "Deepika Padukone", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80", category: "indian" },
-  { name: "Priyanka Chopra", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80", category: "indian" },
-  { name: "Alia Bhatt", image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&q=80", category: "indian" },
-  { name: "Kareena Kapoor", image: "https://images.unsplash.com/photo-1526510747491-58f928ec870f?w=200&q=80", category: "indian" },
-  { name: "Anushka Sharma", image: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&q=80", category: "indian" },
-  { name: "Katrina Kaif", image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&q=80", category: "indian" },
-  // Hollywood Celebrities
-  { name: "Zendaya", image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&q=80", category: "hollywood" },
-  { name: "Blake Lively", image: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=200&q=80", category: "hollywood" },
-  { name: "Margot Robbie", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80", category: "hollywood" },
-  { name: "Jennifer Lawrence", image: "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=200&q=80", category: "hollywood" },
-  { name: "Emma Stone", image: "https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?w=200&q=80", category: "hollywood" },
-  { name: "Gigi Hadid", image: "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=200&q=80", category: "hollywood" },
-];
 
 export const oguraCategories: OguraCategory[] = [
   {
@@ -110,70 +88,6 @@ export const oguraCategories: OguraCategory[] = [
       ],
     },
     productCategories: ["dresses", "lehengas", "sarees"],
-  },
-  {
-    id: "celebrity-fashion",
-    slug: "celebrity-fashion",
-    name: "Celebrity Fashion",
-    title: "Celebrity Fashion",
-    subtitle: "Inspired by iconic celebrity style & trends",
-    heroImage: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1920&q=90",
-    heroVideo: "https://res.cloudinary.com/dpnosz8im/video/upload/v1768723510/nvfa3tvknnrmy0cvt0gbe0nd5r_result__q3spyc.mp4",
-    heroPoster: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1920&q=90",
-    ctaText: "Shop Celebrity Looks",
-    cardImage: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=90",
-    cardVideo: "https://res.cloudinary.com/dpnosz8im/video/upload/v1768723510/nvfa3tvknnrmy0cvt0gbe0nd5r_result__q3spyc.mp4",
-    cardVideoPoster: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=90",
-    subCategories: [
-      { name: "Sarees", image: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=200&q=80", filter: "saree" },
-      { name: "Lehengas", image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=200&q=80", filter: "lehenga" },
-      { name: "Anarkalis", image: "https://images.unsplash.com/photo-1594819047050-99defca82545?w=200&q=80", filter: "anarkali" },
-      { name: "Sharara Sets", image: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=200&q=80", filter: "sharara" },
-      { name: "Indo-Western", image: "https://images.unsplash.com/photo-1617019114583-affb34d1b3cd?w=200&q=80", filter: "indo-western" },
-      { name: "Festive Suits", image: "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=200&q=80", filter: "kurta-set" },
-    ],
-    featuredCollections: [
-      {
-        title: "New Arrivals",
-        description: "Fresh from the runway",
-        images: [
-          "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&q=80",
-          "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&q=80",
-          "https://images.unsplash.com/photo-1594819047050-99defca82545?w=600&q=80",
-          "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&q=80",
-        ],
-      },
-      {
-        title: "Festive Glow Edit",
-        description: "Shine bright this season",
-        images: [
-          "https://images.unsplash.com/photo-1617019114583-affb34d1b3cd?w=600&q=80",
-          "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=600&q=80",
-          "https://images.unsplash.com/photo-1596357977740-5e0bc25c0c21?w=600&q=80",
-          "https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=600&q=80",
-        ],
-      },
-      {
-        title: "Most Loved Styles",
-        description: "Customer favorites",
-        images: [
-          "https://images.unsplash.com/photo-1609709295948-17d77cb2a69b?w=600&q=80",
-          "https://images.unsplash.com/photo-1619086303291-0ef7699e4b31?w=600&q=80",
-          "https://images.unsplash.com/photo-1617922001439-4a2e6562f328?w=600&q=80",
-          "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&q=80",
-        ],
-      },
-    ],
-    luxeEdit: {
-      title: "OGURA Luxe Celebrity Edit",
-      description: "Curated pieces inspired by the stars. Experience the glamour of celebrity style with our handpicked collection of star-inspired ensembles.",
-      images: [
-        "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=800&q=90",
-        "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&q=90",
-        "https://images.unsplash.com/photo-1594819047050-99defca82545?w=800&q=90",
-      ],
-    },
-    productCategories: ["dresses", "tops", "skirts"],
   },
   {
     id: "co-ord-sets",

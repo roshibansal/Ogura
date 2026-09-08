@@ -42,7 +42,7 @@ export default function HowItWorks() {
       <Header />
 
       <main className="flex-1 mx-auto max-w-4xl px-5 py-10 sm:py-14 w-full">
-        <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-[#B38F24]">
+        <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-[#D6285F]">
           How Shopping Works
         </span>
         <h1 className="mt-2 font-serif text-4xl leading-tight sm:text-5xl font-normal text-[#5A0A26]">
@@ -55,8 +55,8 @@ export default function HowItWorks() {
         {/* 6 Core Steps */}
         <div className="mt-12 space-y-8">
           {STEPS.map((s) => (
-            <div key={s.n} className="bg-white/95 border border-[#E2D1A3] p-6 rounded-sm shadow-xs grid gap-4 sm:grid-cols-[4rem_1fr] items-baseline">
-              <p className="font-serif italic text-3xl text-[#B38F24] font-normal">{s.n}</p>
+            <div key={s.n} className="bg-white/95 border border-[#EAE3D9] p-6 rounded-sm shadow-xs grid gap-4 sm:grid-cols-[4rem_1fr] items-baseline">
+              <p className="font-serif italic text-3xl text-[#D6285F] font-normal">{s.n}</p>
               <div>
                 <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#5A0A26]">{s.h}</h2>
                 <p className="mt-1.5 max-w-2xl leading-relaxed text-sm sm:text-base text-[#5A0A26]/80">{s.p}</p>
@@ -68,21 +68,21 @@ export default function HowItWorks() {
         {/* The Honest Guidelines */}
         <h2 className="font-serif text-3xl font-normal text-[#5A0A26] mt-14">Helpful Things to Know</h2>
         <div className="mt-6 space-y-4 text-sm text-[#5A0A26]/85">
-          <div className="rounded-sm border border-[#E2D1A3] bg-white/95 p-5 shadow-xs">
+          <div className="rounded-sm border border-[#EAE3D9] bg-white/95 p-5 shadow-xs">
             <p className="font-bold text-[#5A0A26]">Handmade pieces take a little time to craft.</p>
             <p className="mt-1.5 leading-relaxed">
               Items already in shop ship in 2-3 days. Custom-stitched outfits take 1-2 weeks because they are tailored specifically for you.
             </p>
           </div>
 
-          <div className="rounded-sm border border-[#E2D1A3] bg-white/95 p-5 shadow-xs">
+          <div className="rounded-sm border border-[#EAE3D9] bg-white/95 p-5 shadow-xs">
             <p className="font-bold text-[#5A0A26]">Free size adjustments.</p>
             <p className="mt-1.5 leading-relaxed">
               Because custom-stitched clothes are made for your exact body, we offer one free alteration anywhere in India to make sure you get the perfect fit.
             </p>
           </div>
 
-          <div className="rounded-sm border border-[#E2D1A3] bg-white/95 p-5 shadow-xs">
+          <div className="rounded-sm border border-[#EAE3D9] bg-white/95 p-5 shadow-xs">
             <p className="font-bold text-[#5A0A26]">Real handloom fabrics.</p>
             <p className="mt-1.5 leading-relaxed">
               Hand-spun silks and hand-block prints have beautiful subtle textures that make each piece special and authentic.
@@ -91,7 +91,7 @@ export default function HowItWorks() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="mt-12 rounded-sm bg-white/95 border border-[#E2D1A3] px-7 py-9 text-center shadow-xs">
+        <div className="mt-12 rounded-sm bg-white/95 border border-[#EAE3D9] px-7 py-9 text-center shadow-xs">
           <h3 className="font-serif text-2xl sm:text-3xl text-[#5A0A26]">Ready to find your favorite outfit?</h3>
           <p className="mt-2 text-sm text-[#5A0A26]/80">
             Explore verified shops across India and buy directly with complete safety.
@@ -99,13 +99,13 @@ export default function HowItWorks() {
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               to="/marketplace"
-              className="inline-block rounded-sm bg-[#FFA41C] hover:bg-[#FF8F00] px-8 py-3.5 text-sm font-extrabold text-[#0F1111] transition shadow-xs border border-[#FF8F00]"
+              className="inline-block rounded-sm bg-[#D6285F] hover:bg-[#B01F4C] px-8 py-3.5 text-sm font-extrabold text-white transition shadow-xs border border-[#B01F4C]"
             >
-              Explore Marketplace
+              Start Browsing
             </Link>
             <Link
               to="/designers"
-              className="inline-block rounded-sm border border-[#E2D1A3] bg-white px-7 py-3.5 text-sm font-bold text-[#5A0A26] transition hover:border-[#D4AF37]"
+              className="inline-block rounded-sm border border-[#EAE3D9] bg-white px-7 py-3.5 text-sm font-bold text-[#5A0A26] transition hover:border-[#C9A56B]"
             >
               Meet Our Shops
             </Link>

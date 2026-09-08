@@ -1,6 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { DashboardHeader } from "@/components/seller-dashboard/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSellerStatus } from "@/hooks/useSellerStatus";
+import { endDemo } from "@/lib/seller/demoSeller";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,11 +32,15 @@ const navItems = [
 
 export const SellerDashboardLayout = ({ children }: SellerDashboardLayoutProps) => {
   const { user, logout } = useAuth();
+  const { identity, seller, isDemo } = useSellerStatus();
+  const displayName = identity?.name ?? user?.name ?? "";
+  const displayEmail = identity?.email ?? user?.email ?? "";
+  const signOut = () => (isDemo ? endDemo() : logout());
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const initials = user?.name
-    ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+  const initials = displayName
+    ? displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
     : "S";
 
   const Sidebar = () => (
@@ -44,7 +50,7 @@ export const SellerDashboardLayout = ({ children }: SellerDashboardLayoutProps) 
         <Link to="/seller/dashboard" className="flex items-center gap-2">
           <span className="text-lg font-bold tracking-tight">OGURA</span>
           <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-            Seller
+            {seller?.is_verified ? "Verified atelier" : "Atelier"}
           </span>
         </Link>
       </div>
@@ -61,7 +67,7 @@ export const SellerDashboardLayout = ({ children }: SellerDashboardLayoutProps) 
                className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "bg-primary text-primary-foreground border-l-2 border-[#D4AF37]"
+                  ? "bg-primary text-primary-foreground border-l-2 border-[#C9A56B]"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
@@ -82,15 +88,15 @@ export const SellerDashboardLayout = ({ children }: SellerDashboardLayoutProps) 
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            <p className="text-sm font-medium truncate">{displayName}</p>
+            <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
           </div>
         </div>
         <Button
           variant="ghost"
           size="sm"
           className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
-          onClick={logout}
+          onClick={signOut}
         >
           <LogOut className="h-4 w-4" />
           Sign Out

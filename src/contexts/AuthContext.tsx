@@ -134,6 +134,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const errorMsg = result.error.message || '';
         console.error('OAuth error details:', { message: errorMsg, origin: window.location.origin });
 
+        // The hosted wrapper only accepts allow-listed origins. Where it will
+        // not run (local dev, a preview host), try Supabase's Google provider
+        // directly before giving up.
+        const { error: directError } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: getCanonicalAuthOrigin() },
+        });
+        if (!directError) return { success: true };
+        console.error('Direct Supabase OAuth also failed:', directError.message);
+
         if (errorMsg.includes('redirect_uri_mismatch') || errorMsg.includes('redirect')) {
           console.error('OAuth redirect URI mismatch. Current origin:', window.location.origin);
           return { success: false, error: 'Sign-in configuration error. Please try again or contact support.' };
@@ -171,21 +181,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) return { success: false, error: error.message };
       if (!data.user) return { success: false, error: 'Signup failed' };
 
-      // Auto-create seller record
-      await supabase.from('sellers').insert({
-        user_id: data.user.id,
-        brand_name: email.split('@')[0],
-        city: 'Unknown',
-        seller_type: 'individual',
-        application_status: 'approved',
-      });
-
-      // Assign seller role
-      await supabase.from('user_roles').insert({
-        user_id: data.user.id,
-        role: 'seller',
-      });
-
+      // Deliberately no seller record here. Signing up is not the same as
+      // being an approved atelier — the application and its review live at
+      // /sell, and approval is a human decision made there.
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message || 'Signup failed' };

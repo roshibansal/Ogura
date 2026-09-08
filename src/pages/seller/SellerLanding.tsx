@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { SellerStartButton } from "@/components/seller/SellerStartButton";
+import { DemoStartLink } from "@/components/seller/DemoStageControl";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   TrendingUp,
@@ -15,8 +17,8 @@ import {
 const benefits = [
   {
     icon: Users,
-    title: "Reach Millions",
-    description: "Access Ogura's growing customer base of fashion-forward shoppers across India.",
+    title: "Reach Beyond Your Followers",
+    description: "Be found by shoppers who came to Ogura looking for original design, not by people who already follow you.",
   },
   {
     icon: BarChart3,
@@ -45,26 +47,6 @@ const benefits = [
   },
 ];
 
-const testimonials = [
-  {
-    name: "Priya Sharma",
-    brand: "Priya Couture",
-    quote: "Ogura helped me reach customers I never could have on my own. My sales grew 3x in the first quarter.",
-    avatar: "PS",
-  },
-  {
-    name: "Rajesh Mehra",
-    brand: "RM Studios",
-    quote: "The seller dashboard is incredibly easy to use. I spend less time on admin and more on designing.",
-    avatar: "RM",
-  },
-  {
-    name: "Anita Kapoor",
-    brand: "AK Fashion House",
-    quote: "The AI tools for product photography saved me thousands. Truly a game-changer for independent designers.",
-    avatar: "AK",
-  },
-];
 
 const SellerLanding = () => {
   return (
@@ -84,19 +66,16 @@ const SellerLanding = () => {
               <span className="text-primary">with Ogura</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
-              Partner with Ogura to showcase your designs to millions of customers.
-              Zero upfront costs. Simple onboarding. Start selling in 48 hours.
+              Put your studio's work in front of customers in cities your Instagram never reaches.
+              Zero upfront costs. Every brand reviewed for original design before it goes live.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button asChild size="lg" className="gap-2 text-base px-8">
-                <Link to="/seller/login">
-                  Apply as Partner
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-base px-8">
-                <Link to="/seller/login">Seller Login</Link>
-              </Button>
+            <div className="flex flex-col items-center justify-center gap-3">
+              <SellerStartButton />
+              <p className="text-xs text-muted-foreground">
+                One account for applying and for running your store. Already applied? The same
+                button takes you to your dashboard.
+              </p>
+              <DemoStartLink />
             </div>
           </div>
         </div>
@@ -160,30 +139,35 @@ const SellerLanding = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* What is true today. No invented testimonials — we are in pilot. */}
       <section className="border-t bg-muted/20">
         <div className="container mx-auto px-4 py-20">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-3">Trusted by Sellers</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-3">Where we are today</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              We are early, and we would rather tell you exactly what that means than
+              promise you a number we have not earned yet.
+            </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {testimonials.map((t) => (
-              <Card key={t.name}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto text-center">
+            {[
+              { n: "21", k: "fashion brands onboarded and live on Ogura" },
+              { n: "5", k: "small-batch production houses and fabric suppliers" },
+              { n: "48h", k: "from approved application to your first listing" },
+            ].map((s2) => (
+              <Card key={s2.k}>
                 <CardContent className="pt-6">
-                  <p className="text-sm text-muted-foreground italic mb-4">"{t.quote}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
-                      {t.avatar}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">{t.brand}</p>
-                    </div>
-                  </div>
+                  <p className="text-4xl font-bold text-primary">{s2.n}</p>
+                  <p className="text-sm text-muted-foreground mt-2">{s2.k}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
+          <p className="text-center text-sm text-muted-foreground mt-8 max-w-2xl mx-auto">
+            We are running a pilot to prove one thing: that a brand on Ogura keeps more of
+            the customers it earns than it does selling alone. Until that is proven, we are
+            onboarding carefully rather than quickly.
+          </p>
         </div>
       </section>
 
@@ -191,14 +175,11 @@ const SellerLanding = () => {
       <section className="container mx-auto px-4 py-20 text-center">
         <h2 className="text-3xl font-bold text-foreground mb-4">Ready to Start Selling?</h2>
         <p className="text-muted-foreground max-w-md mx-auto mb-8">
-          Join hundreds of fashion brands already growing with Ogura.
+          Join the 21 brands already live on Ogura.
         </p>
-        <Button asChild size="lg" className="gap-2 text-base px-8">
-          <Link to="/seller/login">
-            Get Started
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
+        <div className="flex justify-center">
+          <SellerStartButton label="Apply with Google" />
+        </div>
       </section>
     </div>
   );

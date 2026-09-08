@@ -29,7 +29,7 @@ const colors = [
   { name: "Maroon", value: "#8B0000" },
   { name: "Royal Blue", value: "#4169E1" },
   { name: "Emerald", value: "#50C878" },
-  { name: "Gold", value: "#D4AF37" },
+  { name: "Gold", value: "#C9A56B" },
   { name: "Blush Pink", value: "#FFB6C1" },
   { name: "Ivory", value: "#FFFFF0" },
   { name: "Burgundy", value: "#722F37" },
@@ -189,7 +189,7 @@ export const MTOCustomizationPanel = ({ onProceed }: MTOCustomizationPanelProps)
                     <TabsTrigger
                       key={type}
                       value={type}
-                      className="text-xs py-2 data-[state=active]:bg-[#D4AF37] data-[state=active]:text-white"
+                      className="text-xs py-2 data-[state=active]:bg-[#C9A56B] data-[state=active]:text-white"
                     >
                       {type}
                     </TabsTrigger>
@@ -200,7 +200,7 @@ export const MTOCustomizationPanel = ({ onProceed }: MTOCustomizationPanelProps)
                     <TabsTrigger
                       key={type}
                       value={type}
-                      className="text-xs py-2 data-[state=active]:bg-[#D4AF37] data-[state=active]:text-white"
+                      className="text-xs py-2 data-[state=active]:bg-[#C9A56B] data-[state=active]:text-white"
                     >
                       {type}
                     </TabsTrigger>
@@ -245,7 +245,7 @@ export const MTOCustomizationPanel = ({ onProceed }: MTOCustomizationPanelProps)
                       "w-full aspect-square rounded-full transition-all duration-200",
                       "ring-offset-2 ring-offset-background",
                       state.customizations.color === color.value
-                        ? "ring-2 ring-[#D4AF37] scale-110"
+                        ? "ring-2 ring-[#C9A56B] scale-110"
                         : "hover:scale-105"
                     )}
                     style={{ backgroundColor: color.value }}
@@ -275,8 +275,8 @@ export const MTOCustomizationPanel = ({ onProceed }: MTOCustomizationPanelProps)
                     className={cn(
                       "p-3 rounded-lg text-left transition-all duration-200 border",
                       state.customizations.embroideryLevel === level.name
-                        ? "border-[#D4AF37] bg-[#D4AF37]/10"
-                        : "border-border hover:border-[#D4AF37]/50"
+                        ? "border-[#C9A56B] bg-[#C9A56B]/10"
+                        : "border-border hover:border-[#C9A56B]/50"
                     )}
                   >
                     <p className="font-medium text-sm">{level.name}</p>
@@ -289,13 +289,13 @@ export const MTOCustomizationPanel = ({ onProceed }: MTOCustomizationPanelProps)
             </Card>
 
             {/* Price Estimate */}
-            <Card className="p-5 bg-gradient-to-br from-[#D4AF37]/5 to-[#D4AF37]/10 border-[#D4AF37]/20">
+            <Card className="p-5 bg-gradient-to-br from-[#C9A56B]/5 to-[#C9A56B]/10 border-[#C9A56B]/20">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">
                     Estimated Price Range
                   </p>
-                  <p className="text-2xl font-serif font-medium text-[#D4AF37]">
+                  <p className="text-2xl font-serif font-medium text-[#C9A56B]">
                     {formatPrice(estimatedPrice[0])} -{" "}
                     {formatPrice(estimatedPrice[1])}
                   </p>
@@ -336,7 +336,7 @@ export const MTOCustomizationPanel = ({ onProceed }: MTOCustomizationPanelProps)
               onClick={handleProceed}
               size="lg"
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-[#D4AF37] to-[#B8860B] hover:from-[#B8860B] hover:to-[#8B6914] text-white"
+              className="w-full bg-gradient-to-r from-[#C9A56B] to-[#D6285F] hover:from-[#D6285F] hover:to-[#8B6914] text-white"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               {isSubmitting ? "Processing..." : "Generate Design Variations"}

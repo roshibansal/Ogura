@@ -41,7 +41,7 @@ const colorOptions = [
   { name: "Red", hex: "#DC2626" },
   { name: "Blue", hex: "#2563EB" },
   { name: "Green", hex: "#16A34A" },
-  { name: "Pink", hex: "#EC4899" },
+  { name: "Pink", hex: "#D6285F" },
   { name: "Yellow", hex: "#EAB308" },
   { name: "Beige", hex: "#D2B48C" },
   { name: "Brown", hex: "#92400E" },

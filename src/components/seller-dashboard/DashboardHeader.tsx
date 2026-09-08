@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, LogOut, LayoutDashboard, User, ShoppingCart, Package, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { Search, Bell, LogOut, LayoutDashboard, User, ShoppingCart, Package, AlertTriangle, CheckCircle, XCircle, BadgeCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSellerStatus } from "@/hooks/useSellerStatus";
+import { endDemo } from "@/lib/seller/demoSeller";
 import { cn } from "@/lib/utils";
 
 interface Notification {
@@ -38,21 +40,30 @@ const mockNotifications: Notification[] = [
 ];
 
 export const DashboardHeader = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const { identity, seller, isDemo } = useSellerStatus();
   const navigate = useNavigate();
+  // A demo walkthrough is a signed-in seller as far as this chrome is concerned.
+  const isAuthenticated = !!identity;
+  const displayName = identity?.name ?? user?.name ?? "";
+  const displayEmail = identity?.email ?? user?.email ?? "";
   const [notifications, setNotifications] = useState(mockNotifications);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
-  const initials = user?.name
-    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+  const initials = displayName
+    ? displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "S";
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/seller-login");
+    if (isDemo) {
+      endDemo();
+    } else {
+      await logout();
+    }
+    navigate("/sell");
   };
 
   return (
@@ -109,6 +120,17 @@ export const DashboardHeader = () => {
           </button>
         )}
 
+        {seller?.is_verified && (
+          <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#0C7A54]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#0C7A54]">
+            <BadgeCheck className="h-3 w-3" /> Verified
+          </span>
+        )}
+        {isDemo && (
+          <span className="hidden sm:inline-flex items-center rounded-full border border-[#5A0A26]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#5A0A26]/70">
+            Demo account
+          </span>
+        )}
+
         {/* Auth area */}
         {isAuthenticated ? (
           <DropdownMenu>
@@ -120,7 +142,16 @@ export const DashboardHeader = () => {
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-64">
+              <div className="px-2 py-2 border-b mb-1">
+                <p className="text-sm font-medium truncate">{displayName}</p>
+                <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
+                {seller?.is_verified && (
+                  <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#0C7A54]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0C7A54]">
+                    <BadgeCheck className="h-3 w-3" /> Verified atelier
+                  </span>
+                )}
+              </div>
               <DropdownMenuItem onClick={() => navigate("/seller/settings")} className="cursor-pointer">
                 <User className="mr-2 h-4 w-4" /> Profile
               </DropdownMenuItem>
@@ -134,10 +165,9 @@ export const DashboardHeader = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/seller-login")}>Login</Button>
-            <Button size="sm" onClick={() => navigate("/seller-signup")}>Signup</Button>
-          </div>
+          <Button size="sm" onClick={() => navigate("/sell")}>
+            Sign in
+          </Button>
         )}
       </div>
     </header>

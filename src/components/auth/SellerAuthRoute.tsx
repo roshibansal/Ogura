@@ -1,53 +1,20 @@
-import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useSellerStatus } from "@/hooks/useSellerStatus";
+import { DemoStageControl } from "@/components/seller/DemoStageControl";
 
+/**
+ * Guards every /seller/* dashboard route.
+ *
+ * This used to auto-create an `approved`, `is_active` seller row for anyone who
+ * signed in, which meant the verification we describe on the landing page did
+ * not exist. Now an unverified account is sent back to /sell, where it sees
+ * exactly which check is outstanding.
+ */
 export const SellerAuthRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
-  const [checking, setChecking] = useState(true);
-  const [allowed, setAllowed] = useState(false);
+  const { stage, loading, isDemo } = useSellerStatus();
 
-  useEffect(() => {
-    if (isLoading) return;
-    if (!isAuthenticated || !user?.id) {
-      setChecking(false);
-      return;
-    }
-
-    let active = true;
-    supabase
-      .from("sellers")
-      .select("id, application_status, is_active")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(async ({ data }) => {
-        if (!active) return;
-        if (!data) {
-          try {
-            await supabase.from("sellers").insert({
-              user_id: user.id,
-              brand_name: user.email ? user.email.split("@")[0].toUpperCase() : "Atelier Partner",
-              city: "Jaipur",
-              seller_type: "boutique",
-              application_status: "approved",
-              is_active: true,
-            });
-          } catch (e) {
-            console.warn("Seller auto-provision notice:", e);
-          }
-        }
-        setAllowed(true);
-        setChecking(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [isAuthenticated, isLoading, user?.id]);
-
-  if (isLoading || checking) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -55,23 +22,14 @@ export const SellerAuthRoute = ({ children }: { children: React.ReactNode }) => 
     );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/seller-login" replace />;
+  if (stage !== "active") {
+    return <Navigate to="/sell" replace />;
   }
 
-  if (!allowed) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-6">
-        <div className="max-w-md text-center space-y-3">
-          <h1 className="text-2xl font-semibold">Store access pending</h1>
-          <p className="text-muted-foreground">
-            This account is not linked to an approved, active store yet. Once your store is approved
-            you will be able to manage your products and orders here.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {isDemo && <DemoStageControl />}
+    </>
+  );
 };

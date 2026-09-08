@@ -64,7 +64,7 @@ export function DesignCard({
         <button
           type="button"
           onClick={() => navigate("/checkout")}
-          className="bg-[#FFA41C] text-[#0F1111] border border-[#FF8F00] text-[11px] font-bold px-3 py-1 rounded-sm hover:bg-[#FF8F00] transition shadow-xs shrink-0"
+          className="bg-[#D6285F] text-white border border-[#B01F4C] text-[11px] font-bold px-3 py-1 rounded-sm hover:bg-[#B01F4C] transition shadow-xs shrink-0"
         >
           Buy Now →
         </button>
@@ -89,37 +89,41 @@ export function DesignCard({
 
   return (
     <article
-      className={`group relative flex flex-col text-ink cursor-pointer bg-white/95 rounded-sm border border-[#E2D1A3] shadow-[0_0_10px_rgba(226,209,163,0.18)] hover:shadow-[0_0_18px_rgba(226,209,163,0.35)] transition-all hover:border-[#D4AF37] ${
+      className={`group relative flex flex-col text-ink cursor-pointer bg-white/95 rounded-sm border border-[#EAE3D9] shadow-[0_0_10px_rgba(226,209,163,0.18)] hover:shadow-[0_0_18px_rgba(226,209,163,0.35)] transition-all hover:border-[#C9A56B] ${
         compact ? "p-2 sm:p-2.5" : "p-3.5 sm:p-4"
       }`}
     >
       {/* Product Image Wrapper with Dual Image Hover */}
       <div className="relative aspect-[3/4] overflow-hidden bg-stone rounded-sm">
         <Link to={`/product/${d.slug}`} className="block h-full w-full">
-          {/* Main Image */}
+          {/* Main image. Cross-fades only when a genuine second photo exists;
+              otherwise it simply scales, so hover never reveals another product. */}
           <img
             src={d.image}
             alt={d.title}
             loading={priority ? "eager" : "lazy"}
-            className="h-full w-full object-cover transition-all duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:opacity-0"
+            className={`h-full w-full object-cover transition-all duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] ${
+              d.altImage ? "group-hover:opacity-0" : "group-hover:scale-105"
+            }`}
           />
 
-          {/* Alternate Image on Hover */}
-          <img
-            src={d.altImage || d.image}
-            alt=""
-            loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:opacity-100 group-hover:scale-105"
-          />
+          {d.altImage ? (
+            <img
+              src={d.altImage}
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:opacity-100 group-hover:scale-105"
+            />
+          ) : null}
         </Link>
 
         {/* Top Left: % Discount Badge */}
         {discountPercent && discountPercent > 0 ? (
-          <div className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-sm bg-[#FFA41C] px-1.5 py-0.5 text-[11px] sm:text-xs font-black tracking-tight text-[#0F1111] shadow-md border border-[#FF8F00]">
-            <span>%{discountPercent} OFF</span>
+          <div className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-sm bg-[#D6285F] px-1.5 py-0.5 text-[11px] sm:text-xs font-black tracking-tight text-white shadow-md border border-[#B01F4C]">
+            <span>{discountPercent}% OFF</span>
           </div>
         ) : d.readyStock ? (
-          <div className="absolute left-2 top-2 z-10 rounded-sm bg-white/95 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink border border-[#E2D1A3] shadow-xs">
+          <div className="absolute left-2 top-2 z-10 rounded-sm bg-white/95 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink border border-[#EAE3D9] shadow-xs">
             Ships 48h
           </div>
         ) : null}
@@ -130,7 +134,7 @@ export function DesignCard({
             type="button"
             onClick={handleWishlistToggle}
             aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            className="absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-ink shadow-xs transition hover:scale-110 border border-[#E2D1A3]/70"
+            className="absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-ink shadow-xs transition hover:scale-110 border border-[#EAE3D9]/70"
           >
             <Heart
               className={`h-3.5 w-3.5 transition ${
@@ -141,7 +145,7 @@ export function DesignCard({
         )}
 
         {/* Hover Quick Size Selector */}
-        <div className="absolute inset-x-2 bottom-2 z-20 hidden sm:flex items-center justify-center gap-1.5 rounded-sm bg-white/97 py-1.5 px-2 text-xs font-semibold text-ink shadow-md opacity-0 translate-y-2 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0 border border-[#E2D1A3]">
+        <div className="absolute inset-x-2 bottom-2 z-20 hidden sm:flex items-center justify-center gap-1.5 rounded-sm bg-white/97 py-1.5 px-2 text-xs font-semibold text-ink shadow-md opacity-0 translate-y-2 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0 border border-[#EAE3D9]">
           {(d.sizes.length > 0 ? d.sizes : ["XS", "S", "M", "L"]).slice(0, 4).map((sz) => (
             <button
               key={sz}
@@ -161,11 +165,11 @@ export function DesignCard({
           {/* Atelier Attribution */}
           <div className="flex items-center justify-between gap-1">
             <Link to={`/collections?atelier=${encodeURIComponent(d.boutique)}`} className="block min-w-0">
-              <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.1em] text-ink/80 hover:text-[#B38F24] transition truncate">
+              <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.1em] text-ink/80 hover:text-[#D6285F] transition truncate">
                 {d.boutique} | {d.city}
               </p>
             </Link>
-            <span className="text-[10px] font-mono font-extrabold text-[#B38F24] uppercase tracking-wider shrink-0">
+            <span className="text-[10px] font-mono font-extrabold text-[#D6285F] uppercase tracking-wider shrink-0">
               VERIFIED
             </span>
           </div>
@@ -173,7 +177,7 @@ export function DesignCard({
           {/* Product Title */}
           <Link to={`/product/${d.slug}`} className="block mt-1">
             <h3
-              className={`font-serif italic font-normal text-ink leading-snug transition group-hover:text-[#B38F24] line-clamp-1 ${
+              className={`font-serif italic font-normal text-ink leading-snug transition group-hover:text-[#D6285F] line-clamp-1 ${
                 compact ? "text-base sm:text-lg" : "text-lg sm:text-xl"
               }`}
             >
@@ -190,8 +194,8 @@ export function DesignCard({
                   {formatINR(d.originalPrice)}
                 </span>
                 {!compact && (
-                  <span className="text-xs font-black text-[#0F1111] bg-[#FFA41C] px-1 py-0.2 rounded-xs">
-                    %{discountPercent} OFF
+                  <span className="text-xs font-black text-white bg-[#D6285F] px-1 py-0.2 rounded-xs">
+                    {discountPercent}% OFF
                   </span>
                 )}
               </>
@@ -201,14 +205,14 @@ export function DesignCard({
 
         {/* Amazon Buying Psychology Buttons */}
         <div
-          className={`pt-2 border-t border-[#E2D1A3]/60 ${
+          className={`pt-2 border-t border-[#EAE3D9]/60 ${
             compact ? "grid grid-cols-2 gap-1.5 mt-2" : "flex flex-col gap-2 mt-3"
           }`}
         >
           <button
             type="button"
             onClick={handleDirectBuy}
-            className={`rounded-sm bg-[#FFA41C] hover:bg-[#FF8F00] active:bg-[#E07E00] text-[#0F1111] font-extrabold transition-all border border-[#FF8F00] flex items-center justify-center text-center ${
+            className={`rounded-sm bg-[#D6285F] hover:bg-[#B01F4C] active:bg-[#96143E] text-white font-extrabold transition-all border border-[#B01F4C] flex items-center justify-center text-center ${
               compact
                 ? "py-1.5 px-1 text-[11px] sm:text-xs"
                 : "w-full py-2.5 px-3 text-xs sm:text-sm shadow-xs"
@@ -220,7 +224,7 @@ export function DesignCard({
           <button
             type="button"
             onClick={(e) => handleQuickAdd(e, d.sizes[0] || "Standard")}
-            className={`rounded-sm bg-[#0F1111] hover:bg-[#232F3E] text-white font-bold transition-all flex items-center justify-center text-center ${
+            className={`rounded-sm bg-[#2B0F1E] hover:bg-[#3D1A2A] text-white font-bold transition-all flex items-center justify-center text-center ${
               compact
                 ? "py-1.5 px-1 text-[11px] sm:text-xs gap-1"
                 : "w-full py-2 px-3 text-xs sm:text-sm shadow-xs gap-2"
@@ -237,8 +241,8 @@ export function DesignCard({
 
 export function BoutiqueCard({ b, count }: { b: BoutiqueVM; count?: number }) {
   return (
-    <Link to={`/designers/${b.slug}`} className="group block text-ink bg-white/95 p-4 rounded-sm border border-[#E2D1A3] hover:border-gold transition-all shadow-[0_0_12px_rgba(226,209,163,0.18)] hover:shadow-[0_0_22px_rgba(226,209,163,0.35)]">
-      <div className="overflow-hidden rounded-sm aspect-[5/4] bg-stone border border-[#E2D1A3]/60">
+    <Link to={`/designers/${b.slug}`} className="group block text-ink bg-white/95 p-4 rounded-sm border border-[#EAE3D9] hover:border-gold transition-all shadow-[0_0_12px_rgba(226,209,163,0.18)] hover:shadow-[0_0_22px_rgba(226,209,163,0.35)]">
+      <div className="overflow-hidden rounded-sm aspect-[5/4] bg-stone border border-[#EAE3D9]/60">
         <img
           src={b.image}
           alt={`${b.name}, ${b.city}`}

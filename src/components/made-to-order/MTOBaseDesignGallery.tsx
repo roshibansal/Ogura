@@ -128,7 +128,7 @@ export const MTOBaseDesignGallery = ({ onProceed }: MTOBaseDesignGalleryProps) =
               className={cn(
                 "rounded-full px-5",
                 selectedCategory === category &&
-                  "bg-[#D4AF37] hover:bg-[#B8860B] border-[#D4AF37]"
+                  "bg-[#C9A56B] hover:bg-[#D6285F] border-[#C9A56B]"
               )}
             >
               {category}
@@ -149,8 +149,8 @@ export const MTOBaseDesignGallery = ({ onProceed }: MTOBaseDesignGalleryProps) =
                   "group relative overflow-hidden cursor-pointer transition-all duration-300",
                   "border-2 rounded-2xl",
                   isSelected
-                    ? "border-[#D4AF37] ring-4 ring-[#D4AF37]/20"
-                    : "border-transparent hover:border-[#D4AF37]/30"
+                    ? "border-[#C9A56B] ring-4 ring-[#C9A56B]/20"
+                    : "border-transparent hover:border-[#C9A56B]/30"
                 )}
               >
                 {/* Image */}
@@ -166,7 +166,7 @@ export const MTOBaseDesignGallery = ({ onProceed }: MTOBaseDesignGalleryProps) =
 
                   {/* Selected Indicator */}
                   {isSelected && (
-                    <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center">
+                    <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#C9A56B] flex items-center justify-center">
                       <Check className="w-5 h-5 text-white" />
                     </div>
                   )}
@@ -184,7 +184,7 @@ export const MTOBaseDesignGallery = ({ onProceed }: MTOBaseDesignGalleryProps) =
                     <h3 className="text-white font-medium text-sm md:text-base leading-tight">
                       {design.name}
                     </h3>
-                    <p className="text-[#D4AF37] text-sm mt-1 font-medium">
+                    <p className="text-[#C9A56B] text-sm mt-1 font-medium">
                       Starting from {formatPrice(design.startingPrice)}
                     </p>
                   </div>
@@ -200,7 +200,7 @@ export const MTOBaseDesignGallery = ({ onProceed }: MTOBaseDesignGalleryProps) =
             onClick={handleProceed}
             disabled={!state.selectedBaseDesign}
             size="lg"
-            className="bg-gradient-to-r from-[#D4AF37] to-[#B8860B] hover:from-[#B8860B] hover:to-[#8B6914] text-white px-10"
+            className="bg-gradient-to-r from-[#C9A56B] to-[#D6285F] hover:from-[#D6285F] hover:to-[#8B6914] text-white px-10"
           >
             Customize This Design
             <ArrowRight className="w-4 h-4 ml-2" />

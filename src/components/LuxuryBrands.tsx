@@ -55,7 +55,7 @@ export const LuxuryBrands = () => {
                 >
                   <div className="text-center relative z-10 px-4">
                     <div
-                      className="text-5xl md:text-6xl font-light text-[#e9d4a3]/85 group-hover:text-[#e9d4a3] transition-colors mb-3"
+                      className="text-5xl md:text-6xl font-light text-[#EAE3D9]/85 group-hover:text-[#EAE3D9] transition-colors mb-3"
                       style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic" }}
                     >
                       {brand.logo}

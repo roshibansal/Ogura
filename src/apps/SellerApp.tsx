@@ -1,10 +1,9 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { SellerPublicLayout } from "@/layouts/SellerPublicLayout";
 import { SellerDashboardLayout } from "@/layouts/SellerDashboardLayout";
 import { SellerAuthRoute } from "@/components/auth/SellerAuthRoute";
 import SellerLanding from "@/pages/seller/SellerLanding";
-import SellerLogin from "@/pages/seller/SellerLogin";
-import SellerSignup from "@/pages/seller/SellerSignup";
+import SellerGateway from "@/pages/seller/SellerGateway";
 import JoinUs from "@/pages/JoinUs";
 import SellerDashboardHome from "@/pages/seller/SellerDashboardHome";
 import SellerProducts from "@/pages/seller/SellerProducts";
@@ -22,17 +21,18 @@ const SellerApp = () => {
   return (
     <Routes>
       <Route path="/join" element={<JoinUs />} />
-      <Route path="/seller" element={<SellerPublicLayout><SellerLanding /></SellerPublicLayout>} />
-      <Route path="/seller/join" element={<SellerPublicLayout><SellerLanding /></SellerPublicLayout>} />
-      <Route path="/seller-login" element={<SellerLogin />} />
-      <Route path="/seller-signup" element={<SellerSignup />} />
-      <Route path="/seller/login" element={<SellerLogin />} />
+      <Route path="/sell" element={<SellerGateway />} />
+      <Route path="/seller" element={<Navigate to="/sell" replace />} />
+      <Route path="/seller/join" element={<Navigate to="/sell" replace />} />
+      <Route path="/seller-login" element={<Navigate to="/sell" replace />} />
+      <Route path="/seller-signup" element={<Navigate to="/sell" replace />} />
+      <Route path="/seller/login" element={<Navigate to="/sell" replace />} />
       <Route path="/seller/dashboard" element={<WrappedRoute><SellerDashboardHome /></WrappedRoute>} />
       <Route path="/seller/products" element={<WrappedRoute><SellerProducts /></WrappedRoute>} />
       <Route path="/seller/products/new" element={<WrappedRoute><SellerAddProduct /></WrappedRoute>} />
       <Route path="/seller/orders" element={<WrappedRoute><SellerOrders /></WrappedRoute>} />
       <Route path="/seller/settings" element={<WrappedRoute><SellerSettings /></WrappedRoute>} />
-      <Route path="/seller/*" element={<SellerPublicLayout><SellerLanding /></SellerPublicLayout>} />
+      <Route path="/seller/*" element={<Navigate to="/sell" replace />} />
     </Routes>
   );
 };

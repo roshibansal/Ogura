@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types";
+import { NEW_ARRIVALS } from "@/data/newArrivals";
 import {
   transformProductToDesignStrict,
   normalizeProductColors,
@@ -26,7 +27,7 @@ export function useCatalogProducts() {
         }
 
         const dbProducts: Product[] = (dbRows || []).map((p: any) => {
-          const { price, originalPrice } = normalizeCatalogPrice(p.price, p.id || p.title);
+          const { price, originalPrice } = normalizeCatalogPrice(p.price, p.id || p.title, p.category);
 
           return {
             id: String(p.id),
@@ -58,6 +59,32 @@ export function useCatalogProducts() {
           }
         }
 
+        // The 9 Sept studio drop lives in code, not the products table, so the
+        // catalogue can carry it without a production database write.
+        for (const seed of NEW_ARRIVALS) {
+          if (seen.has(seed.id)) continue;
+          seen.add(seed.id);
+          const { price, originalPrice } = normalizeCatalogPrice(undefined, seed.id, seed.category);
+          deduplicated.push({
+            id: seed.id,
+            name: seed.title,
+            brand: seed.brand,
+            price,
+            originalPrice,
+            category: seed.category as Product["category"],
+            images: seed.images,
+            sizes: normalizeProductSizes(seed.sizes),
+            colors: normalizeProductColors(seed.colors),
+            description: seed.description,
+            material: seed.fabric,
+            inStock: true,
+            tags: seed.style_tags,
+            occasions: seed.occasion_tags,
+            rating: 5.0,
+            reviews: 0,
+          });
+        }
+
         // Merge any real-time locally added seller products
         if (typeof window !== "undefined") {
           try {
@@ -68,7 +95,7 @@ export function useCatalogProducts() {
                 for (const cp of customItems) {
                   const idStr = String(cp.id);
                   if (!seen.has(idStr)) {
-                    const { price: customPrice, originalPrice: customOriginalPrice } = normalizeCatalogPrice(cp.price, idStr || cp.title);
+                    const { price: customPrice, originalPrice: customOriginalPrice } = normalizeCatalogPrice(cp.price, idStr || cp.title, cp.category);
                     deduplicated.push({
                       id: idStr,
                       name: cp.title || "Artisanal Creation",
@@ -94,12 +121,34 @@ export function useCatalogProducts() {
           } catch {}
         }
 
-        // Default sort: cheapest to expensive (lowest to highest price)
-        deduplicated.sort((a, b) => a.price - b.price);
+        // Tops and Indian Co-ords lead the catalogue: this drop is the work that
+        // looks most like what Ogura actually sells. Everything else keeps the
+        // existing cheapest-first order behind them.
+        // Tops and Indian Co-ords lead, and inside them the 9 Sept studio drop
+        // comes first — that photography is the closest thing on the site to
+        // what Ogura actually sells. Mirrors featuredRank() in Collections.tsx.
+        const featuredRank = (item: { category?: string; images?: string[]; image?: string }) => {
+          const c = (item.category || "").toLowerCase();
+          const firstImage = item.image ?? item.images?.[0] ?? "";
+          const isDrop = firstImage.startsWith("/catalogue/");
+          const isTop = c.includes("top");
+          const isCoord = c.includes("kurta set") || c.includes("indian co");
+          if (isDrop && isCoord) return 0;
+          if (isDrop && isTop) return 1;
+          if (isCoord) return 2;
+          if (isTop) return 3;
+          return 4;
+        };
+
+        const byFeatureThenPrice = <
+          T extends { category?: string; price: number; images?: string[]; image?: string },
+        >(a: T, b: T) => featuredRank(a) - featuredRank(b) || a.price - b.price;
+
+        deduplicated.sort(byFeatureThenPrice);
 
         const designs = deduplicated
           .map((p) => transformProductToDesignStrict(p))
-          .sort((a, b) => a.price - b.price);
+          .sort(byFeatureThenPrice);
 
         return {
           rawProducts: deduplicated,

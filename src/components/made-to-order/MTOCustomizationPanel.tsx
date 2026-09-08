@@ -336,7 +336,7 @@ export const MTOCustomizationPanel = ({ onProceed }: MTOCustomizationPanelProps)
               onClick={handleProceed}
               size="lg"
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-[#C9A56B] to-[#D6285F] hover:from-[#D6285F] hover:to-[#8B6914] text-white"
+              className="w-full bg-gradient-to-r from-[#C9A56B] to-[#5A0A26] hover:from-[#5A0A26] hover:to-[#8B6914] text-white"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               {isSubmitting ? "Processing..." : "Generate Design Variations"}

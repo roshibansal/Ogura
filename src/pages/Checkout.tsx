@@ -468,7 +468,7 @@ export default function Checkout() {
               </div>
 
               <Button 
-                className="w-full mt-6 py-4 text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-sm bg-[#D6285F] hover:bg-[#B01F4C] text-white border border-[#B01F4C] shadow-md transition" 
+                className="w-full mt-6 py-4 text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-sm bg-[#5A0A26] hover:bg-[#3D0618] text-white border border-[#3D0618] shadow-md transition" 
                 size="lg"
                 onClick={handlePayment}
                 disabled={isProcessing || !razorpayLoaded}

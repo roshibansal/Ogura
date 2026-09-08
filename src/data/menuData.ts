@@ -251,7 +251,7 @@ export const filterOptions = {
     { name: "Blue", hex: "#2563EB" },
     { name: "Green", hex: "#16A34A" },
     { name: "Yellow", hex: "#EAB308" },
-    { name: "Pink", hex: "#D6285F" },
+    { name: "Pink", hex: "#5A0A26" },
     { name: "Purple", hex: "#9333EA" },
     { name: "Orange", hex: "#EA580C" },
     { name: "Brown", hex: "#92400E" },

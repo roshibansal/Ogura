@@ -32,7 +32,7 @@ export default function SellerGateway() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-wash">
-        <Loader2 className="h-7 w-7 animate-spin text-[#D6285F]" />
+        <Loader2 className="h-7 w-7 animate-spin text-[#5A0A26]" />
       </div>
     );
   }

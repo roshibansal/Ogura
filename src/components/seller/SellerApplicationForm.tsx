@@ -78,7 +78,7 @@ export const SellerApplicationForm = ({
     <div className="min-h-screen bg-wash">
       <div className="max-w-5xl mx-auto px-4 py-12 sm:py-16 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#D6285F] mb-3">
+          <p className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#5A0A26] mb-3">
             Step 2 of 3 — Your atelier
           </p>
           <h1 className="font-serif text-4xl text-ink mb-3">Tell us about your studio</h1>
@@ -168,7 +168,7 @@ export const SellerApplicationForm = ({
             <Button
               type="submit"
               disabled={submitting}
-              className="h-11 px-8 bg-[#5A0A26] hover:bg-[#D6285F] text-white font-semibold"
+              className="h-11 px-8 bg-[#5A0A26] hover:bg-[#5A0A26] text-white font-semibold"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Submit for review

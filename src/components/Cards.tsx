@@ -64,7 +64,7 @@ export function DesignCard({
         <button
           type="button"
           onClick={() => navigate("/checkout")}
-          className="bg-[#D6285F] text-white border border-[#B01F4C] text-[11px] font-bold px-3 py-1 rounded-sm hover:bg-[#B01F4C] transition shadow-xs shrink-0"
+          className="bg-[#5A0A26] text-white border border-[#3D0618] text-[11px] font-bold px-3 py-1 rounded-sm hover:bg-[#3D0618] transition shadow-xs shrink-0"
         >
           Buy Now →
         </button>
@@ -119,7 +119,7 @@ export function DesignCard({
 
         {/* Top Left: % Discount Badge */}
         {discountPercent && discountPercent > 0 ? (
-          <div className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-sm bg-[#D6285F] px-1.5 py-0.5 text-[11px] sm:text-xs font-black tracking-tight text-white shadow-md border border-[#B01F4C]">
+          <div className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-sm bg-[#5A0A26] px-1.5 py-0.5 text-[11px] sm:text-xs font-black tracking-tight text-white shadow-md border border-[#3D0618]">
             <span>{discountPercent}% OFF</span>
           </div>
         ) : d.readyStock ? (
@@ -165,11 +165,11 @@ export function DesignCard({
           {/* Atelier Attribution */}
           <div className="flex items-center justify-between gap-1">
             <Link to={`/collections?atelier=${encodeURIComponent(d.boutique)}`} className="block min-w-0">
-              <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.1em] text-ink/80 hover:text-[#D6285F] transition truncate">
+              <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.1em] text-ink/80 hover:text-[#5A0A26] transition truncate">
                 {d.boutique} | {d.city}
               </p>
             </Link>
-            <span className="text-[10px] font-mono font-extrabold text-[#D6285F] uppercase tracking-wider shrink-0">
+            <span className="text-[10px] font-mono font-extrabold text-[#5A0A26] uppercase tracking-wider shrink-0">
               VERIFIED
             </span>
           </div>
@@ -177,7 +177,7 @@ export function DesignCard({
           {/* Product Title */}
           <Link to={`/product/${d.slug}`} className="block mt-1">
             <h3
-              className={`font-serif italic font-normal text-ink leading-snug transition group-hover:text-[#D6285F] line-clamp-1 ${
+              className={`font-serif italic font-normal text-ink leading-snug transition group-hover:text-[#5A0A26] line-clamp-1 ${
                 compact ? "text-base sm:text-lg" : "text-lg sm:text-xl"
               }`}
             >
@@ -194,7 +194,7 @@ export function DesignCard({
                   {formatINR(d.originalPrice)}
                 </span>
                 {!compact && (
-                  <span className="text-xs font-black text-white bg-[#D6285F] px-1 py-0.2 rounded-xs">
+                  <span className="text-xs font-black text-white bg-[#5A0A26] px-1 py-0.2 rounded-xs">
                     {discountPercent}% OFF
                   </span>
                 )}
@@ -212,7 +212,7 @@ export function DesignCard({
           <button
             type="button"
             onClick={handleDirectBuy}
-            className={`rounded-sm bg-[#D6285F] hover:bg-[#B01F4C] active:bg-[#96143E] text-white font-extrabold transition-all border border-[#B01F4C] flex items-center justify-center text-center ${
+            className={`rounded-sm bg-[#5A0A26] hover:bg-[#3D0618] active:bg-[#96143E] text-white font-extrabold transition-all border border-[#3D0618] flex items-center justify-center text-center ${
               compact
                 ? "py-1.5 px-1 text-[11px] sm:text-xs"
                 : "w-full py-2.5 px-3 text-xs sm:text-sm shadow-xs"

@@ -71,7 +71,7 @@ export const SellerReviewStatus = ({
               </div>
               <div className="h-1.5 rounded-full bg-stone overflow-hidden">
                 <div
-                  className="h-full bg-[#D6285F] transition-all duration-700"
+                  className="h-full bg-[#5A0A26] transition-all duration-700"
                   style={{ width: `${(done / checks.length) * 100}%` }}
                 />
               </div>
@@ -85,7 +85,7 @@ export const SellerReviewStatus = ({
                   className={`shrink-0 mt-0.5 h-6 w-6 rounded-full flex items-center justify-center ${
                     c.state === "done"
                       ? "bg-[#0C7A54]/10 text-[#0C7A54]"
-                      : "bg-[#D6285F]/10 text-[#D6285F]"
+                      : "bg-[#5A0A26]/10 text-[#5A0A26]"
                   }`}
                 >
                   {c.state === "done" ? (
@@ -98,7 +98,7 @@ export const SellerReviewStatus = ({
                   <p className="text-sm font-semibold text-ink flex items-center gap-2">
                     {c.label}
                     {c.state === "pending" && !rejected && (
-                      <Loader2 className="h-3 w-3 animate-spin text-[#D6285F]" />
+                      <Loader2 className="h-3 w-3 animate-spin text-[#5A0A26]" />
                     )}
                   </p>
                   <p className="text-xs text-ink/55 leading-relaxed mt-0.5">{c.detail}</p>

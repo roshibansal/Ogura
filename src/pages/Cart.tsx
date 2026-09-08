@@ -36,10 +36,10 @@ export default function Cart() {
         <Header />
         <main className="flex-1 max-w-7xl mx-auto px-5 py-24 flex items-center justify-center">
           <div className="text-center max-w-md bg-white/95 p-8 rounded-sm border border-[#EAE3D9] shadow-[0_0_16px_rgba(226,209,163,0.22)]">
-            <ShoppingBag className="mx-auto h-16 w-16 text-[#D6285F] mb-4" />
+            <ShoppingBag className="mx-auto h-16 w-16 text-[#5A0A26] mb-4" />
             <h2 className="font-serif text-3xl font-normal mb-2 text-[#5A0A26]">Your shopping bag is empty</h2>
             <p className="text-sm text-[#5A0A26]/80 mb-6">Explore our curated collections of bespoke boutique wear.</p>
-            <Button onClick={() => navigate('/collections')} className="rounded-sm bg-[#D6285F] hover:bg-[#B01F4C] px-8 py-3.5 text-sm font-extrabold text-white uppercase tracking-wider transition border border-[#B01F4C] shadow-sm">Browse Designs</Button>
+            <Button onClick={() => navigate('/collections')} className="rounded-sm bg-[#5A0A26] hover:bg-[#3D0618] px-8 py-3.5 text-sm font-extrabold text-white uppercase tracking-wider transition border border-[#3D0618] shadow-sm">Browse Designs</Button>
           </div>
         </main>
         <Footer />
@@ -177,7 +177,7 @@ export default function Cart() {
               </div>
 
               <Button 
-                className="w-full mb-3 py-4 text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-sm bg-[#D6285F] hover:bg-[#B01F4C] text-white border border-[#B01F4C] shadow-md transition" 
+                className="w-full mb-3 py-4 text-sm sm:text-base font-extrabold uppercase tracking-wider rounded-sm bg-[#5A0A26] hover:bg-[#3D0618] text-white border border-[#3D0618] shadow-md transition" 
                 size="lg"
                 onClick={handleCheckout}
               >

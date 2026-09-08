@@ -39,7 +39,7 @@ export const Header = () => {
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-1.5 text-[#5A0A26] hover:text-[#D6285F] transition rounded-sm"
+            className="md:hidden p-1.5 text-[#5A0A26] hover:text-[#5A0A26] transition rounded-sm"
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -47,7 +47,7 @@ export const Header = () => {
 
           {/* OGURA Brand Logo - pure clean logo without marketplace */}
           <Link to="/" className="flex items-baseline group" aria-label="OGURA Home">
-            <span className="font-serif font-bold text-2xl sm:text-4xl tracking-tight text-[#5A0A26] group-hover:text-[#D6285F] transition">
+            <span className="font-serif font-bold text-2xl sm:text-4xl tracking-tight text-[#5A0A26] group-hover:text-[#5A0A26] transition">
               OGURA
             </span>
           </Link>
@@ -57,7 +57,7 @@ export const Header = () => {
         <div className="hidden md:flex flex-1 max-w-xl mx-4">
           <form
             onSubmit={handleSearchSubmit}
-            className="w-full flex items-center gap-3 bg-white border border-[#EAE3D9] rounded-sm py-2 px-4 text-sm text-[#5A0A26] focus-within:border-[#D6285F] focus-within:ring-2 focus-within:ring-[#D6285F]/20 transition shadow-sm"
+            className="w-full flex items-center gap-3 bg-white border border-[#EAE3D9] rounded-sm py-2 px-4 text-sm text-[#5A0A26] focus-within:border-[#5A0A26] focus-within:ring-2 focus-within:ring-[#5A0A26]/20 transition shadow-sm"
           >
             <Search className="h-4 w-4 text-[#5A0A26]/50 shrink-0" />
             <input
@@ -69,7 +69,7 @@ export const Header = () => {
             />
             <button
               type="submit"
-              className="text-sm font-bold text-[#5A0A26] hover:text-[#D6285F] transition shrink-0 ml-auto border-l border-[#EAE3D9] pl-3"
+              className="text-sm font-bold text-[#5A0A26] hover:text-[#5A0A26] transition shrink-0 ml-auto border-l border-[#EAE3D9] pl-3"
             >
               Search
             </button>
@@ -78,18 +78,11 @@ export const Header = () => {
 
         {/* Right Utility Bar */}
         <div className="flex items-center gap-2 sm:gap-3.5 text-sm font-semibold text-[#5A0A26]">
-          {/* Sell on Ogura */}
-          <a
-            href="/sell"
-            className="hidden sm:inline-flex items-center gap-1 px-3 sm:px-3.5 py-1.5 rounded-sm bg-white border border-[#EAE3D9] text-[#5A0A26] hover:border-[#D6285F] hover:text-[#D6285F] font-bold transition shadow-xs text-xs sm:text-sm"
-          >
-            Sell on Ogura
-          </a>
 
           {/* Saved / Wishlist */}
           <Link
             to="/wishlist"
-            className="flex items-center gap-1.5 hover:text-[#D6285F] transition text-sm font-semibold"
+            className="flex items-center gap-1.5 hover:text-[#5A0A26] transition text-sm font-semibold"
           >
             <Heart className="h-5 w-5" />
             <span className="hidden sm:inline">Saved</span>
@@ -108,9 +101,9 @@ export const Header = () => {
             to="/cart"
             className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-sm bg-[#2B0F1E] text-white hover:bg-[#3D1A2A] transition shadow-xs shrink-0"
           >
-            <ShoppingBag className="h-4 w-4 text-[#D6285F]" />
+            <ShoppingBag className="h-4 w-4 text-white" />
             <span className="font-extrabold text-xs sm:text-sm">
-              Bag <span className="text-[#D6285F]">({totalItems})</span>
+              Bag <span className="text-gold">({totalItems})</span>
             </span>
           </Link>
         </div>
@@ -137,7 +130,7 @@ export const Header = () => {
             <Link
               key={c.label}
               to={c.to}
-              className="shrink-0 whitespace-nowrap text-[13px] font-semibold text-[#5A0A26]/85 hover:text-[#D6285F] transition border-b-2 border-transparent hover:border-[#D6285F] pb-0.5"
+              className="shrink-0 whitespace-nowrap text-[13px] font-semibold text-[#5A0A26]/85 hover:text-[#5A0A26] transition border-b-2 border-transparent hover:border-[#5A0A26] pb-0.5"
             >
               {c.label}
             </Link>
@@ -147,13 +140,13 @@ export const Header = () => {
 
           <Link
             to="/collections?availability=made-to-order"
-            className="shrink-0 whitespace-nowrap text-[13px] font-bold text-[#D6285F] hover:underline underline-offset-4"
+            className="shrink-0 whitespace-nowrap text-[13px] font-bold text-[#5A0A26] hover:underline underline-offset-4"
           >
             Made to Order
           </Link>
           <Link
             to="/designers"
-            className="shrink-0 whitespace-nowrap text-[13px] font-bold text-[#5A0A26] hover:text-[#D6285F] transition"
+            className="shrink-0 whitespace-nowrap text-[13px] font-bold text-[#5A0A26] hover:text-[#5A0A26] transition"
           >
             Ateliers
           </Link>
@@ -200,7 +193,7 @@ export const Header = () => {
               onClick={() => setIsMobileMenuOpen(false)}
               className="py-2 px-3 rounded-sm hover:bg-neutral-50 transition flex items-center gap-2 border border-[#EAE3D9]/60"
             >
-              <span className="px-1.5 py-0.2 bg-[#D6285F] text-white font-black rounded-xs text-xs">%</span>
+              <span className="px-1.5 py-0.2 bg-[#5A0A26] text-white font-black rounded-xs text-xs">%</span>
               <span>Sale Deals (Under ₹2,000)</span>
             </Link>
             <Link
@@ -214,12 +207,6 @@ export const Header = () => {
           </div>
 
           <div className="pt-3 border-t border-[#EAE3D9] flex flex-col gap-2 text-sm font-bold text-[#5A0A26]">
-            <a
-              href="/sell"
-              className="py-2.5 px-3 text-[#9F1239] font-black hover:bg-neutral-50 transition rounded-sm border border-[#EAE3D9] text-center"
-            >
-              Sell on Ogura
-            </a>
           </div>
         </div>
       )}

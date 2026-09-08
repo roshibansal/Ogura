@@ -20,7 +20,7 @@ const sizeOptions = ["XS", "S", "M", "L", "XL", "XXL", "Free Size"];
 const colorOptions = [
   { name: "Black", hex: "#000000" }, { name: "White", hex: "#FFFFFF" },
   { name: "Red", hex: "#EF4444" }, { name: "Blue", hex: "#3B82F6" },
-  { name: "Green", hex: "#22C55E" }, { name: "Pink", hex: "#D6285F" },
+  { name: "Green", hex: "#22C55E" }, { name: "Pink", hex: "#5A0A26" },
   { name: "Beige", hex: "#D4A574" }, { name: "Brown", hex: "#92400E" },
   { name: "Navy", hex: "#1E3A5F" }, { name: "Maroon", hex: "#800000" },
 ];

@@ -49,7 +49,7 @@ export const DemoStageControl = () => {
                 onClick={() => setDemoStage(s.stage)}
                 className={`shrink-0 rounded-sm px-2.5 py-1.5 text-left transition ${
                   i === index
-                    ? "bg-[#D6285F] text-white"
+                    ? "bg-[#5A0A26] text-white"
                     : i < index
                       ? "bg-[#5A0A26]/8 text-[#5A0A26]"
                       : "text-[#5A0A26]/50 hover:bg-[#5A0A26]/5"
@@ -106,7 +106,7 @@ export const DemoStartLink = () => (
   <button
     type="button"
     onClick={() => startDemo("anonymous")}
-    className="text-xs text-ink/45 hover:text-[#D6285F] underline underline-offset-4 transition"
+    className="text-xs text-ink/45 hover:text-[#5A0A26] underline underline-offset-4 transition"
   >
     Run the guided walkthrough
   </button>

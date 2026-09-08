@@ -161,7 +161,7 @@ export const MTOInspirationUpload = ({ onProceed }: MTOInspirationUploadProps) =
               onClick={onProceed}
               disabled={!canProceed}
               size="lg"
-              className="bg-gradient-to-r from-[#C9A56B] to-[#D6285F] hover:from-[#D6285F] hover:to-[#8B6914] text-white px-8"
+              className="bg-gradient-to-r from-[#C9A56B] to-[#5A0A26] hover:from-[#5A0A26] hover:to-[#8B6914] text-white px-8"
             >
               Find Matching Designers
               <ArrowRight className="w-4 h-4 ml-2" />

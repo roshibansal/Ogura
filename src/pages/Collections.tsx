@@ -281,7 +281,7 @@ export default function Collections() {
           <div>
             {activeAtelier ? (
               <>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#D6285F]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#5A0A26]">
                   Verified atelier
                 </p>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif tracking-tight text-ink mt-1">
@@ -346,7 +346,7 @@ export default function Collections() {
         {/* ============================================================ */}
         <div className="py-4 border-b border-[#EAE3D9]">
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-xs font-black uppercase tracking-[0.16em] text-[#D6285F]">
+            <span className="text-xs font-black uppercase tracking-[0.16em] text-[#5A0A26]">
               Browse Categories ({CANONICAL_TAXONOMY.length})
             </span>
             {activeCategory && (
@@ -410,7 +410,7 @@ export default function Collections() {
               onClick={() => toggleParam("price", "under2k")}
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
                 activePrice === "under2k"
-                  ? "bg-[#D6285F] text-white font-black border-[#B01F4C]"
+                  ? "bg-[#5A0A26] text-white font-black border-[#3D0618]"
                   : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >
@@ -421,7 +421,7 @@ export default function Collections() {
               onClick={() => toggleParam("price", "2to3k")}
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
                 activePrice === "2to3k"
-                  ? "bg-[#D6285F] text-white font-black border-[#B01F4C]"
+                  ? "bg-[#5A0A26] text-white font-black border-[#3D0618]"
                   : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >
@@ -432,7 +432,7 @@ export default function Collections() {
               onClick={() => toggleParam("price", "over3k")}
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
                 activePrice === "over3k"
-                  ? "bg-[#D6285F] text-white font-black border-[#B01F4C]"
+                  ? "bg-[#5A0A26] text-white font-black border-[#3D0618]"
                   : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >

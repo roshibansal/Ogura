@@ -411,7 +411,7 @@ export default function ProductDetail() {
                 </span>
                 {currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.price && (
                   <div className="flex items-center gap-2.5">
-                    <span className="text-xs sm:text-sm font-black text-white bg-[#D6285F] border border-[#B01F4C] px-2.5 py-1 rounded-xs flex items-center gap-1 shadow-xs">
+                    <span className="text-xs sm:text-sm font-black text-white bg-[#5A0A26] border border-[#3D0618] px-2.5 py-1 rounded-xs flex items-center gap-1 shadow-xs">
                       <span>SAVE {discountPercent}%</span>
                     </span>
                     <span className="text-base text-ink/40 line-through font-normal">
@@ -427,7 +427,7 @@ export default function ProductDetail() {
             <div className="flex items-center gap-4 border border-[#EAE3D9] rounded-sm p-4 bg-white/95 shadow-[0_0_15px_rgba(226,209,163,0.22)]">
               <Link
                 to={atelierInfo?.id ? `/designers/${atelierInfo.id}` : `/collections?atelier=${encodeURIComponent(currentProduct.brand || "")}`}
-                className="h-12 w-12 rounded-full overflow-hidden bg-stone shrink-0 border-2 border-[#EAE3D9] hover:border-[#D6285F] transition"
+                className="h-12 w-12 rounded-full overflow-hidden bg-stone shrink-0 border-2 border-[#EAE3D9] hover:border-[#5A0A26] transition"
                 aria-label={`View all pieces by ${currentProduct.brand}`}
               >
                 <img
@@ -442,7 +442,7 @@ export default function ProductDetail() {
                   to={atelierInfo?.id ? `/designers/${atelierInfo.id}` : `/collections?atelier=${encodeURIComponent(currentProduct.brand || "")}`}
                   className="group flex items-center gap-2 flex-wrap"
                 >
-                  <span className="text-base font-bold text-ink truncate group-hover:text-[#D6285F] transition">
+                  <span className="text-base font-bold text-ink truncate group-hover:text-[#5A0A26] transition">
                     {currentProduct.brand}
                   </span>
                   <span className="text-xs font-mono font-extrabold text-gold border border-[#EAE3D9] rounded-sm px-2 py-0.5 uppercase tracking-wider bg-white">
@@ -454,7 +454,7 @@ export default function ProductDetail() {
                 </p>
                 <Link
                   to={atelierInfo?.id ? `/designers/${atelierInfo.id}` : `/collections?atelier=${encodeURIComponent(currentProduct.brand || "")}`}
-                  className="inline-block mt-1 text-xs font-bold text-[#D6285F] hover:underline underline-offset-2"
+                  className="inline-block mt-1 text-xs font-bold text-[#5A0A26] hover:underline underline-offset-2"
                 >
                   See everything from this boutique →
                 </Link>
@@ -510,7 +510,7 @@ export default function ProductDetail() {
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-[#D6285F] font-bold hover:underline"
+                  className="text-xs text-[#5A0A26] font-bold hover:underline"
                 >
                   Free Size Help →
                 </a>
@@ -542,7 +542,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handleBuyNow}
-                  className="w-full py-4 bg-[#D6285F] hover:bg-[#B01F4C] active:bg-[#96143E] text-white font-extrabold text-base rounded-sm transition shadow-md flex items-center justify-center gap-2 border border-[#B01F4C] group"
+                  className="w-full py-4 bg-[#5A0A26] hover:bg-[#3D0618] active:bg-[#96143E] text-white font-extrabold text-base rounded-sm transition shadow-md flex items-center justify-center gap-2 border border-[#3D0618] group"
                 >
                   <span>Buy Now — {formatINR(currentProduct.price)}</span>
                 </button>
@@ -689,13 +689,13 @@ export default function ProductDetail() {
           onClick={handleAddToCart}
           className="flex-1 py-3 bg-[#2B0F1E] hover:bg-[#3D1A2A] active:bg-black text-white font-extrabold text-xs rounded-sm transition flex items-center justify-center gap-1.5 shadow-xs"
         >
-          <ShoppingBag className="h-3.5 w-3.5 text-[#D6285F]" />
+          <ShoppingBag className="h-3.5 w-3.5 text-[#5A0A26]" />
           <span>Add to Bag</span>
         </button>
         <button
           type="button"
           onClick={handleBuyNow}
-          className="flex-1 py-3 bg-[#D6285F] hover:bg-[#B01F4C] active:bg-[#96143E] text-white font-black text-xs rounded-sm transition border border-[#B01F4C] flex items-center justify-center shadow-md"
+          className="flex-1 py-3 bg-[#5A0A26] hover:bg-[#3D0618] active:bg-[#96143E] text-white font-black text-xs rounded-sm transition border border-[#3D0618] flex items-center justify-center shadow-md"
         >
           <span>Buy Now ({formatINR(currentProduct.price)})</span>
         </button>

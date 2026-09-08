@@ -69,7 +69,7 @@ export const MTODesignerSelector = ({ onProceed }: MTODesignerSelectorProps) => 
               className={cn(
                 "rounded-full px-5",
                 selectedCategory === category &&
-                  "bg-[#C9A56B] hover:bg-[#D6285F] border-[#C9A56B]"
+                  "bg-[#C9A56B] hover:bg-[#5A0A26] border-[#C9A56B]"
               )}
             >
               {category}
@@ -162,7 +162,7 @@ export const MTODesignerSelector = ({ onProceed }: MTODesignerSelectorProps) => 
             onClick={handleProceed}
             disabled={!state.selectedDesigner}
             size="lg"
-            className="bg-gradient-to-r from-[#C9A56B] to-[#D6285F] hover:from-[#D6285F] hover:to-[#8B6914] text-white px-10"
+            className="bg-gradient-to-r from-[#C9A56B] to-[#5A0A26] hover:from-[#5A0A26] hover:to-[#8B6914] text-white px-10"
           >
             Continue with {state.selectedDesigner?.brand_name || "Designer"}
             <ArrowRight className="w-4 h-4 ml-2" />

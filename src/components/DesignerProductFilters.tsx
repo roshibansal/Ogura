@@ -18,7 +18,7 @@ const COLORS = [
   { name: "Red", hex: "#EF4444" },
   { name: "Blue", hex: "#3B82F6" },
   { name: "Green", hex: "#22C55E" },
-  { name: "Pink", hex: "#D6285F" },
+  { name: "Pink", hex: "#5A0A26" },
   { name: "Yellow", hex: "#EAB308" },
   { name: "Purple", hex: "#A855F7" },
 ];

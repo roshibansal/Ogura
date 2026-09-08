@@ -55,7 +55,7 @@ export const SellerStartButton = ({
       size={size}
       variant={variant === "outline" ? "outline" : "default"}
       className={`gap-2.5 text-base ${
-        variant === "primary" ? "px-8 bg-[#5A0A26] hover:bg-[#D6285F] text-white" : "px-8"
+        variant === "primary" ? "px-8 bg-[#5A0A26] hover:bg-[#5A0A26] text-white" : "px-8"
       } ${className}`}
     >
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleMark />}

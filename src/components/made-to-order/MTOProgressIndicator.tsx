@@ -48,7 +48,7 @@ export const MTOProgressIndicator = ({
                       isCompleted &&
                         "bg-[#C9A56B] text-white",
                       isCurrent &&
-                        "bg-gradient-to-r from-[#C9A56B] to-[#D6285F] text-white ring-4 ring-[#C9A56B]/20",
+                        "bg-gradient-to-r from-[#C9A56B] to-[#5A0A26] text-white ring-4 ring-[#C9A56B]/20",
                       !isCompleted &&
                         !isCurrent &&
                         "bg-muted text-muted-foreground"

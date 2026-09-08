@@ -153,7 +153,7 @@ export default function Index() {
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link
                   to="/marketplace"
-                  className="rounded-sm bg-[#D6285F] hover:bg-[#B01F4C] active:bg-[#96143E] px-9 py-4 text-base font-extrabold text-white tracking-wider uppercase transition shadow-md border border-[#B01F4C]"
+                  className="rounded-sm bg-[#5A0A26] hover:bg-[#3D0618] active:bg-[#96143E] px-9 py-4 text-base font-extrabold text-white tracking-wider uppercase transition shadow-md border border-[#3D0618]"
                 >
                   Explore Designer Wear
                 </Link>
@@ -202,7 +202,7 @@ export default function Index() {
             </p>
             <Link
               to={`/product/${activeLook.slug}`}
-              className="mt-3.5 block text-center py-3 px-4 rounded-sm bg-[#D6285F] hover:bg-[#B01F4C] text-white font-extrabold text-sm border border-[#B01F4C] shadow-xs transition"
+              className="mt-3.5 block text-center py-3 px-4 rounded-sm bg-[#5A0A26] hover:bg-[#3D0618] text-white font-extrabold text-sm border border-[#3D0618] shadow-xs transition"
             >
               Shop this look →
             </Link>
@@ -216,7 +216,7 @@ export default function Index() {
         <section className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-2 w-full">
           <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end justify-between border-b border-[#EAE3D9] pb-3 gap-1.5">
             <div>
-              <span className="text-[11px] sm:text-xs font-black uppercase tracking-[0.2em] text-[#D6285F]">
+              <span className="text-[11px] sm:text-xs font-black uppercase tracking-[0.2em] text-[#5A0A26]">
                 WAYS TO SHOP
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif text-[#5A0A26] tracking-tight mt-0.5">
@@ -241,7 +241,7 @@ export default function Index() {
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/15" />
               <div className="absolute inset-0 p-4 sm:p-7 flex flex-col justify-center text-white z-10 max-w-full">
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#D6285F] block mb-0.5">
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#D4AF37] block mb-0.5">
                   % SALE SPECIAL
                 </span>
                 <b className="block text-2xl sm:text-3xl lg:text-4xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs leading-tight">
@@ -250,7 +250,7 @@ export default function Index() {
                 <p className="text-xs sm:text-sm text-white/95 mt-1 sm:mt-1.5 max-w-[270px] sm:max-w-xs leading-snug font-medium line-clamp-2">
                   Beautiful sarees, dresses and tops at easy everyday prices.
                 </p>
-                <span className="inline-block mt-2 sm:mt-3 text-xs sm:text-sm font-extrabold text-[#D6285F] border-b border-[#D6285F] pb-0.5 self-start">
+                <span className="inline-block mt-2 sm:mt-3 text-xs sm:text-sm font-extrabold text-[#D4AF37] border-b border-[#5A0A26] pb-0.5 self-start">
                   See pieces under ₹2k →
                 </span>
               </div>
@@ -295,7 +295,7 @@ export default function Index() {
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/15" />
               <div className="absolute inset-0 p-4 sm:p-7 flex flex-col justify-center text-white z-10 max-w-full">
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#D6285F] block mb-0.5">
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#D4AF37] block mb-0.5">
                   FAST DELIVERY
                 </span>
                 <b className="block text-2xl sm:text-3xl lg:text-4xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs leading-tight">
@@ -304,7 +304,7 @@ export default function Index() {
                 <p className="text-xs sm:text-sm text-white/95 mt-1 sm:mt-1.5 max-w-[270px] sm:max-w-xs leading-snug font-medium line-clamp-2">
                   Ready in shop right now. Packed and dispatched quickly to your door.
                 </p>
-                <span className="inline-block mt-2 sm:mt-3 text-xs sm:text-sm font-extrabold text-[#D6285F] border-b border-[#D6285F] pb-0.5 self-start">
+                <span className="inline-block mt-2 sm:mt-3 text-xs sm:text-sm font-extrabold text-[#D4AF37] border-b border-[#5A0A26] pb-0.5 self-start">
                   See ready-to-ship pieces →
                 </span>
               </div>
@@ -318,7 +318,7 @@ export default function Index() {
         <section className="max-w-[1360px] mx-auto px-4 sm:px-8">
           <div className="flex items-end justify-between mb-6 border-b border-[#EAE3D9] pb-3">
             <div>
-              <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#D6285F]">
+              <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#5A0A26]">
                 POPULAR CATEGORIES
               </span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#5A0A26] tracking-tight mt-1">
@@ -330,7 +330,7 @@ export default function Index() {
             </div>
             <Link
               to="/marketplace"
-              className="text-sm font-extrabold text-[#5A0A26] hover:text-[#D6285F] transition border-b-2 border-[#D6285F] pb-0.5 shrink-0"
+              className="text-sm font-extrabold text-[#5A0A26] hover:text-[#5A0A26] transition border-b-2 border-[#5A0A26] pb-0.5 shrink-0"
             >
               Browse All 332 Pieces →
             </Link>
@@ -368,13 +368,13 @@ export default function Index() {
               More Styles:
             </span>
             <div className="flex flex-wrap items-center gap-4 font-bold">
-              <Link to="/marketplace?category=Jumpsuits" className="hover:text-[#D6285F] transition">Jumpsuits (4)</Link>
+              <Link to="/marketplace?category=Jumpsuits" className="hover:text-[#5A0A26] transition">Jumpsuits (4)</Link>
               <span>|</span>
-              <Link to="/marketplace?category=Bottoms" className="hover:text-[#D6285F] transition">Bottoms (6)</Link>
+              <Link to="/marketplace?category=Bottoms" className="hover:text-[#5A0A26] transition">Bottoms (6)</Link>
               <span>|</span>
-              <Link to="/marketplace?category=Western%20Co-ords" className="hover:text-[#D6285F] transition">Western Co-ords (7)</Link>
+              <Link to="/marketplace?category=Western%20Co-ords" className="hover:text-[#5A0A26] transition">Western Co-ords (7)</Link>
             </div>
-            <Link to="/marketplace" className="font-extrabold text-[#D6285F] hover:underline ml-auto">
+            <Link to="/marketplace" className="font-extrabold text-[#5A0A26] hover:underline ml-auto">
               View All 11 Categories →
             </Link>
           </div>
@@ -388,7 +388,7 @@ export default function Index() {
             <div className="bg-white/95 border border-[#EAE3D9] shadow-[0_0_20px_rgba(226,209,163,0.22)] rounded-sm p-6 sm:p-10">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-[#EAE3D9] pb-4">
                 <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs bg-[#D6285F] text-white font-black text-xs sm:text-sm uppercase tracking-wider mb-2 shadow-2xs">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs bg-[#5A0A26] text-white font-black text-xs sm:text-sm uppercase tracking-wider mb-2 shadow-2xs">
                     <span className="text-sm font-black">%</span> Special Sale Deals
                   </div>
                   <h2 className="text-3xl sm:text-4xl font-serif text-[#5A0A26] tracking-tight">
@@ -422,7 +422,7 @@ export default function Index() {
         <section className="max-w-[1360px] mx-auto px-4 sm:px-8">
           <div className="flex items-end justify-between mb-6 border-b border-[#EAE3D9] pb-3">
             <div>
-              <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#D6285F]">
+              <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#5A0A26]">
                 JUST ARRIVED
               </span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-[#5A0A26] tracking-tight mt-1">
@@ -434,7 +434,7 @@ export default function Index() {
             </div>
             <Link
               to="/marketplace?sort=new"
-              className="text-sm font-extrabold text-[#D6285F] hover:underline transition border-b-2 border-[#D6285F] pb-0.5 shrink-0"
+              className="text-sm font-extrabold text-[#5A0A26] hover:underline transition border-b-2 border-[#5A0A26] pb-0.5 shrink-0"
             >
               Shop All New In →
             </Link>
@@ -455,7 +455,7 @@ export default function Index() {
           <div className="bg-white/95 border border-[#EAE3D9] shadow-[0_0_20px_rgba(226,209,163,0.22)] rounded-sm p-6 sm:p-10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#EAE3D9] pb-3 gap-2">
               <div>
-                <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#D6285F]">
+                <span className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#5A0A26]">
                   SAFE & RELIABLE SHOPPING
                 </span>
                 <h2 className="font-serif text-3xl sm:text-4xl text-[#5A0A26] mt-1 tracking-tight">

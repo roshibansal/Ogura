@@ -42,7 +42,7 @@ export default function HowItWorks() {
       <Header />
 
       <main className="flex-1 mx-auto max-w-4xl px-5 py-10 sm:py-14 w-full">
-        <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-[#D6285F]">
+        <span className="text-xs uppercase tracking-[0.2em] font-extrabold text-[#5A0A26]">
           How Shopping Works
         </span>
         <h1 className="mt-2 font-serif text-4xl leading-tight sm:text-5xl font-normal text-[#5A0A26]">
@@ -56,7 +56,7 @@ export default function HowItWorks() {
         <div className="mt-12 space-y-8">
           {STEPS.map((s) => (
             <div key={s.n} className="bg-white/95 border border-[#EAE3D9] p-6 rounded-sm shadow-xs grid gap-4 sm:grid-cols-[4rem_1fr] items-baseline">
-              <p className="font-serif italic text-3xl text-[#D6285F] font-normal">{s.n}</p>
+              <p className="font-serif italic text-3xl text-[#5A0A26] font-normal">{s.n}</p>
               <div>
                 <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#5A0A26]">{s.h}</h2>
                 <p className="mt-1.5 max-w-2xl leading-relaxed text-sm sm:text-base text-[#5A0A26]/80">{s.p}</p>
@@ -99,7 +99,7 @@ export default function HowItWorks() {
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               to="/marketplace"
-              className="inline-block rounded-sm bg-[#D6285F] hover:bg-[#B01F4C] px-8 py-3.5 text-sm font-extrabold text-white transition shadow-xs border border-[#B01F4C]"
+              className="inline-block rounded-sm bg-[#5A0A26] hover:bg-[#3D0618] px-8 py-3.5 text-sm font-extrabold text-white transition shadow-xs border border-[#3D0618]"
             >
               Start Browsing
             </Link>

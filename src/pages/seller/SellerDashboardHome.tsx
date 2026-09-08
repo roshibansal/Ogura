@@ -86,7 +86,7 @@ const REVENUE_TIMELINE = [
 ];
 
 const CATEGORY_BREAKDOWN = [
-  { name: "Lehengas & Sarees", share: 44, color: "#D6285F" },
+  { name: "Lehengas & Sarees", share: 44, color: "#5A0A26" },
   { name: "Western & Evening Dresses", share: 28, color: "#1B1714" },
   { name: "Kurtas & Suits", share: 16, color: "#6B7280" },
   { name: "Bags & Footwear", share: 12, color: "#9CA3AF" },

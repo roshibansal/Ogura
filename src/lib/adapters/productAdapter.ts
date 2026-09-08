@@ -286,9 +286,9 @@ export function getAtelierCity(brandName?: string): string {
 /**
  * Price bands by category, set by the founder on 9 Sept 2026.
  *
- *   Lehengas, Sarees          4,000 - 5,000
- *   Indo-Western, Indian Co-ords   2,000 - 3,000
- *   Everything else           1,500 - 3,000
+ *   Lehengas, Sarees              4,400 - 5,400
+ *   Indo-Western, Indian Co-ords  2,400 - 3,400
+ *   Everything else               1,900 - 3,400
  *
  * The band is chosen from the product's category, then a price inside it is
  * picked deterministically from the id — so a piece never changes price
@@ -300,13 +300,13 @@ export function getAtelierCity(brandName?: string): string {
  * checkout will not match the price on screen.
  */
 const PRICE_BANDS: Record<string, number[]> = {
-  Lehengas: [3999, 4199, 4299, 4499, 4599, 4799, 4899, 4999],
-  Sarees: [3999, 4199, 4299, 4499, 4599, 4799, 4899, 4999],
-  "Indo-Western": [1999, 2199, 2299, 2499, 2599, 2799, 2899, 2999],
-  "Indian Co-ords": [1999, 2199, 2299, 2499, 2599, 2799, 2899, 2999],
+  Lehengas: [4399, 4599, 4699, 4899, 4999, 5199, 5299, 5399],
+  Sarees: [4399, 4599, 4699, 4899, 4999, 5199, 5299, 5399],
+  "Indo-Western": [2399, 2599, 2699, 2899, 2999, 3199, 3299, 3399],
+  "Indian Co-ords": [2399, 2599, 2699, 2899, 2999, 3199, 3299, 3399],
 };
 
-const DEFAULT_BAND = [1499, 1599, 1699, 1799, 1899, 1999, 2199, 2399, 2599, 2799, 2999];
+const DEFAULT_BAND = [1899, 1999, 2099, 2199, 2299, 2399, 2599, 2799, 2999, 3199, 3399];
 
 export function normalizeCatalogPrice(
   rawPrice?: number | null,

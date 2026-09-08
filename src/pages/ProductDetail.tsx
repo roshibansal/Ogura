@@ -265,15 +265,11 @@ export default function ProductDetail() {
   }
 
   const galleryImages = currentProduct.images.length > 0 ? currentProduct.images : ["/mockup-assets/lengha-03.jpg"];
-  // If only 1 image, populate supplementary thumbnails from category assets so gallery is complete
-  const thumbnails = galleryImages.length >= 2 
-    ? galleryImages 
-    : [
-        galleryImages[0],
-        "/mockup-assets/lengha-12.jpg",
-        "/mockup-assets/lengha-21.jpg",
-        "/mockup-assets/lengha-07.jpg",
-      ];
+
+  // Only ever show genuine photographs of THIS piece. This used to pad any
+  // single-image product with three fixed lehenga shots, so every such product
+  // page displayed three unrelated garments in its thumbnail rail.
+  const thumbnails = galleryImages;
 
   const currentDisplayImage = thumbnails[selectedImageIndex] || thumbnails[0];
   const wishlisted = isInWishlist(currentProduct.id);
@@ -483,12 +479,9 @@ export default function ProductDetail() {
                 Colour: <span className="text-ink font-semibold">{selectedColor}</span>
               </h4>
               <div className="flex items-center gap-2">
-                {[
-                  { name: "Ruby Rose", hex: "#8d3350" },
-                  { name: "Emerald Studio", hex: "#2C4638" },
-                  { name: "Gold Zari", hex: "#DFC48A" },
-                  { name: "Midnight Indigo", hex: "#3B4C7A" },
-                ].map((c) => (
+                {/* The piece's own colours. This was a fixed four-swatch palette,
+                    so an ochre kurta advertised itself as "Midnight Indigo". */}
+                {(currentProduct.colors || []).map((c) => (
                   <button
                     key={c.name}
                     type="button"

@@ -15,57 +15,7 @@ const CITY_PAIRS = [
   ["Pune", "Hyderabad"],
 ];
 
-// Rotating Hero Lookbook Looks with high-res editorial assets
-const HERO_LOOKS = [
-  {
-    id: "look-1",
-    image: "/mockup-assets/lengha-03.jpg",
-    alt: "Handloom Embroidered Bridal Lehenga",
-    label: "LOOK 01 | HANDLOOM HERITAGE",
-    boutique: "Atelier Vindhya",
-    city: "Hyderabad",
-    title: "Gulaab Handloom Lehenga",
-    price: 9300,
-    originalPrice: 12400,
-    slug: "gulaab-lehenga",
-  },
-  {
-    id: "look-2",
-    image: "/mockup-assets/saree-15.jpg",
-    alt: "Kanjeevaram Temple Border Silk Saree",
-    label: "LOOK 02 | PURE MULBERRY SILK",
-    boutique: "Kamala House",
-    city: "Chennai",
-    title: "Temple Border Pure Silk Saree",
-    price: 11800,
-    originalPrice: 14500,
-    slug: "temple-border-saree",
-  },
-  {
-    id: "look-3",
-    image: "/mockup-assets/dresses-western-25.jpg",
-    alt: "Contemporary Draped Evening Gown",
-    label: "LOOK 03 | SCULPTURAL SILHOUETTE",
-    boutique: "Ruh Studio",
-    city: "Goa",
-    title: "Draped Asymmetric Satin Gown",
-    price: 8400,
-    originalPrice: 10500,
-    slug: "draped-asymmetric-gown",
-  },
-  {
-    id: "look-4",
-    image: "/mockup-assets/bags-14.jpg",
-    alt: "Sculpted Handcrafted Bag",
-    label: "LOOK 04 | ARTISANAL LEATHER & SILK",
-    boutique: "Thaila Co.",
-    city: "Jaipur",
-    title: "Sculpted Silk Envelope Bag",
-    price: 4999,
-    originalPrice: 6999,
-    slug: "sculpted-envelope-bag",
-  },
-];
+import { HERO_LOOKS } from "@/lib/editorialLooks";
 
 // Curated Category Blocks with high-res mockup assets
 const CATEGORY_BLOCKS = [

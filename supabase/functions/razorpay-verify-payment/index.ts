@@ -28,9 +28,41 @@ async function verifySignature(
 
   const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
   const signatureArray = Array.from(new Uint8Array(signatureBuffer));
-  const expectedSignature = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const expectedSignature = signatureArray.map((b: number) => b.toString(16).padStart(2, '0')).join('');
 
   return expectedSignature === signature;
+}
+
+// Deterministic sample pricing generator (mirrors catalog pricing and razorpay-create-order)
+function getAuthoritativeSamplePrice(
+  rawPrice?: number | null,
+  idOrTitle?: string | number | null
+): number {
+  const str = String(idOrTitle || rawPrice || "item");
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const absHash = Math.abs(hash);
+  const ratio = (absHash % 1000) / 1000;
+
+  if (ratio < 0.65) {
+    const cheapPrices = [
+      1299, 1399, 1499, 1599, 1699, 1799, 1899, 1999, 2199, 2299, 2499, 2599, 2799, 2899, 2999
+    ];
+    return cheapPrices[absHash % cheapPrices.length];
+  } else if (ratio < 0.85) {
+    const midPrices = [
+      3299, 3499, 3699, 3999, 4299, 4499, 4799, 4999, 5299, 5499, 5899
+    ];
+    return midPrices[absHash % midPrices.length];
+  } else {
+    const highPrices = [
+      6499, 6999, 7499, 7999, 8499, 8999, 9499, 9999, 10499, 11499, 11999
+    ];
+    return highPrices[absHash % highPrices.length];
+  }
 }
 
 serve(async (req) => {
@@ -122,233 +154,19 @@ serve(async (req) => {
       );
     }
 
-    // Step 3: Authoritative Database Re-Validation of Products & Prices
-    const productIds = rawItems.map((it: any) => it.product_id);
-    const { data: dbProducts, error: prodErr } = await supabase
-      .from('products')
-      .select('id, title, price, seller_id, brand, is_available')
-      .in('id', productIds);
+    // Step 3: Atomic Checkout Confirmation via single PostgreSQL transaction
+    const { data: atomicResult, error: atomicErr } = await supabase.rpc('confirm_checkout_atomic', {
+      p_razorpay_order_id: razorpay_order_id,
+      p_razorpay_payment_id: razorpay_payment_id,
+      p_order_data: order_data,
+    });
 
-    if (prodErr || !dbProducts || dbProducts.length === 0) {
-      console.error('[VerifyPayment] Error querying products:', prodErr);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Unable to validate product data' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
+    if (atomicErr || !atomicResult?.success) {
+      console.error('[VerifyPayment] Atomic checkout confirmation failed:', atomicErr || atomicResult?.error);
+      throw new Error(atomicErr?.message || atomicResult?.error || 'Atomic checkout confirmation failed');
     }
 
-    const dbProductMap = new Map<string, any>();
-    dbProducts.forEach(p => dbProductMap.set(p.id, p));
-
-    // Step 4: Atomic Inventory Validation & Reservation
-    const validatedItems: any[] = [];
-    let authoritativeSubtotal = 0;
-
-    for (const item of rawItems) {
-      const dbProd = dbProductMap.get(item.product_id);
-      if (!dbProd) {
-        throw new Error(`Product ${item.product_id} not found in catalog`);
-      }
-
-      const unitPrice = typeof dbProd.price === 'number' ? dbProd.price : 0;
-      const quantity = Math.max(1, parseInt(item.quantity) || 1);
-      const lineTotal = unitPrice * quantity;
-      authoritativeSubtotal += lineTotal;
-
-      // Find matching variant in product_variants
-      let variantId = item.variant_id || null;
-      let variantRecord = null;
-
-      if (!variantId && item.size) {
-        let vQuery = supabase
-          .from('product_variants')
-          .select('id, stock_quantity, size, color_name')
-          .eq('product_id', dbProd.id)
-          .eq('size', item.size);
-
-        if (item.color) {
-          vQuery = vQuery.ilike('color_name', item.color);
-        }
-
-        const { data: matchedVariants } = await vQuery.limit(1);
-        if (matchedVariants && matchedVariants.length > 0) {
-          variantRecord = matchedVariants[0];
-          variantId = variantRecord.id;
-        }
-      } else if (variantId) {
-        const { data: vRow } = await supabase
-          .from('product_variants')
-          .select('id, stock_quantity, size, color_name')
-          .eq('id', variantId)
-          .maybeSingle();
-        variantRecord = vRow;
-      }
-
-      // Atomic inventory check & decrement using authoritative RPC with fallback
-      if (variantRecord && typeof variantRecord.stock_quantity === 'number') {
-        let stockDeducted = false;
-
-        // Attempt RPC first
-        try {
-          const { data: rpcRes, error: rpcErr } = await supabase.rpc('reserve_and_decrement_variant_stock', {
-            p_variant_id: variantRecord.id,
-            p_quantity: quantity
-          });
-
-          if (!rpcErr && rpcRes && rpcRes.length > 0 && rpcRes[0].success) {
-            stockDeducted = true;
-            console.log(`[VerifyPayment] RPC decremented variant ${variantRecord.id}. New stock: ${rpcRes[0].new_stock}`);
-          }
-        } catch (rpcEx: any) {
-          console.warn('[VerifyPayment] RPC error, falling back to conditional update:', rpcEx.message);
-        }
-
-        // Fallback to atomic conditional update if RPC didn't execute
-        if (!stockDeducted) {
-          if (variantRecord.stock_quantity < quantity) {
-            console.error(`[VerifyPayment] Insufficient stock for variant ${variantId}: available ${variantRecord.stock_quantity}, requested ${quantity}`);
-          } else {
-            const { error: decError } = await supabase
-              .from('product_variants')
-              .update({ 
-                stock_quantity: Math.max(0, variantRecord.stock_quantity - quantity),
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', variantRecord.id)
-              .gte('stock_quantity', quantity);
-
-            if (decError) {
-              console.error(`[VerifyPayment] Failed to decrement variant ${variantRecord.id}:`, decError);
-            } else {
-              console.log(`[VerifyPayment] Atomically decremented variant ${variantRecord.id} by ${quantity}`);
-            }
-          }
-        }
-      }
-
-      validatedItems.push({
-        product_id: dbProd.id,
-        variant_id: variantId,
-        seller_id: dbProd.seller_id,
-        brand: dbProd.brand || 'OGURA Atelier',
-        title: dbProd.title,
-        quantity,
-        unit_price: unitPrice,
-        total_price: lineTotal,
-        size: item.size || 'Free Size',
-        color: item.color || 'Studio Original',
-      });
-    }
-
-    const shippingFee = order_data.shipping_fee || 0;
-    const discount = order_data.discount || 0;
-    const authoritativeTotal = Math.max(0, authoritativeSubtotal + shippingFee - discount);
-
-    // Step 5: Insert Parent Order into `orders`
-    const orderNumber = `OGR${Date.now().toString(36).toUpperCase()}`;
-    const primarySellerId = validatedItems[0]?.seller_id || order_data.customer_id;
-
-    const { data: parentOrder, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        order_number: orderNumber,
-        customer_id: order_data.customer_id,
-        seller_id: primarySellerId, // Backward compatibility column
-        subtotal: authoritativeSubtotal,
-        shipping_fee: shippingFee,
-        discount: discount,
-        total: authoritativeTotal,
-        shipping_address: order_data.shipping_address,
-        status: 'confirmed',
-        tracking_id: razorpay_payment_id,
-      })
-      .select()
-      .single();
-
-    if (orderError || !parentOrder) {
-      console.error('[VerifyPayment] Failed to save parent order:', orderError);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          payment_verified: true,
-          order_saved: false,
-          payment_id: razorpay_payment_id,
-          order_id: razorpay_order_id,
-          error: 'Order save failed, please contact support with payment ID',
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Step 6: Partition Items by Seller into Suborders (`seller_orders`)
-    const sellerGroups = new Map<string, any[]>();
-    for (const item of validatedItems) {
-      const sId = item.seller_id || primarySellerId;
-      if (!sellerGroups.has(sId)) {
-        sellerGroups.set(sId, []);
-      }
-      sellerGroups.get(sId)!.push(item);
-    }
-
-    const createdSuborders: any[] = [];
-    const STANDARD_COMMISSION_RATE = 15.00; // 15% standard commission
-
-    for (const [sellerId, items] of sellerGroups.entries()) {
-      const sellerSubtotal = items.reduce((sum, it) => sum + it.total_price, 0);
-      const commissionAmount = Math.round(sellerSubtotal * (STANDARD_COMMISSION_RATE / 100));
-      const sellerPayable = sellerSubtotal - commissionAmount;
-
-      try {
-        const { data: suborder, error: subError } = await supabase
-          .from('seller_orders')
-          .insert({
-            parent_order_id: parentOrder.id,
-            seller_id: sellerId,
-            seller_subtotal: sellerSubtotal,
-            commission_rate: STANDARD_COMMISSION_RATE,
-            commission_amount: commissionAmount,
-            seller_payable: sellerPayable,
-            status: 'confirmed',
-            fulfillment_status: 'unfulfilled',
-          })
-          .select()
-          .single();
-
-        if (subError) {
-          console.warn('[VerifyPayment] seller_orders insert warning (table might be pending migration):', subError.message);
-        } else if (suborder) {
-          createdSuborders.push(suborder);
-          // Link suborder ID to items for this seller
-          items.forEach(it => { it.seller_order_id = suborder.id; });
-        }
-      } catch (err: any) {
-        console.warn('[VerifyPayment] seller_orders exception:', err.message);
-      }
-    }
-
-    // Step 7: Insert Order Items into `order_items`
-    const orderItemsToInsert = validatedItems.map(item => ({
-      order_id: parentOrder.id,
-      product_id: item.product_id,
-      variant_id: item.variant_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      total_price: item.total_price,
-      size: item.size,
-      color: item.color,
-      ...(item.seller_order_id ? { seller_order_id: item.seller_order_id } : {}),
-      ...(item.seller_id ? { seller_id: item.seller_id } : {}),
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItemsToInsert);
-
-    if (itemsError) {
-      console.error('[VerifyPayment] Failed to save order items:', itemsError);
-    } else {
-      console.log(`[VerifyPayment] Successfully saved ${orderItemsToInsert.length} order items for order ${parentOrder.order_number}`);
-    }
+    console.log(`[VerifyPayment] Successfully confirmed atomic checkout for order ${atomicResult.order_number}`);
 
     return new Response(
       JSON.stringify({
@@ -357,9 +175,10 @@ serve(async (req) => {
         order_saved: true,
         payment_id: razorpay_payment_id,
         order_id: razorpay_order_id,
-        order_number: parentOrder.order_number,
-        db_order_id: parentOrder.id,
-        suborders_count: createdSuborders.length,
+        order_number: atomicResult.order_number,
+        db_order_id: atomicResult.order_id,
+        suborders_count: atomicResult.suborders_count || 0,
+        idempotent: atomicResult.idempotent || false,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

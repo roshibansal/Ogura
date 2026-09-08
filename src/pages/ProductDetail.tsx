@@ -11,6 +11,7 @@ import { useDesigners } from "@/hooks/useDesigners";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types";
 import { normalizeProductSizes, normalizeProductColors, getAtelierCity, normalizeCatalogPrice } from "@/lib/adapters/productAdapter";
+import { getEditorialProduct } from "@/lib/editorialLooks";
 import { Heart, Check, MapPin, MessageCircle, ShoppingBag } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -41,6 +42,16 @@ export default function ProductDetail() {
 
     const fetchProduct = async () => {
       if (!id) return;
+
+      // 0. Editorial look check (homepage hero spotlight looks)
+      const editorial = getEditorialProduct(id);
+      if (editorial) {
+        if (!isCancelled) {
+          setApiProduct(editorial);
+          setIsApiLoading(false);
+        }
+        return;
+      }
 
       // 1. Instant check from already-loaded catalog products
       if (catalogData?.rawProducts?.length) {
@@ -168,6 +179,8 @@ export default function ProductDetail() {
       const fromDesign = allDesigns.find((d) => String(d.slug) === String(id));
       if (fromDesign?.rawProduct) return fromDesign.rawProduct;
     }
+    const editorial = getEditorialProduct(id);
+    if (editorial) return editorial;
     return null;
   }, [apiProduct, id, catalogData, allDesigns]);
 

@@ -27,7 +27,7 @@ export const Header = () => {
       <div className="bg-[#FAFAFA] text-[#5A0A26] border-b border-[#EAE3D9]/60 flex items-center justify-center gap-3 sm:gap-8 py-1.5 px-3 text-[11px] sm:text-xs md:text-sm font-bold tracking-wide text-center">
         <span>Free delivery on orders over ₹2,500</span>
         <span className="hidden sm:inline text-[#5A0A26]/30">|</span>
-        <span className="hidden sm:inline">Talk to the shop before you order</span>
+        <span className="hidden sm:inline">Chat with the shop on Ogura</span>
         <span className="hidden md:inline text-[#5A0A26]/30">|</span>
         <span className="hidden md:inline">7-Day Free Size Help & Returns</span>
       </div>

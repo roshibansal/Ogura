@@ -153,7 +153,7 @@ export default function Index() {
               </h1>
 
               <p className="mt-5 text-base sm:text-xl leading-relaxed text-white/95 max-w-xl font-normal">
-                Authentic handcrafted clothes from independent boutique shops across India. Talk directly with the makers, get custom sizing, and enjoy fast home delivery.
+                Authentic handcrafted clothes from independent boutique shops across India. Chat with the makers on Ogura, get custom sizing, and enjoy fast home delivery.
               </p>
 
               {/* One hero, one action. The boutique introduces itself on the product page,

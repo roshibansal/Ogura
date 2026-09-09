@@ -130,22 +130,24 @@ export default function DesignerDetail() {
             ) : null}
             <div className="mt-5 rounded-xl border border-black/10 bg-parchment/60 p-6">
               <h2 className="font-display text-2xl font-normal leading-tight">
-                Talk to {designer.name.split(" ")[0]} directly
+                Chat with {designer.name.split(" ")[0]} on Ogura
               </h2>
               <p className="mt-2 text-xs sm:text-sm leading-relaxed text-ink-soft">
-                Fifteen minutes, free, before you place an order. Ask about custom sizing, sleeve modifications, neckline adjustments, or event timelines.
+                Fifteen minutes, free, before you order. Ask about custom sizing, sleeve
+                or neckline changes, fabric weight, or whether it can be ready for your date.
               </p>
               <ul className="mt-4 space-y-1.5 text-xs text-ink-soft">
-                <li>• Direct consultation with the maker</li>
-                <li>• Video or voice call in your preferred language</li>
-                <li>• Custom measurements taken on file</li>
+                <li>• Chat or video call, arranged and hosted by Ogura</li>
+                <li>• In your preferred language</li>
+                <li>• Your measurements saved to your Ogura account for next time</li>
+                <li>• Ogura stands behind whatever is agreed in the chat</li>
               </ul>
               <div className="mt-5">
                 <CallRequest
                   boutique={designer.brand_name || designer.name}
                   owner={designer.name}
                   variant="solid"
-                  label={`Request a Call with ${designer.name.split(" ")[0]}`}
+                  label={`Start a chat with ${designer.name.split(" ")[0]}`}
                 />
               </div>
             </div>

@@ -541,7 +541,7 @@ export default function ProductDetail() {
                 className="w-full py-3.5 bg-white border border-[#EAE3D9] text-ink font-bold text-sm rounded-sm hover:border-gold transition flex items-center justify-center gap-2.5 shadow-[0_0_10px_rgba(226,209,163,0.15)]"
               >
                 <MessageCircle className="h-4 w-4 text-gold" />
-                <span>Talk to Ogura&apos;s designer first</span>
+                <span>Chat with this boutique on Ogura</span>
                 <span className="text-xs text-ink/70 font-medium">(Fit & styling consult)</span>
               </a>
             </div>

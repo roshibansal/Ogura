@@ -151,7 +151,7 @@ Please confirm the appointment link. Thank you!`;
                   <div>
                     <span className="font-display text-lg tracking-tight">The Call is the Product</span>
                     <p className="text-xs text-ink-soft mt-0.5">
-                      Talk to {owner} at {boutique} before you buy
+                      Chat with {owner} at {boutique}, on Ogura
                     </p>
                   </div>
                   <span className="text-xs font-medium text-ink-soft">Step {step} of 3</span>

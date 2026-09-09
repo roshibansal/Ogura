@@ -126,6 +126,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // sessionStorage unavailable (private mode) - non-fatal
       }
 
+      // Lovable's wrapper navigates to /~oauth/initiate, a route that only
+      // exists on Lovable's own hosting. Off that host — as we now are — it is
+      // a hard 404 and the user never reaches Google at all. The wrapper never
+      // "errors", it redirects, so the fallback below could never fire.
+      // Off Lovable, go straight to Supabase's Google provider.
+      const onLovableHost = /(^|\.)lovable\.(app|dev)$/i.test(window.location.hostname);
+
+      if (!onLovableHost) {
+        const { error: directError } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: getCanonicalAuthOrigin() },
+        });
+        if (!directError) return { success: true };
+        console.error('Supabase Google OAuth failed:', directError.message);
+        return {
+          success: false,
+          error:
+            'Google sign-in is not configured yet. Add the Google client ID and secret ' +
+            'under Authentication → Providers in Supabase.',
+        };
+      }
+
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: getCanonicalAuthOrigin(),
       });

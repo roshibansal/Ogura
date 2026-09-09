@@ -34,17 +34,17 @@ serve(async (req) => {
 // bands must stay identical to the client's, or the amount taken at checkout
 // will not match the price the customer saw.
 //
-//   Lehengas, Sarees              4,400 - 5,400
-//   Indo-Western, Indian Co-ords  2,400 - 3,400
-//   Everything else               1,900 - 3,400
+//   Lehengas, Sarees              4,800 - 5,800
+//   Indo-Western, Indian Co-ords  2,800 - 3,800
+//   Everything else               2,300 - 3,800
 const PRICE_BANDS: Record<string, number[]> = {
-  Lehengas: [4399, 4599, 4699, 4899, 4999, 5199, 5299, 5399],
-  Sarees: [4399, 4599, 4699, 4899, 4999, 5199, 5299, 5399],
-  "Indo-Western": [2399, 2599, 2699, 2899, 2999, 3199, 3299, 3399],
-  "Indian Co-ords": [2399, 2599, 2699, 2899, 2999, 3199, 3299, 3399],
+  Lehengas: [4799, 4999, 5099, 5299, 5399, 5599, 5699, 5799],
+  Sarees: [4799, 4999, 5099, 5299, 5399, 5599, 5699, 5799],
+  "Indo-Western": [2799, 2999, 3099, 3299, 3399, 3599, 3699, 3799],
+  "Indian Co-ords": [2799, 2999, 3099, 3299, 3399, 3599, 3699, 3799],
 };
 
-const DEFAULT_BAND = [1899, 1999, 2099, 2199, 2299, 2399, 2599, 2799, 2999, 3199, 3399];
+const DEFAULT_BAND = [2299, 2399, 2499, 2599, 2699, 2799, 2999, 3199, 3399, 3599, 3799];
 
 function mapCategoryToBand(rawCategory?: string | null): number[] {
   const c = (rawCategory || "").toLowerCase().trim();

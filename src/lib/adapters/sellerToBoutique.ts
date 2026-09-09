@@ -74,7 +74,7 @@ export const sellerToBoutique = (s: SellerRow): Designer => {
     slug: (s.brand_name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
     city,
     category: craft,
-    price_range: "₹1,900 – ₹5,400",
+    price_range: "₹2,300 – ₹5,800",
     instagram_link: s.instagram_handle
       ? `https://instagram.com/${String(s.instagram_handle).replace(/^@/, "")}`
       : "",

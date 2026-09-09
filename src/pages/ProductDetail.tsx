@@ -473,31 +473,6 @@ export default function ProductDetail() {
               </button>
             </div>
 
-            {/* Colour Options (.opt) */}
-            <div className="border-t border-line pt-4">
-              <h4 className="text-[11px] font-bold uppercase tracking-[0.11em] text-ink/75 mb-2.5">
-                Colour: <span className="text-ink font-semibold">{selectedColor}</span>
-              </h4>
-              <div className="flex items-center gap-2">
-                {/* The piece's own colours. This was a fixed four-swatch palette,
-                    so an ochre kurta advertised itself as "Midnight Indigo". */}
-                {(currentProduct.colors || []).map((c) => (
-                  <button
-                    key={c.name}
-                    type="button"
-                    onClick={() => setSelectedColor(c.name)}
-                    className={`h-7 w-7 rounded-full transition shadow-sm ${
-                      selectedColor === c.name
-                        ? "ring-2 ring-gold ring-offset-2 scale-110"
-                        : "ring-1 ring-line hover:scale-105"
-                    }`}
-                    style={{ backgroundColor: c.hex }}
-                    title={c.name}
-                  />
-                ))}
-              </div>
-            </div>
-
             {/* Size Options (.opt) */}
             <div className="border-t border-line pt-4">
               <div className="flex items-center justify-between mb-2.5">
@@ -609,18 +584,6 @@ export default function ProductDetail() {
                 <span className="text-emerald-700 font-extrabold text-base leading-none">✓</span>
                 <span>
                   <b className="text-ink">In the shop now.</b> Ready to ship in 2-3 days.
-                </span>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-emerald-700 font-extrabold text-base leading-none">✓</span>
-                <span>
-                  <b className="text-ink">100% Safe Payments.</b> Your money is fully protected until you confirm the fit.
-                </span>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-emerald-700 font-extrabold text-base leading-none">✓</span>
-                <span>
-                  <b className="text-ink">One free alteration</b> anywhere in India.
                 </span>
               </div>
               <div className="flex items-start gap-3">

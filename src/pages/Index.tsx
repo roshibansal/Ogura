@@ -117,8 +117,8 @@ export default function Index() {
           ))}
 
           {/* High-Contrast Editorial Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/45 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/62 via-black/26 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/40 to-transparent" />
 
           {/* Hero Content Frame */}
           <div className="relative max-w-[1360px] mx-auto px-4 sm:px-8 py-10 text-white z-10 w-full flex flex-col justify-center h-full">
@@ -131,7 +131,7 @@ export default function Index() {
               </div>
 
               {/* Headline with Large Typography */}
-              <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-normal tracking-tight leading-[1.05] text-white drop-shadow-sm">
+              <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-normal tracking-tight leading-[1.05] text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.55)]">
                 Sit in{" "}
                 <span
                   className={`italic text-white border-b-2 border-gold pb-1 inline-block transition-all duration-500 ${
@@ -189,11 +189,14 @@ export default function Index() {
 
           {/* Floating "Shop This Look" Card with Faded Gold Glow */}
           <div className="hidden lg:block absolute right-8 bottom-6 z-20 bg-white/95 rounded-sm p-6 min-w-[340px] shadow-2xl border border-[#EAE3D9] shadow-[0_0_20px_rgba(226,209,163,0.28)] backdrop-blur-md transition-all duration-500">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-bold tracking-widest uppercase text-[#5A0A26]">
-                {activeLook.boutique} | {activeLook.city}
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-xs font-bold tracking-widest uppercase text-[#5A0A26] leading-snug">
+                {activeLook.boutique}
+                <span className="block font-semibold tracking-wide text-[#5A0A26]/60">
+                  {activeLook.city}
+                </span>
               </p>
-              <span className="text-[10px] font-mono font-extrabold text-gold uppercase px-2 py-0.5 rounded-xs bg-[#5A0A26] text-white">
+              <span className="shrink-0 whitespace-nowrap text-[10px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-xs bg-[#5A0A26] text-white">
                 VERIFIED SHOP
               </span>
             </div>

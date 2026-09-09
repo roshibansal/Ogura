@@ -22,14 +22,14 @@ import { HERO_LOOKS } from "@/lib/editorialLooks";
 // the photography there is the closest thing on the site to what Ogura is
 // actually selling.
 const CATEGORY_BLOCKS = [
-  { title: "Indian Co-ords", count: 21, image: "/catalogue/indian-coords/pink-sharara-set-dupatta.jpg", path: "/collections?category=Indian%20Co-ords" },
+  { title: "Indian Co-ords", count: 21, image: "/categories/indian-coords.jpg", path: "/collections?category=Indian%20Co-ords" },
   { title: "Tops", count: 100, image: "/catalogue/tops/sage-mirrorwork-vest.jpg", path: "/collections?category=Tops" },
-  { title: "Lehengas", count: 36, image: "/mockup-assets/lengha-30.jpg", path: "/collections?category=Lehengas" },
-  { title: "Sarees", count: 15, image: "/mockup-assets/saree-15.jpg", path: "/collections?category=Sarees" },
+  { title: "Lehengas", count: 36, image: "/categories/lehengas.jpg", path: "/collections?category=Lehengas" },
+  { title: "Sarees", count: 15, image: "/categories/sarees.jpg", path: "/collections?category=Sarees" },
   { title: "Western Dresses", count: 78, image: "/mockup-assets/dresses-western-25.jpg", path: "/collections?category=Western%20Dresses" },
   { title: "Indo-Western", count: 6, image: "/mockup-assets/indowesteern-03.jpg", path: "/collections?category=Indo-Western" },
-  { title: "Bags", count: 20, image: "/mockup-assets/bags-14.jpg", path: "/collections?category=Bags" },
-  { title: "Shoes", count: 22, image: "/mockup-assets/shoes-14.jpg", path: "/collections?category=Shoes" },
+  { title: "Bags", count: 20, image: "/categories/bags.jpg", path: "/collections?category=Bags" },
+  { title: "Shoes", count: 22, image: "/categories/shoes.jpg", path: "/collections?category=Shoes" },
 ];
 
 // Featured Ateliers
@@ -361,13 +361,15 @@ export default function Index() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/45 to-black/5" />
                 <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-                  <span className="text-xs font-mono text-gold block uppercase tracking-widest mb-0.5 font-extrabold">
+                  <span className="text-xs font-mono text-gold block uppercase tracking-widest mb-0.5 font-extrabold [text-shadow:0_1px_6px_rgba(0,0,0,0.7)]">
                     0{i + 1}
                   </span>
-                  <b className="block text-lg sm:text-2xl font-serif italic font-normal leading-tight text-white drop-shadow-xs">
+                  <b className="block text-lg sm:text-2xl font-serif italic font-normal leading-tight text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.75)]">
                     {c.title}
                   </b>
-                  <span className="text-xs sm:text-sm opacity-95 mt-1 block font-sans">{c.count} verified pieces</span>
+                  <span className="text-xs sm:text-sm opacity-95 mt-1 block font-sans [text-shadow:0_1px_6px_rgba(0,0,0,0.7)]">
+                    {c.count} verified pieces
+                  </span>
                 </div>
               </Link>
             ))}

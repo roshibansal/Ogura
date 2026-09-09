@@ -235,18 +235,18 @@ export default function Index() {
               </h2>
             </div>
             <p className="text-xs sm:text-sm font-semibold text-[#5A0A26]/80">
-              Ready to ship | Custom size stitching | Budget-friendly prices
+              Ready to ship | Free size help | Budget-friendly prices
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-6">
             {/* Tile 1: Under 3k */}
             <Link
               to="/marketplace?price=under3k"
               className="group relative min-h-[190px] xs:min-h-[210px] sm:min-h-[260px] md:min-h-[290px] md:aspect-[16/10] overflow-hidden bg-white rounded-sm border border-[#EAE3D9] shadow-[0_0_12px_rgba(226,209,163,0.2)] hover:shadow-[0_0_22px_rgba(226,209,163,0.35)] transition-all hover:border-[#C9A56B]"
             >
               <img
-                src="/mockup-assets/tops-western-09.jpg"
+                src="/ways/under-3k.jpg"
                 alt="Under ₹3,000"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-106"
               />
@@ -267,40 +267,13 @@ export default function Index() {
               </div>
             </Link>
 
-            {/* Tile 2: Made to order */}
-            <Link
-              to="/marketplace?availability=order"
-              className="group relative min-h-[190px] xs:min-h-[210px] sm:min-h-[260px] md:min-h-[290px] md:aspect-[16/10] overflow-hidden bg-white rounded-sm border border-[#EAE3D9] shadow-[0_0_12px_rgba(226,209,163,0.2)] hover:shadow-[0_0_22px_rgba(226,209,163,0.35)] transition-all hover:border-[#C9A56B]"
-            >
-              <img
-                src="/mockup-assets/lengha-07.jpg"
-                alt="Made to order"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-106"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/15" />
-              <div className="absolute inset-0 p-4 sm:p-7 flex flex-col justify-center text-white z-10 max-w-full">
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gold block mb-0.5">
-                  CUSTOM STITCHING
-                </span>
-                <b className="block text-2xl sm:text-3xl lg:text-4xl font-serif italic font-normal tracking-tight text-white drop-shadow-xs leading-tight">
-                  Made on order
-                </b>
-                <p className="text-xs sm:text-sm text-white/95 mt-1 sm:mt-1.5 max-w-[270px] sm:max-w-xs leading-snug font-medium line-clamp-2">
-                  Stitched to your exact measurements directly by boutique tailors.
-                </p>
-                <span className="inline-block mt-2 sm:mt-3 text-xs sm:text-sm font-extrabold text-gold border-b border-gold pb-0.5 self-start">
-                  See custom fit pieces →
-                </span>
-              </div>
-            </Link>
-
             {/* Tile 3: Ships in 48 hrs */}
             <Link
               to="/marketplace?availability=stock"
               className="group relative min-h-[190px] xs:min-h-[210px] sm:min-h-[260px] md:min-h-[290px] md:aspect-[16/10] overflow-hidden bg-white rounded-sm border border-[#EAE3D9] shadow-[0_0_12px_rgba(226,209,163,0.2)] hover:shadow-[0_0_22px_rgba(226,209,163,0.35)] transition-all hover:border-[#C9A56B]"
             >
               <img
-                src="/mockup-assets/bags-14.jpg"
+                src="/ways/ready-to-ship.jpg"
                 alt="Ships in 48 hrs"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,0.8,0.28,1)] group-hover:scale-106"
               />

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const Login = () => {
-  const { isAuthenticated, isLoading, isNewUser } = useAuth();
+  const { isAuthenticated, isLoading, isNewUser, signInWithEmail, signUpWithEmail } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -27,6 +27,28 @@ const Login = () => {
   const from = isSameOriginPath
     ? nextParam!
     : (location.state as any)?.from?.pathname || storedPath || "/dashboard";
+
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const fn = mode === "signin" ? signInWithEmail : signUpWithEmail;
+    const { success, error } = await fn(email.trim(), password);
+    setBusy(false);
+    if (success) {
+      toast.success(mode === "signin" ? "Welcome back" : "Account created");
+      return;
+    }
+    if (mode === "signin" && /invalid login credentials/i.test(error || "")) {
+      toast.error("No account with that email and password. Try creating one.");
+      return;
+    }
+    toast.error(error || "Something went wrong. Please try again.");
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -88,23 +110,7 @@ const Login = () => {
             Discover curated collections from India's finest designers. 
             Luxury fashion, artisanal craftsmanship, and timeless elegance—all in one place.
           </p>
-          <div className="mt-12 flex items-center gap-8">
-            <div className="text-center">
-              <p className="text-3xl font-light text-foreground">500+</p>
-              <p className="text-sm text-muted-foreground mt-1">Designers</p>
-            </div>
-            <div className="h-12 w-px bg-border" />
-            <div className="text-center">
-              <p className="text-3xl font-light text-foreground">10K+</p>
-              <p className="text-sm text-muted-foreground mt-1">Products</p>
-            </div>
-            <div className="h-12 w-px bg-border" />
-            <div className="text-center">
-              <p className="text-3xl font-light text-foreground">50+</p>
-              <p className="text-sm text-muted-foreground mt-1">Cities</p>
-            </div>
           </div>
-        </div>
       </div>
 
       {/* Right side - Login Form */}
@@ -130,11 +136,53 @@ const Login = () => {
                 <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-4 text-muted-foreground">
-                  Secure Sign In
-                </span>
+                <span className="bg-background px-4 text-muted-foreground">or use email</span>
               </div>
             </div>
+
+            {/* Email sign-in. Google needs a client secret configured in Supabase
+                before it can complete; email works today, so the page is never
+                a dead end. */}
+            <form onSubmit={handleEmailSubmit} className="space-y-3">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                className="w-full h-11 rounded-md border border-border bg-background px-3 text-sm"
+              />
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password (at least 6 characters)"
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                className="w-full h-11 rounded-md border border-border bg-background px-3 text-sm"
+              />
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full h-11 rounded-md bg-[#5A0A26] hover:bg-[#3D0618] text-white text-sm font-semibold transition inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+                {mode === "signin" ? "Sign in" : "Create account"}
+              </button>
+            </form>
+
+            <p className="text-center text-sm text-muted-foreground">
+              {mode === "signin" ? "New to Ogura?" : "Already have an account?"}{" "}
+              <button
+                type="button"
+                onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+                className="text-[#5A0A26] font-semibold hover:underline"
+              >
+                {mode === "signin" ? "Create an account" : "Sign in"}
+              </button>
+            </p>
 
             <div className="text-center text-sm text-muted-foreground">
               <p>

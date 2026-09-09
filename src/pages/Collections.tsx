@@ -126,7 +126,7 @@ export default function Collections() {
   const facetCounts = useMemo(() => {
     const counts = {
       availability: { stock: 0, order: 0 },
-      price: { under2k: 0, "2to3k": 0, over3k: 0 },
+      price: { under3k: 0, "3to4k": 0, over4k: 0 },
       categories: {} as Record<string, number>,
       ateliers: {} as Record<string, number>,
       cities: {} as Record<string, number>,
@@ -138,9 +138,9 @@ export default function Collections() {
       else counts.availability.order++;
 
       // Price: 1200 to 12000 range
-      if (d.price < 2000) counts.price.under2k++;
-      else if (d.price <= 3000) counts.price["2to3k"]++;
-      else counts.price.over3k++;
+      if (d.price < 3000) counts.price.under3k++;
+      else if (d.price <= 4000) counts.price["3to4k"]++;
+      else counts.price.over4k++;
 
       // Category
       if (d.category) {
@@ -221,9 +221,9 @@ export default function Collections() {
         if (activeAvailability === "order" && d.readyStock) return false;
 
         // Price filter (1,200 to 12,000)
-        if (activePrice === "under2k" && d.price >= 2000) return false;
-        if (activePrice === "2to3k" && (d.price < 2000 || d.price > 3000)) return false;
-        if (activePrice === "over3k" && d.price <= 3000) return false;
+        if (activePrice === "under3k" && d.price >= 3000) return false;
+        if (activePrice === "3to4k" && (d.price < 3000 || d.price > 4000)) return false;
+        if (activePrice === "over4k" && d.price <= 4000) return false;
 
         return true;
       })
@@ -407,36 +407,36 @@ export default function Collections() {
             </span>
             <button
               type="button"
-              onClick={() => toggleParam("price", "under2k")}
+              onClick={() => toggleParam("price", "under3k")}
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
-                activePrice === "under2k"
+                activePrice === "under3k"
                   ? "bg-[#5A0A26] text-white font-black border-[#3D0618]"
                   : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >
-              Under ₹2,000 ({facetCounts.price.under2k})
+              Under ₹3,000 ({facetCounts.price.under3k})
             </button>
             <button
               type="button"
-              onClick={() => toggleParam("price", "2to3k")}
+              onClick={() => toggleParam("price", "3to4k")}
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
-                activePrice === "2to3k"
+                activePrice === "3to4k"
                   ? "bg-[#5A0A26] text-white font-black border-[#3D0618]"
                   : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >
-              ₹2,000–₹3,000 ({facetCounts.price["2to3k"]})
+              ₹3,000–₹4,000 ({facetCounts.price["3to4k"]})
             </button>
             <button
               type="button"
-              onClick={() => toggleParam("price", "over3k")}
+              onClick={() => toggleParam("price", "over4k")}
               className={`shrink-0 px-3 py-1.5 rounded-sm transition border ${
-                activePrice === "over3k"
+                activePrice === "over4k"
                   ? "bg-[#5A0A26] text-white font-black border-[#3D0618]"
                   : "bg-white text-[#5A0A26] border-[#EAE3D9] hover:border-gold font-bold"
               }`}
             >
-              Over ₹3,000 ({facetCounts.price.over3k})
+              Over ₹4,000 ({facetCounts.price.over4k})
             </button>
             <button
               type="button"
@@ -499,11 +499,11 @@ export default function Collections() {
                 className="inline-flex items-center gap-1 border border-rose text-rose bg-white px-2.5 py-1 rounded-sm text-xs hover:bg-rose/5 transition"
               >
                 <span>
-                  {activePrice === "under2k"
-                    ? "Under ₹2,000"
-                    : activePrice === "2to3k"
-                    ? "₹2,000–₹3,000"
-                    : "Over ₹3,000"}
+                  {activePrice === "under3k"
+                    ? "Under ₹3,000"
+                    : activePrice === "3to4k"
+                    ? "₹3,000–₹4,000"
+                    : "Over ₹4,000"}
                 </span>
                 <X className="h-3 w-3" />
               </button>
@@ -610,59 +610,59 @@ export default function Collections() {
               <div className="space-y-1.5">
                 <button
                   type="button"
-                  onClick={() => toggleParam("price", "under2k")}
+                  onClick={() => toggleParam("price", "under3k")}
                   className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
-                    activePrice === "under2k" ? "font-bold text-ink" : ""
+                    activePrice === "under3k" ? "font-bold text-ink" : ""
                   }`}
                 >
                   <span
                     className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
-                      activePrice === "under2k"
+                      activePrice === "under3k"
                         ? "bg-ink border-ink text-white"
                         : "border-line"
                     }`}
                   >
-                    {activePrice === "under2k" && <Check className="h-2.5 w-2.5" />}
+                    {activePrice === "under3k" && <Check className="h-2.5 w-2.5" />}
                   </span>
-                  <span>Under ₹2,000 ({facetCounts.price.under2k})</span>
+                  <span>Under ₹3,000 ({facetCounts.price.under3k})</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => toggleParam("price", "2to3k")}
+                  onClick={() => toggleParam("price", "3to4k")}
                   className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
-                    activePrice === "2to3k" ? "font-bold text-ink" : ""
+                    activePrice === "3to4k" ? "font-bold text-ink" : ""
                   }`}
                 >
                   <span
                     className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
-                      activePrice === "2to3k"
+                      activePrice === "3to4k"
                         ? "bg-ink border-ink text-white"
                         : "border-line"
                     }`}
                   >
-                    {activePrice === "2to3k" && <Check className="h-2.5 w-2.5" />}
+                    {activePrice === "3to4k" && <Check className="h-2.5 w-2.5" />}
                   </span>
-                  <span>₹2,000–₹3,000 ({facetCounts.price["2to3k"]})</span>
+                  <span>₹3,000–₹4,000 ({facetCounts.price["3to4k"]})</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => toggleParam("price", "over3k")}
+                  onClick={() => toggleParam("price", "over4k")}
                   className={`flex items-center gap-2 w-full text-left py-1 hover:text-ink transition ${
-                    activePrice === "over3k" ? "font-bold text-ink" : ""
+                    activePrice === "over4k" ? "font-bold text-ink" : ""
                   }`}
                 >
                   <span
                     className={`h-3.5 w-3.5 border rounded-sm flex items-center justify-center shrink-0 ${
-                      activePrice === "over3k"
+                      activePrice === "over4k"
                         ? "bg-ink border-ink text-white"
                         : "border-line"
                     }`}
                   >
-                    {activePrice === "over3k" && <Check className="h-2.5 w-2.5" />}
+                    {activePrice === "over4k" && <Check className="h-2.5 w-2.5" />}
                   </span>
-                  <span>Over ₹3,000 ({facetCounts.price.over3k})</span>
+                  <span>Over ₹4,000 ({facetCounts.price.over4k})</span>
                 </button>
               </div>
             </div>

@@ -189,12 +189,12 @@ export const Header = () => {
               <span className="text-xs font-semibold text-[#5A0A26]/70">Explore all styles →</span>
             </Link>
             <Link
-              to="/marketplace?price=under2k"
+              to="/marketplace?price=under3k"
               onClick={() => setIsMobileMenuOpen(false)}
               className="py-2 px-3 rounded-sm hover:bg-neutral-50 transition flex items-center gap-2 border border-[#EAE3D9]/60"
             >
               <span className="px-1.5 py-0.2 bg-[#5A0A26] text-white font-black rounded-xs text-xs">%</span>
-              <span>Sale Deals (Under ₹2,000)</span>
+              <span>Sale Deals (Under ₹3,000)</span>
             </Link>
             <Link
               to="/wishlist"

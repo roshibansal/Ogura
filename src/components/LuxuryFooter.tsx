@@ -29,15 +29,14 @@ export const LuxuryFooter = () => {
       <div className="border-b border-background/10">
         <div className="container mx-auto px-4 py-14 text-center">
           <h3 className="text-2xl md:text-3xl font-light uppercase tracking-[0.2em] mb-4">
-            New Pieces, First
+            Get Our Newsletter
           </h3>
           <p className="text-background/60 text-sm mb-8 max-w-md mx-auto leading-relaxed">
-            Boutiques list in small batches, and one-off pieces go quickly. We write
-            when something new lands — nothing else.
+            New arrivals from our boutiques, straight to your inbox.
           </p>
           {joined ? (
             <p className="text-sm text-background/80 max-w-md mx-auto">
-              You're on the list. We'll be in touch when the next pieces land.
+              You're on the list. Thank you.
             </p>
           ) : (
             <form

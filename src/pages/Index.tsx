@@ -126,7 +126,7 @@ export default function Index() {
               {/* Simple Category Intro Tag */}
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xs bg-white/20 backdrop-blur-md border border-white/40 mb-6 shadow-sm">
                 <p className="text-xs sm:text-sm font-black uppercase tracking-[0.18em] text-white">
-                  Shop 40 Verified Indian Boutiques
+                  Shop Verified Indian Boutiques
                 </p>
               </div>
 
@@ -153,7 +153,7 @@ export default function Index() {
               </h1>
 
               <p className="mt-5 text-base sm:text-xl leading-relaxed text-white/95 max-w-xl font-normal">
-                Authentic handcrafted clothes from 40 independent boutique shops across India. Talk directly with the makers, get custom sizing, and enjoy fast home delivery.
+                Authentic handcrafted clothes from independent boutique shops across India. Talk directly with the makers, get custom sizing, and enjoy fast home delivery.
               </p>
 
               {/* One hero, one action. The boutique introduces itself on the product page,
@@ -343,7 +343,7 @@ export default function Index() {
               to="/marketplace"
               className="text-sm font-extrabold text-[#5A0A26] hover:text-[#5A0A26] transition border-b-2 border-[#5A0A26] pb-0.5 shrink-0"
             >
-              Browse All 332 Pieces →
+              Browse Everything →
             </Link>
           </div>
 
@@ -368,7 +368,7 @@ export default function Index() {
                     {c.title}
                   </b>
                   <span className="text-xs sm:text-sm opacity-95 mt-1 block font-sans [text-shadow:0_1px_6px_rgba(0,0,0,0.7)]">
-                    {c.count} verified pieces
+                    Shop the edit
                   </span>
                 </div>
               </Link>
@@ -381,14 +381,14 @@ export default function Index() {
               More Styles:
             </span>
             <div className="flex flex-wrap items-center gap-4 font-bold">
-              <Link to="/marketplace?category=Jumpsuits" className="hover:text-[#5A0A26] transition">Jumpsuits (4)</Link>
+              <Link to="/marketplace?category=Jumpsuits" className="hover:text-[#5A0A26] transition">Jumpsuits</Link>
               <span>|</span>
-              <Link to="/marketplace?category=Bottoms" className="hover:text-[#5A0A26] transition">Bottoms (6)</Link>
+              <Link to="/marketplace?category=Bottoms" className="hover:text-[#5A0A26] transition">Bottoms</Link>
               <span>|</span>
-              <Link to="/marketplace?category=Western%20Co-ords" className="hover:text-[#5A0A26] transition">Western Co-ords (7)</Link>
+              <Link to="/marketplace?category=Western%20Co-ords" className="hover:text-[#5A0A26] transition">Western Co-ords</Link>
             </div>
             <Link to="/marketplace" className="font-extrabold text-[#5A0A26] hover:underline ml-auto">
-              View All 11 Categories →
+              View All Categories →
             </Link>
           </div>
         </section>

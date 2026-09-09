@@ -257,7 +257,10 @@ export function BoutiqueCard({ b, count }: { b: BoutiqueVM; count?: number }) {
           <span className="text-[11px] font-mono text-gold font-bold uppercase tracking-wider">VERIFIED</span>
         </div>
         <p className="text-sm text-ink/80 mt-1 font-medium">
-          {b.city} · {count || 24} creations
+          {/* Only ever state a count we actually have. This used to fall back to
+              a hardcoded 24, so every boutique without a real number claimed one. */}
+          {b.city}
+          {count ? ` · ${count} ${count === 1 ? "creation" : "creations"}` : ""}
         </p>
       </div>
     </Link>

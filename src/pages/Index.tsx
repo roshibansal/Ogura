@@ -95,15 +95,23 @@ export default function Index() {
         {/* ============================================================ */}
         {/* SECTION 1: HERO LOOKBOOK (PROUD, EXPANSIVE & READABLE)       */}
         {/* ============================================================ */}
-        <section className="relative h-[560px] sm:h-[640px] lg:h-[700px] w-full overflow-hidden flex items-center justify-center border-b border-[#EAE3D9] shadow-[0_4px_20px_rgba(226,209,163,0.15)]">
+        <section className="relative h-[620px] sm:h-[760px] lg:h-[86vh] lg:min-h-[720px] lg:max-h-[940px] w-full overflow-hidden flex items-center justify-center border-b border-[#EAE3D9] shadow-[0_4px_20px_rgba(226,209,163,0.15)]">
           {/* Rotating Lookbook Background Images with Smooth Cross-Fade */}
           {HERO_LOOKS.map((look, idx) => (
             <img
               key={look.id}
               src={look.image}
               alt={look.alt}
-              className={`absolute inset-0 w-full h-full object-cover object-[50%_25%] transition-opacity duration-1000 ease-in-out ${
-                idx === heroIndex ? "opacity-100 scale-100" : "opacity-0 scale-105 pointer-events-none"
+              loading="eager"
+              decoding="async"
+              fetchPriority={idx === 0 ? "high" : "low"}
+              // Each frame carries its own focal point; a single crop for all
+              // five cut the subject out of the taller portrait shots.
+              style={{ objectPosition: look.focus }}
+              className={`absolute inset-0 w-full h-full object-cover transition-[opacity,transform] duration-[1400ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] ${
+                idx === heroIndex
+                  ? "opacity-100 scale-100"
+                  : "opacity-0 scale-[1.06] pointer-events-none"
               }`}
             />
           ))}

@@ -1,0 +1,74 @@
+[
+ {
+  "id": "731145ba-c8b0-4779-96f7-09661e8dbf76",
+  "name": "Sarees",
+  "slug": "sarees",
+  "parent_id": null,
+  "sort_order": 1,
+  "is_active": true,
+  "created_at": "2026-02-02T17:33:08.741024+00:00"
+ },
+ {
+  "id": "d8117e15-6bc0-4b3e-a406-4d5df48cda8c",
+  "name": "Lehengas",
+  "slug": "lehengas",
+  "parent_id": null,
+  "sort_order": 2,
+  "is_active": true,
+  "created_at": "2026-02-02T17:33:08.741024+00:00"
+ },
+ {
+  "id": "dff7345d-d206-4b4f-9ada-21ac58e7fca1",
+  "name": "Kurta Sets",
+  "slug": "kurta-sets",
+  "parent_id": null,
+  "sort_order": 3,
+  "is_active": true,
+  "created_at": "2026-02-02T17:33:08.741024+00:00"
+ },
+ {
+  "id": "9621d021-7ab3-4e64-b972-43c30bf2490f",
+  "name": "Dresses",
+  "slug": "dresses",
+  "parent_id": null,
+  "sort_order": 4,
+  "is_active": true,
+  "created_at": "2026-02-02T17:33:08.741024+00:00"
+ },
+ {
+  "id": "7e1282e1-3db7-4d2f-b999-82cd2f8d4609",
+  "name": "Blouses",
+  "slug": "blouses",
+  "parent_id": null,
+  "sort_order": 5,
+  "is_active": true,
+  "created_at": "2026-02-02T17:33:08.741024+00:00"
+ },
+ {
+  "id": "40eb2db1-70e7-400d-b0af-e09f50f3035a",
+  "name": "Dupattas",
+  "slug": "dupattas",
+  "parent_id": null,
+  "sort_order": 6,
+  "is_active": true,
+  "created_at": "2026-02-02T17:33:08.741024+00:00"
+ },
+ {
+  "id": "a68fbdf7-916e-4c15-a8d1-414ece13507f",
+  "name": "Indo-Western",
+  "slug": "indo-western",
+  "parent_id": null,
+  "sort_order": 7,
+  "is_active": true,
+  "created_at": "2026-02-02T17:33:08.741024+00:00"
+ },
+ {
+  "id": "e1410161-4ee8-4195-b8b2-f7c7c26a27ee",
+  "name": "Bridal Wear",
+  "slug": "bridal-wear",
+  "parent_id": null,
+  "sort_order": 8,
+  "is_active": true,
+  "created_at": "2026-02-02T17:33:08.741024+00:00"
+ }
+]

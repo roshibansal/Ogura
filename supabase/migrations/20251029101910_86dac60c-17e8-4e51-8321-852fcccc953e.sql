@@ -8,7 +8,7 @@ END;
 $$ LANGUAGE plpgsql SET search_path = public;
 
 -- Create designers table
-CREATE TABLE public.designers (
+CREATE TABLE IF NOT EXISTS public.designers (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   brand_name TEXT NOT NULL,
@@ -27,41 +27,42 @@ CREATE TABLE public.designers (
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_designers_brand_name ON public.designers(brand_name);
-CREATE INDEX idx_designers_category ON public.designers(category);
-CREATE INDEX idx_designers_city ON public.designers(city);
+CREATE INDEX IF NOT EXISTS idx_designers_brand_name ON public.designers(brand_name);
+CREATE INDEX IF NOT EXISTS idx_designers_category ON public.designers(category);
+CREATE INDEX IF NOT EXISTS idx_designers_city ON public.designers(city);
 
 -- Enable Row Level Security
 ALTER TABLE public.designers ENABLE ROW LEVEL SECURITY;
 
 -- Create policy for public read access
-CREATE POLICY "Anyone can view designers" 
-ON public.designers 
+DROP POLICY IF EXISTS "Anyone can view designers" ON public.designers;
+CREATE POLICY "Anyone can view designers" ON public.designers 
 FOR SELECT 
 USING (true);
 
 -- Create policy for authenticated users to insert (for future admin panel)
-CREATE POLICY "Authenticated users can insert designers" 
-ON public.designers 
+DROP POLICY IF EXISTS "Authenticated users can insert designers" ON public.designers;
+CREATE POLICY "Authenticated users can insert designers" ON public.designers 
 FOR INSERT 
 TO authenticated
 WITH CHECK (true);
 
 -- Create policy for authenticated users to update (for future admin panel)
-CREATE POLICY "Authenticated users can update designers" 
-ON public.designers 
+DROP POLICY IF EXISTS "Authenticated users can update designers" ON public.designers;
+CREATE POLICY "Authenticated users can update designers" ON public.designers 
 FOR UPDATE 
 TO authenticated
 USING (true);
 
 -- Create policy for authenticated users to delete (for future admin panel)
-CREATE POLICY "Authenticated users can delete designers" 
-ON public.designers 
+DROP POLICY IF EXISTS "Authenticated users can delete designers" ON public.designers;
+CREATE POLICY "Authenticated users can delete designers" ON public.designers 
 FOR DELETE 
 TO authenticated
 USING (true);
 
 -- Create trigger for automatic timestamp updates
+DROP TRIGGER IF EXISTS update_designers_updated_at ON public.designers;
 CREATE TRIGGER update_designers_updated_at
 BEFORE UPDATE ON public.designers
 FOR EACH ROW

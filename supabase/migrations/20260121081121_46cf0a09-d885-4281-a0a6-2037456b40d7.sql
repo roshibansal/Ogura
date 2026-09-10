@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS public.delivery_zones (
 ALTER TABLE public.delivery_zones ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for delivery zones
-CREATE POLICY "Anyone can view delivery zones" 
-  ON public.delivery_zones FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Anyone can view delivery zones" ON public.delivery_zones;
+CREATE POLICY "Anyone can view delivery zones" ON public.delivery_zones FOR SELECT USING (true);
 
 -- Insert some sample delivery zones for major Indian cities
 INSERT INTO public.delivery_zones (pincode, city, state, is_deliverable, delivery_days, express_available) VALUES

@@ -109,6 +109,7 @@ $$;
 ALTER TABLE public.seller_orders ENABLE ROW LEVEL SECURITY;
 
 -- Customer can view their suborders via parent order ownership
+DROP POLICY IF EXISTS "Customers can view their suborders" ON public.seller_orders;
 CREATE POLICY "Customers can view their suborders" ON public.seller_orders
 FOR SELECT USING (
   parent_order_id IN (
@@ -117,6 +118,7 @@ FOR SELECT USING (
 );
 
 -- Sellers can view and update ONLY their own suborders
+DROP POLICY IF EXISTS "Sellers can view own suborders" ON public.seller_orders;
 CREATE POLICY "Sellers can view own suborders" ON public.seller_orders
 FOR SELECT USING (
   seller_id IN (
@@ -124,6 +126,7 @@ FOR SELECT USING (
   )
 );
 
+DROP POLICY IF EXISTS "Sellers can update own suborders" ON public.seller_orders;
 CREATE POLICY "Sellers can update own suborders" ON public.seller_orders
 FOR UPDATE USING (
   seller_id IN (

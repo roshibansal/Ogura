@@ -1,3 +1,194 @@
+-- Bootstrap: the role enum, the user_roles table and has_role().
+--
+-- has_role() is called by 17 later migrations and by policies throughout the
+-- schema, but no migration ever created it — it was made by hand in the old
+-- project's SQL editor. A rebuild therefore failed on the very first policy
+-- that referenced it. Same story as orders/sellers/product_variants.
+--
+-- Deliberately numbered before every other migration so the function exists
+-- when the first policy needs it.
+
+do $$ begin
+  DO $do$ BEGIN
+    CREATE TYPE public.app_role AS ENUM ('admin', 'seller', 'customer');
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $do$;
+exception when duplicate_object then null; end $$;
+
+create table if not exists public.user_roles (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null,
+  role       public.app_role not null,
+  created_at timestamptz default now(),
+  unique (user_id, role)
+);
+
+alter table public.user_roles enable row level security;
+
+-- security definer so a policy can ask "is this user an admin?" without the
+-- user needing read access to user_roles itself, which would be circular.
+create or replace function public.has_role(_user_id uuid, _role text)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  return exists (
+    select 1 from public.user_roles
+    where user_id = _user_id and role::text = _role
+  );
+end;
+$$;
+
+create or replace function public.has_role(_user_id uuid, _role public.app_role)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  return exists (
+    select 1 from public.user_roles
+    where user_id = _user_id and role = _role
+  );
+end;
+$$;
+
+drop policy if exists "Users read their own roles" on public.user_roles;
+DROP POLICY IF EXISTS "Users read their own roles" ON public.user_roles;
+CREATE POLICY "Users read their own roles" ON public.user_roles
+  for select using (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
+-- Core commerce tables, also hand-made in the old project and therefore absent
+-- from the migration history. They live here rather than in a later migration
+-- because `discounts`, `orders` and others carry foreign keys to `sellers`,
+-- so it has to exist before any of them run.
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.sellers (
+  id                  uuid primary key default gen_random_uuid(),
+  user_id             uuid not null,
+  brand_name          text not null,
+  city                text not null,
+  seller_type         text not null,
+  description         text,
+  profile_image       text,
+  banner_image        text,
+  instagram_handle    text,
+  application_status  text not null default 'submitted',
+  is_verified         boolean default false,
+  is_active           boolean default false,
+  gstin               text,
+  pan_number          text,
+  bank_name           text,
+  bank_account_number text,
+  bank_ifsc           text,
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
+);
+create unique index if not exists sellers_user_id_key on public.sellers (user_id);
+
+create table if not exists public.product_variants (
+  id             uuid primary key default gen_random_uuid(),
+  product_id     uuid not null,
+  size           text not null,
+  color_name     text not null,
+  color_hex      text,
+  sku            text,
+  price_override numeric,
+  stock_quantity integer default 0,
+  created_at     timestamptz default now(),
+  updated_at     timestamptz default now()
+);
+create index if not exists product_variants_product_id_idx on public.product_variants (product_id);
+
+create table if not exists public.orders (
+  id               uuid primary key default gen_random_uuid(),
+  order_number     text not null unique,
+  customer_id      uuid not null,
+  seller_id        uuid not null,
+  status           text not null default 'pending',
+  subtotal         numeric not null,
+  discount         numeric default 0,
+  shipping_fee     numeric default 0,
+  total            numeric not null,
+  shipping_address jsonb not null,
+  shipping_carrier text,
+  tracking_id      text,
+  accepted_at      timestamptz,
+  packed_at        timestamptz,
+  shipped_at       timestamptz,
+  delivered_at     timestamptz,
+  cancelled_at     timestamptz,
+  created_at       timestamptz default now()
+);
+create index if not exists orders_customer_id_idx on public.orders (customer_id);
+create index if not exists orders_seller_id_idx   on public.orders (seller_id);
+
+create table if not exists public.order_items (
+  id          uuid primary key default gen_random_uuid(),
+  order_id    uuid not null references public.orders (id) on delete cascade,
+  product_id  uuid not null,
+  variant_id  uuid,
+  quantity    integer not null,
+  unit_price  numeric not null,
+  total_price numeric not null,
+  size        text,
+  color       text,
+  created_at  timestamptz default now()
+);
+create index if not exists order_items_order_id_idx on public.order_items (order_id);
+
+alter table public.sellers          enable row level security;
+alter table public.product_variants enable row level security;
+alter table public.orders           enable row level security;
+alter table public.order_items      enable row level security;
+-- Columns added by hand to `products` in the old project, present in no
+-- migration. Without them a rebuilt database has a products table the
+-- application cannot use: no seller_id to attribute a piece to a boutique,
+-- no status to publish it, no fabric or brand for the storefront.
+--
+-- Numbered immediately after the bootstrap so later migrations that add
+-- constraints over these columns have something to constrain.
+
+alter table public.products add column if not exists brand text;
+alter table public.products add column if not exists care_instructions text;
+alter table public.products add column if not exists category_id uuid;
+alter table public.products add column if not exists dispatch_days integer;
+alter table public.products add column if not exists fabric text;
+alter table public.products add column if not exists is_made_to_order boolean default false;
+alter table public.products add column if not exists is_returnable boolean default true;
+alter table public.products add column if not exists occasion_tags jsonb default '[]'::jsonb;
+alter table public.products add column if not exists rejection_reason text;
+alter table public.products add column if not exists seller_id uuid;
+alter table public.products add column if not exists short_description text;
+alter table public.products add column if not exists status text default 'draft';
+alter table public.products add column if not exists style_tags jsonb default '[]'::jsonb;
+
+create index if not exists products_seller_id_idx on public.products (seller_id);
+create index if not exists products_status_idx    on public.products (status);
+-- `categories` was another hand-made table. products.category_id references it
+-- and the storefront reads it, but no migration ever created it.
+
+create table if not exists public.categories (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null,
+  slug       text not null unique,
+  parent_id  uuid references public.categories (id) on delete set null,
+  sort_order integer default 0,
+  is_active  boolean default true,
+  created_at timestamptz default now()
+);
+
+alter table public.categories enable row level security;
+
+drop policy if exists "Public can read categories" on public.categories;
+create policy "Public can read categories" on public.categories
+  for select using (true);
 -- Create function to update timestamps
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -8,7 +199,7 @@ END;
 $$ LANGUAGE plpgsql SET search_path = public;
 
 -- Create designers table
-CREATE TABLE public.designers (
+CREATE TABLE IF NOT EXISTS public.designers (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   brand_name TEXT NOT NULL,
@@ -27,41 +218,42 @@ CREATE TABLE public.designers (
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_designers_brand_name ON public.designers(brand_name);
-CREATE INDEX idx_designers_category ON public.designers(category);
-CREATE INDEX idx_designers_city ON public.designers(city);
+CREATE INDEX IF NOT EXISTS idx_designers_brand_name ON public.designers(brand_name);
+CREATE INDEX IF NOT EXISTS idx_designers_category ON public.designers(category);
+CREATE INDEX IF NOT EXISTS idx_designers_city ON public.designers(city);
 
 -- Enable Row Level Security
 ALTER TABLE public.designers ENABLE ROW LEVEL SECURITY;
 
 -- Create policy for public read access
-CREATE POLICY "Anyone can view designers" 
-ON public.designers 
+DROP POLICY IF EXISTS "Anyone can view designers" ON public.designers;
+CREATE POLICY "Anyone can view designers" ON public.designers 
 FOR SELECT 
 USING (true);
 
 -- Create policy for authenticated users to insert (for future admin panel)
-CREATE POLICY "Authenticated users can insert designers" 
-ON public.designers 
+DROP POLICY IF EXISTS "Authenticated users can insert designers" ON public.designers;
+CREATE POLICY "Authenticated users can insert designers" ON public.designers 
 FOR INSERT 
 TO authenticated
 WITH CHECK (true);
 
 -- Create policy for authenticated users to update (for future admin panel)
-CREATE POLICY "Authenticated users can update designers" 
-ON public.designers 
+DROP POLICY IF EXISTS "Authenticated users can update designers" ON public.designers;
+CREATE POLICY "Authenticated users can update designers" ON public.designers 
 FOR UPDATE 
 TO authenticated
 USING (true);
 
 -- Create policy for authenticated users to delete (for future admin panel)
-CREATE POLICY "Authenticated users can delete designers" 
-ON public.designers 
+DROP POLICY IF EXISTS "Authenticated users can delete designers" ON public.designers;
+CREATE POLICY "Authenticated users can delete designers" ON public.designers 
 FOR DELETE 
 TO authenticated
 USING (true);
 
 -- Create trigger for automatic timestamp updates
+DROP TRIGGER IF EXISTS update_designers_updated_at ON public.designers;
 CREATE TRIGGER update_designers_updated_at
 BEFORE UPDATE ON public.designers
 FOR EACH ROW
@@ -135,21 +327,22 @@ VALUES (
   true,
   10485760,
   ARRAY['image/jpeg', 'image/png', 'image/webp']
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
 -- Allow public access to view images
-CREATE POLICY "Public can view try-on images"
-ON storage.objects FOR SELECT
+DROP POLICY IF EXISTS "Public can view try-on images" ON storage.objects;
+CREATE POLICY "Public can view try-on images" ON storage.objects FOR SELECT
 USING (bucket_id = 'tryon-images');
 
 -- Allow authenticated users to upload images
-CREATE POLICY "Authenticated users can upload try-on images"
-ON storage.objects FOR INSERT
+DROP POLICY IF EXISTS "Authenticated users can upload try-on images" ON storage.objects;
+CREATE POLICY "Authenticated users can upload try-on images" ON storage.objects FOR INSERT
 WITH CHECK (bucket_id = 'tryon-images' AND auth.role() = 'authenticated');
 
 -- Allow users to delete their own uploads
-CREATE POLICY "Users can delete their own try-on images"
-ON storage.objects FOR DELETE
+DROP POLICY IF EXISTS "Users can delete their own try-on images" ON storage.objects;
+CREATE POLICY "Users can delete their own try-on images" ON storage.objects FOR DELETE
 USING (bucket_id = 'tryon-images' AND auth.role() = 'authenticated');-- Create try-on history table
 CREATE TABLE IF NOT EXISTS public.tryon_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -166,24 +359,24 @@ CREATE TABLE IF NOT EXISTS public.tryon_history (
 ALTER TABLE public.tryon_history ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
-CREATE POLICY "Users can view their own try-on history"
-ON public.tryon_history
+DROP POLICY IF EXISTS "Users can view their own try-on history" ON public.tryon_history;
+CREATE POLICY "Users can view their own try-on history" ON public.tryon_history
 FOR SELECT
 USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert their own try-on history"
-ON public.tryon_history
+DROP POLICY IF EXISTS "Users can insert their own try-on history" ON public.tryon_history;
+CREATE POLICY "Users can insert their own try-on history" ON public.tryon_history
 FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own try-on history"
-ON public.tryon_history
+DROP POLICY IF EXISTS "Users can delete their own try-on history" ON public.tryon_history;
+CREATE POLICY "Users can delete their own try-on history" ON public.tryon_history
 FOR DELETE
 USING (auth.uid() = user_id);
 
 -- Create indexes for performance
-CREATE INDEX idx_tryon_history_user_id ON public.tryon_history(user_id);
-CREATE INDEX idx_tryon_history_created_at ON public.tryon_history(created_at DESC);-- Create a public storage bucket for influencer videos
+CREATE INDEX IF NOT EXISTS idx_tryon_history_user_id ON public.tryon_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_tryon_history_created_at ON public.tryon_history(created_at DESC);-- Create a public storage bucket for influencer videos
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'influencer-videos',
@@ -191,17 +384,18 @@ VALUES (
   true,
   52428800, -- 50MB limit
   ARRAY['video/mp4', 'video/webm', 'video/quicktime']
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
 -- Allow public read access to all videos
-CREATE POLICY "Public can view influencer videos"
-ON storage.objects
+DROP POLICY IF EXISTS "Public can view influencer videos" ON storage.objects;
+CREATE POLICY "Public can view influencer videos" ON storage.objects
 FOR SELECT
 USING (bucket_id = 'influencer-videos');
 
 -- Allow authenticated users to upload videos
-CREATE POLICY "Authenticated users can upload influencer videos"
-ON storage.objects
+DROP POLICY IF EXISTS "Authenticated users can upload influencer videos" ON storage.objects;
+CREATE POLICY "Authenticated users can upload influencer videos" ON storage.objects
 FOR INSERT
 WITH CHECK (
   bucket_id = 'influencer-videos' 
@@ -209,17 +403,17 @@ WITH CHECK (
 );
 
 -- Allow authenticated users to update their uploads
-CREATE POLICY "Authenticated users can update influencer videos"
-ON storage.objects
+DROP POLICY IF EXISTS "Authenticated users can update influencer videos" ON storage.objects;
+CREATE POLICY "Authenticated users can update influencer videos" ON storage.objects
 FOR UPDATE
 USING (bucket_id = 'influencer-videos' AND auth.role() = 'authenticated');
 
 -- Allow authenticated users to delete videos
-CREATE POLICY "Authenticated users can delete influencer videos"
-ON storage.objects
+DROP POLICY IF EXISTS "Authenticated users can delete influencer videos" ON storage.objects;
+CREATE POLICY "Authenticated users can delete influencer videos" ON storage.objects
 FOR DELETE
-USING (bucket_id = 'influencer-videos' AND auth.role() = 'authenticated');-- Create table for influencer videos
-CREATE TABLE public.influencer_videos (
+USING (bucket_id = 'influencer-videos' AND auth.role() = 'authenticated');-- CREATE TABLE IF NOT EXISTS for influencer videos
+CREATE TABLE IF NOT EXISTS public.influencer_videos (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   video_filename TEXT NOT NULL,
   poster_url TEXT,
@@ -235,28 +429,29 @@ CREATE TABLE public.influencer_videos (
 ALTER TABLE public.influencer_videos ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can view active videos
-CREATE POLICY "Anyone can view active influencer videos"
-ON public.influencer_videos
+DROP POLICY IF EXISTS "Anyone can view active influencer videos" ON public.influencer_videos;
+CREATE POLICY "Anyone can view active influencer videos" ON public.influencer_videos
 FOR SELECT
 USING (is_active = true);
 
 -- Authenticated users can manage videos
-CREATE POLICY "Authenticated users can insert influencer videos"
-ON public.influencer_videos
+DROP POLICY IF EXISTS "Authenticated users can insert influencer videos" ON public.influencer_videos;
+CREATE POLICY "Authenticated users can insert influencer videos" ON public.influencer_videos
 FOR INSERT
 WITH CHECK (auth.role() = 'authenticated');
 
-CREATE POLICY "Authenticated users can update influencer videos"
-ON public.influencer_videos
+DROP POLICY IF EXISTS "Authenticated users can update influencer videos" ON public.influencer_videos;
+CREATE POLICY "Authenticated users can update influencer videos" ON public.influencer_videos
 FOR UPDATE
 USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Authenticated users can delete influencer videos"
-ON public.influencer_videos
+DROP POLICY IF EXISTS "Authenticated users can delete influencer videos" ON public.influencer_videos;
+CREATE POLICY "Authenticated users can delete influencer videos" ON public.influencer_videos
 FOR DELETE
 USING (auth.role() = 'authenticated');
 
 -- Add trigger for updated_at
+DROP TRIGGER IF EXISTS update_influencer_videos_updated_at ON public.influencer_videos;
 CREATE TRIGGER update_influencer_videos_updated_at
 BEFORE UPDATE ON public.influencer_videos
 FOR EACH ROW
@@ -268,8 +463,8 @@ INSERT INTO public.influencer_videos (video_filename, poster_url, caption, link,
 ('video-2.mp4', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', '✨💛', '/collections/dresses', 2),
 ('video-3.mp4', 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', 'Get ready with me for a date 💜✨', '/collections/tops', 3),
 ('video-4.mp4', 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', '"Don''t buy another dress, you got enough"', '/collections/dresses', 4),
-('video-5.mp4', 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&q=80', 'outfit @ogura', '/collections/outerwear', 5);-- Create table for OTP storage with security features
-CREATE TABLE public.otp_verifications (
+('video-5.mp4', 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&q=80', 'outfit @ogura', '/collections/outerwear', 5);-- CREATE TABLE IF NOT EXISTS for OTP storage with security features
+CREATE TABLE IF NOT EXISTS public.otp_verifications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   phone text NOT NULL,
   otp_hash text NOT NULL,
@@ -280,8 +475,8 @@ CREATE TABLE public.otp_verifications (
 );
 
 -- Index for fast lookups
-CREATE INDEX idx_otp_phone ON public.otp_verifications(phone);
-CREATE INDEX idx_otp_expires ON public.otp_verifications(expires_at);
+CREATE INDEX IF NOT EXISTS idx_otp_phone ON public.otp_verifications(phone);
+CREATE INDEX IF NOT EXISTS idx_otp_expires ON public.otp_verifications(expires_at);
 
 -- Enable RLS (edge functions use service role, no public access needed)
 ALTER TABLE public.otp_verifications ENABLE ROW LEVEL SECURITY;
@@ -300,11 +495,12 @@ END;
 $$;
 
 -- Trigger to auto-cleanup on new OTP insert
+DROP TRIGGER IF EXISTS trigger_cleanup_expired_otps ON public.otp_verifications;
 CREATE TRIGGER trigger_cleanup_expired_otps
   BEFORE INSERT ON public.otp_verifications
   FOR EACH STATEMENT
   EXECUTE FUNCTION public.cleanup_expired_otps();-- Create profiles table for user data
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
   phone TEXT UNIQUE,
@@ -316,16 +512,20 @@ CREATE TABLE public.profiles (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
 CREATE POLICY "Users can view own profile" ON public.profiles
   FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile" ON public.profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW
@@ -349,6 +549,7 @@ END;
 $$;
 
 -- Trigger to create profile on auth.users insert
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();-- Add slug and banner_image to designers table
@@ -356,7 +557,7 @@ ALTER TABLE public.designers
 ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE,
 ADD COLUMN IF NOT EXISTS banner_image TEXT;
 
--- Create index for fast slug lookups
+-- CREATE INDEX IF NOT EXISTS for fast slug lookups
 CREATE INDEX IF NOT EXISTS idx_designers_slug ON public.designers(slug);
 
 -- Generate slugs for existing designers (lowercase, replace spaces with hyphens)
@@ -368,7 +569,7 @@ WHERE slug IS NULL;
 ALTER TABLE public.designers ALTER COLUMN slug SET NOT NULL;
 
 -- Create products table
-CREATE TABLE public.products (
+CREATE TABLE IF NOT EXISTS public.products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   price INTEGER NOT NULL,
@@ -389,34 +590,39 @@ CREATE TABLE public.products (
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can view products
+DROP POLICY IF EXISTS "Anyone can view products" ON public.products;
 CREATE POLICY "Anyone can view products" ON public.products
 FOR SELECT USING (true);
 
 -- Authenticated users can insert products
+DROP POLICY IF EXISTS "Authenticated users can insert products" ON public.products;
 CREATE POLICY "Authenticated users can insert products" ON public.products
 FOR INSERT WITH CHECK (true);
 
 -- Authenticated users can update products
+DROP POLICY IF EXISTS "Authenticated users can update products" ON public.products;
 CREATE POLICY "Authenticated users can update products" ON public.products
 FOR UPDATE USING (true);
 
 -- Authenticated users can delete products
+DROP POLICY IF EXISTS "Authenticated users can delete products" ON public.products;
 CREATE POLICY "Authenticated users can delete products" ON public.products
 FOR DELETE USING (true);
 
 -- Indexes for fast lookups
-CREATE INDEX idx_products_designer_id ON public.products(designer_id);
-CREATE INDEX idx_products_category ON public.products(category);
-CREATE INDEX idx_products_is_available ON public.products(is_available);
-CREATE INDEX idx_products_price ON public.products(price);
+CREATE INDEX IF NOT EXISTS idx_products_designer_id ON public.products(designer_id);
+CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category);
+CREATE INDEX IF NOT EXISTS idx_products_is_available ON public.products(is_available);
+CREATE INDEX IF NOT EXISTS idx_products_price ON public.products(price);
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS update_products_updated_at ON public.products;
 CREATE TRIGGER update_products_updated_at
 BEFORE UPDATE ON public.products
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();-- Add collection_name column to designers table
 ALTER TABLE public.designers ADD COLUMN IF NOT EXISTS collection_name text;-- Create vendors table
-CREATE TABLE public.vendors (
+CREATE TABLE IF NOT EXISTS public.vendors (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
@@ -432,12 +638,17 @@ CREATE TABLE public.vendors (
 ALTER TABLE public.vendors ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for vendors
+DROP POLICY IF EXISTS "Anyone can view vendors" ON public.vendors;
 CREATE POLICY "Anyone can view vendors" ON public.vendors FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Authenticated users can insert vendors" ON public.vendors;
 CREATE POLICY "Authenticated users can insert vendors" ON public.vendors FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Authenticated users can update vendors" ON public.vendors;
 CREATE POLICY "Authenticated users can update vendors" ON public.vendors FOR UPDATE USING (true);
+DROP POLICY IF EXISTS "Authenticated users can delete vendors" ON public.vendors;
 CREATE POLICY "Authenticated users can delete vendors" ON public.vendors FOR DELETE USING (true);
 
 -- Update trigger for vendors
+DROP TRIGGER IF EXISTS update_vendors_updated_at ON public.vendors;
 CREATE TRIGGER update_vendors_updated_at
   BEFORE UPDATE ON public.vendors
   FOR EACH ROW
@@ -501,8 +712,8 @@ CREATE TABLE IF NOT EXISTS public.delivery_zones (
 ALTER TABLE public.delivery_zones ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for delivery zones
-CREATE POLICY "Anyone can view delivery zones" 
-  ON public.delivery_zones FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Anyone can view delivery zones" ON public.delivery_zones;
+CREATE POLICY "Anyone can view delivery zones" ON public.delivery_zones FOR SELECT USING (true);
 
 -- Insert some sample delivery zones for major Indian cities
 INSERT INTO public.delivery_zones (pincode, city, state, is_deliverable, delivery_days, express_available) VALUES
@@ -527,7 +738,7 @@ INSERT INTO public.delivery_zones (pincode, city, state, is_deliverable, deliver
   ('682001', 'Kochi', 'Kerala', true, 4, false),
   ('751001', 'Bhubaneswar', 'Odisha', true, 5, false)
 ON CONFLICT (pincode) DO NOTHING;-- Create user_addresses table for storing delivery addresses
-CREATE TABLE public.user_addresses (
+CREATE TABLE IF NOT EXISTS public.user_addresses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   full_name text NOT NULL,
@@ -547,27 +758,28 @@ CREATE TABLE public.user_addresses (
 ALTER TABLE public.user_addresses ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for users to manage their own addresses
-CREATE POLICY "Users can view their own addresses"
-ON public.user_addresses
+DROP POLICY IF EXISTS "Users can view their own addresses" ON public.user_addresses;
+CREATE POLICY "Users can view their own addresses" ON public.user_addresses
 FOR SELECT
 USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can create their own addresses"
-ON public.user_addresses
+DROP POLICY IF EXISTS "Users can create their own addresses" ON public.user_addresses;
+CREATE POLICY "Users can create their own addresses" ON public.user_addresses
 FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own addresses"
-ON public.user_addresses
+DROP POLICY IF EXISTS "Users can update their own addresses" ON public.user_addresses;
+CREATE POLICY "Users can update their own addresses" ON public.user_addresses
 FOR UPDATE
 USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own addresses"
-ON public.user_addresses
+DROP POLICY IF EXISTS "Users can delete their own addresses" ON public.user_addresses;
+CREATE POLICY "Users can delete their own addresses" ON public.user_addresses
 FOR DELETE
 USING (auth.uid() = user_id);
 
 -- Create trigger for automatic timestamp updates
+DROP TRIGGER IF EXISTS update_user_addresses_updated_at ON public.user_addresses;
 CREATE TRIGGER update_user_addresses_updated_at
 BEFORE UPDATE ON public.user_addresses
 FOR EACH ROW
@@ -609,20 +821,20 @@ VALUES ('product-images', 'product-images', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Allow authenticated users to upload files
-CREATE POLICY "Authenticated users can upload product images"
-ON storage.objects FOR INSERT TO authenticated
+DROP POLICY IF EXISTS "Authenticated users can upload product images" ON storage.objects;
+CREATE POLICY "Authenticated users can upload product images" ON storage.objects FOR INSERT TO authenticated
 WITH CHECK (bucket_id = 'product-images');
 
 -- Allow anyone to view product images (public bucket)
-CREATE POLICY "Anyone can view product images"
-ON storage.objects FOR SELECT
+DROP POLICY IF EXISTS "Anyone can view product images" ON storage.objects;
+CREATE POLICY "Anyone can view product images" ON storage.objects FOR SELECT
 USING (bucket_id = 'product-images');
 
 -- Allow authenticated users to delete their own uploads
-CREATE POLICY "Users can delete own product images"
-ON storage.objects FOR DELETE TO authenticated
+DROP POLICY IF EXISTS "Users can delete own product images" ON storage.objects;
+CREATE POLICY "Users can delete own product images" ON storage.objects FOR DELETE TO authenticated
 USING (bucket_id = 'product-images' AND (auth.uid()::text = (storage.foldername(name))[1]));
-CREATE TABLE public.seller_applications (
+CREATE TABLE IF NOT EXISTS public.seller_applications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   full_name text NOT NULL,
   brand_name text NOT NULL,
@@ -638,28 +850,28 @@ CREATE TABLE public.seller_applications (
 
 ALTER TABLE public.seller_applications ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can submit application"
-ON public.seller_applications
+DROP POLICY IF EXISTS "Anyone can submit application" ON public.seller_applications;
+CREATE POLICY "Anyone can submit application" ON public.seller_applications
 FOR INSERT
 TO anon, authenticated
 WITH CHECK (true);
 
-CREATE POLICY "Admins can view applications"
-ON public.seller_applications
+DROP POLICY IF EXISTS "Admins can view applications" ON public.seller_applications;
+CREATE POLICY "Admins can view applications" ON public.seller_applications
 FOR SELECT
 TO authenticated
 USING (public.has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Admins can update applications"
-ON public.seller_applications
+DROP POLICY IF EXISTS "Admins can update applications" ON public.seller_applications;
+CREATE POLICY "Admins can update applications" ON public.seller_applications
 FOR UPDATE
 TO authenticated
-USING (public.has_role(auth.uid(), 'admin'));CREATE POLICY "Anyone can upload application images"
-ON storage.objects FOR INSERT TO anon
+USING (public.has_role(auth.uid(), 'admin'));DROP POLICY IF EXISTS "Anyone can upload application images" ON storage.objects;
+CREATE POLICY "Anyone can upload application images" ON storage.objects FOR INSERT TO anon
 WITH CHECK (
   bucket_id = 'product-images' 
   AND (storage.foldername(name))[1] = 'applications'
-);CREATE TABLE public.discounts (
+);CREATE TABLE IF NOT EXISTS public.discounts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   seller_id uuid NOT NULL REFERENCES public.sellers(id) ON DELETE CASCADE,
   code text NOT NULL,
@@ -679,74 +891,76 @@ WITH CHECK (
 
 ALTER TABLE public.discounts ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Sellers can manage own discounts" ON public.discounts;
 CREATE POLICY "Sellers can manage own discounts" ON public.discounts FOR ALL
   USING (seller_id IN (SELECT id FROM sellers WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Anyone can view active discounts" ON public.discounts;
 CREATE POLICY "Anyone can view active discounts" ON public.discounts FOR SELECT
   TO anon, authenticated
   USING (status = 'active' AND (end_date IS NULL OR end_date > now()));
 -- Dev-mode: allow anonymous inserts, updates, selects, deletes on products
-CREATE POLICY "dev_allow_all_inserts_products"
-ON public.products FOR INSERT TO anon
+DROP POLICY IF EXISTS "dev_allow_all_inserts_products" ON public.products;
+CREATE POLICY "dev_allow_all_inserts_products" ON public.products FOR INSERT TO anon
 WITH CHECK (true);
 
-CREATE POLICY "dev_allow_all_select_products"
-ON public.products FOR SELECT TO anon
+DROP POLICY IF EXISTS "dev_allow_all_select_products" ON public.products;
+CREATE POLICY "dev_allow_all_select_products" ON public.products FOR SELECT TO anon
 USING (true);
 
-CREATE POLICY "dev_allow_all_update_products"
-ON public.products FOR UPDATE TO anon
+DROP POLICY IF EXISTS "dev_allow_all_update_products" ON public.products;
+CREATE POLICY "dev_allow_all_update_products" ON public.products FOR UPDATE TO anon
 USING (true);
 
-CREATE POLICY "dev_allow_all_delete_products"
-ON public.products FOR DELETE TO anon
+DROP POLICY IF EXISTS "dev_allow_all_delete_products" ON public.products;
+CREATE POLICY "dev_allow_all_delete_products" ON public.products FOR DELETE TO anon
 USING (true);
 
 -- Dev-mode: allow anonymous inserts, updates, selects, deletes on discounts
-CREATE POLICY "dev_allow_all_inserts_discounts"
-ON public.discounts FOR INSERT TO anon
+DROP POLICY IF EXISTS "dev_allow_all_inserts_discounts" ON public.discounts;
+CREATE POLICY "dev_allow_all_inserts_discounts" ON public.discounts FOR INSERT TO anon
 WITH CHECK (true);
 
-CREATE POLICY "dev_allow_all_select_discounts"
-ON public.discounts FOR SELECT TO anon
+DROP POLICY IF EXISTS "dev_allow_all_select_discounts" ON public.discounts;
+CREATE POLICY "dev_allow_all_select_discounts" ON public.discounts FOR SELECT TO anon
 USING (true);
 
-CREATE POLICY "dev_allow_all_update_discounts"
-ON public.discounts FOR UPDATE TO anon
+DROP POLICY IF EXISTS "dev_allow_all_update_discounts" ON public.discounts;
+CREATE POLICY "dev_allow_all_update_discounts" ON public.discounts FOR UPDATE TO anon
 USING (true);
 
-CREATE POLICY "dev_allow_all_delete_discounts"
-ON public.discounts FOR DELETE TO anon
+DROP POLICY IF EXISTS "dev_allow_all_delete_discounts" ON public.discounts;
+CREATE POLICY "dev_allow_all_delete_discounts" ON public.discounts FOR DELETE TO anon
 USING (true);
 
 -- Dev-mode: allow anonymous reads on sellers table (for seller lookup fallback)
-CREATE POLICY "dev_allow_anon_select_sellers"
-ON public.sellers FOR SELECT TO anon
+DROP POLICY IF EXISTS "dev_allow_anon_select_sellers" ON public.sellers;
+CREATE POLICY "dev_allow_anon_select_sellers" ON public.sellers FOR SELECT TO anon
 USING (true);
 
 -- Dev-mode: allow anonymous uploads to product-images storage
-CREATE POLICY "dev_allow_anon_upload_product_images"
-ON storage.objects FOR INSERT TO anon
+DROP POLICY IF EXISTS "dev_allow_anon_upload_product_images" ON storage.objects;
+CREATE POLICY "dev_allow_anon_upload_product_images" ON storage.objects FOR INSERT TO anon
 WITH CHECK (bucket_id = 'product-images');
 
-CREATE POLICY "dev_allow_anon_select_product_images"
-ON storage.objects FOR SELECT TO anon
+DROP POLICY IF EXISTS "dev_allow_anon_select_product_images" ON storage.objects;
+CREATE POLICY "dev_allow_anon_select_product_images" ON storage.objects FOR SELECT TO anon
 USING (bucket_id = 'product-images');
 ALTER TABLE public.products DROP CONSTRAINT product_must_have_owner;
 ALTER TABLE public.products ADD CONSTRAINT product_must_have_owner
-  CHECK (designer_id IS NOT NULL OR vendor_id IS NOT NULL OR seller_id IS NOT NULL);CREATE POLICY "dev_allow_anon_update_sellers"
-ON public.sellers FOR UPDATE TO anon
+  CHECK (designer_id IS NOT NULL OR vendor_id IS NOT NULL OR seller_id IS NOT NULL);DROP POLICY IF EXISTS "dev_allow_anon_update_sellers" ON public.sellers;
+CREATE POLICY "dev_allow_anon_update_sellers" ON public.sellers FOR UPDATE TO anon
 USING (true) WITH CHECK (true);
 -- Allow anonymous uploads to tryon-images bucket
-CREATE POLICY "Anyone can upload tryon images"
-ON storage.objects
+DROP POLICY IF EXISTS "Anyone can upload tryon images" ON storage.objects;
+CREATE POLICY "Anyone can upload tryon images" ON storage.objects
 FOR INSERT
 TO public
 WITH CHECK (bucket_id = 'tryon-images');
 
 -- Allow anonymous reads from tryon-images bucket
-CREATE POLICY "Anyone can read tryon images"
-ON storage.objects
+DROP POLICY IF EXISTS "Anyone can read tryon images" ON storage.objects;
+CREATE POLICY "Anyone can read tryon images" ON storage.objects
 FOR SELECT
 TO public
 USING (bucket_id = 'tryon-images');
@@ -767,6 +981,7 @@ DROP POLICY IF EXISTS "dev_allow_anon_update_sellers" ON public.sellers;
 DROP POLICY IF EXISTS "Authenticated users can insert designers" ON public.designers;
 DROP POLICY IF EXISTS "Authenticated users can update designers" ON public.designers;
 DROP POLICY IF EXISTS "Authenticated users can delete designers" ON public.designers;
+DROP POLICY IF EXISTS "Admins can manage designers" ON public.designers;
 CREATE POLICY "Admins can manage designers" ON public.designers
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
@@ -775,6 +990,7 @@ CREATE POLICY "Admins can manage designers" ON public.designers
 DROP POLICY IF EXISTS "Authenticated users can insert vendors" ON public.vendors;
 DROP POLICY IF EXISTS "Authenticated users can update vendors" ON public.vendors;
 DROP POLICY IF EXISTS "Authenticated users can delete vendors" ON public.vendors;
+DROP POLICY IF EXISTS "Admins can manage vendors" ON public.vendors;
 CREATE POLICY "Admins can manage vendors" ON public.vendors
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
@@ -783,6 +999,7 @@ CREATE POLICY "Admins can manage vendors" ON public.vendors
 DROP POLICY IF EXISTS "Authenticated users can insert influencer videos" ON public.influencer_videos;
 DROP POLICY IF EXISTS "Authenticated users can update influencer videos" ON public.influencer_videos;
 DROP POLICY IF EXISTS "Authenticated users can delete influencer videos" ON public.influencer_videos;
+DROP POLICY IF EXISTS "Admins can manage influencer videos" ON public.influencer_videos;
 CREATE POLICY "Admins can manage influencer videos" ON public.influencer_videos
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
@@ -796,7 +1013,7 @@ DROP POLICY IF EXISTS "dev_allow_anon_upload_product_images" ON storage.objects;
 DROP POLICY IF EXISTS "Anyone can upload application images" ON storage.objects;
 DROP POLICY IF EXISTS "Anyone can upload tryon images" ON storage.objects;
 DROP POLICY IF EXISTS "Anyone can read tryon images" ON storage.objects;
-CREATE TABLE public.brand_waitlist_applications (
+CREATE TABLE IF NOT EXISTS public.brand_waitlist_applications (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   brand_name TEXT NOT NULL,
   handle_or_website TEXT NOT NULL,
@@ -815,17 +1032,17 @@ GRANT ALL ON public.brand_waitlist_applications TO service_role;
 
 ALTER TABLE public.brand_waitlist_applications ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can submit a waitlist application"
-ON public.brand_waitlist_applications
+DROP POLICY IF EXISTS "Anyone can submit a waitlist application" ON public.brand_waitlist_applications;
+CREATE POLICY "Anyone can submit a waitlist application" ON public.brand_waitlist_applications
 FOR INSERT
 TO anon, authenticated
 WITH CHECK (true);
 
-CREATE POLICY "Admins can view waitlist applications"
-ON public.brand_waitlist_applications
+DROP POLICY IF EXISTS "Admins can view waitlist applications" ON public.brand_waitlist_applications;
+CREATE POLICY "Admins can view waitlist applications" ON public.brand_waitlist_applications
 FOR SELECT
 TO authenticated
-USING (public.has_role(auth.uid(), 'admin'));CREATE TABLE public.collections (
+USING (public.has_role(auth.uid(), 'admin'));CREATE TABLE IF NOT EXISTS public.collections (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL,
   slug text NOT NULL UNIQUE,
@@ -844,32 +1061,33 @@ GRANT ALL ON public.collections TO service_role;
 
 ALTER TABLE public.collections ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Published collections are viewable by everyone"
-  ON public.collections FOR SELECT
+DROP POLICY IF EXISTS "Published collections are viewable by everyone" ON public.collections;
+CREATE POLICY "Published collections are viewable by everyone" ON public.collections FOR SELECT
   USING (status = 'published');
 
-CREATE POLICY "Admins can view all collections"
-  ON public.collections FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Admins can view all collections" ON public.collections;
+CREATE POLICY "Admins can view all collections" ON public.collections FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Admins can insert collections"
-  ON public.collections FOR INSERT TO authenticated
+DROP POLICY IF EXISTS "Admins can insert collections" ON public.collections;
+CREATE POLICY "Admins can insert collections" ON public.collections FOR INSERT TO authenticated
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Admins can update collections"
-  ON public.collections FOR UPDATE TO authenticated
+DROP POLICY IF EXISTS "Admins can update collections" ON public.collections;
+CREATE POLICY "Admins can update collections" ON public.collections FOR UPDATE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Admins can delete collections"
-  ON public.collections FOR DELETE TO authenticated
+DROP POLICY IF EXISTS "Admins can delete collections" ON public.collections;
+CREATE POLICY "Admins can delete collections" ON public.collections FOR DELETE TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
+DROP TRIGGER IF EXISTS update_collections_updated_at ON public.collections;
 CREATE TRIGGER update_collections_updated_at
   BEFORE UPDATE ON public.collections
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.device_tokens (
+CREATE TABLE IF NOT EXISTS public.device_tokens (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   token text NOT NULL UNIQUE,
@@ -881,36 +1099,37 @@ CREATE TABLE public.device_tokens (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX device_tokens_user_id_idx ON public.device_tokens (user_id);
-CREATE INDEX device_tokens_active_idx ON public.device_tokens (is_active) WHERE is_active;
+CREATE INDEX IF NOT EXISTS device_tokens_user_id_idx ON public.device_tokens (user_id);
+CREATE INDEX IF NOT EXISTS device_tokens_active_idx ON public.device_tokens (is_active) WHERE is_active;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.device_tokens TO authenticated;
 GRANT ALL ON public.device_tokens TO service_role;
 
 ALTER TABLE public.device_tokens ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view their own device tokens"
-  ON public.device_tokens FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Users can view their own device tokens" ON public.device_tokens;
+CREATE POLICY "Users can view their own device tokens" ON public.device_tokens FOR SELECT TO authenticated
   USING (auth.uid() = user_id OR public.has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Users can register their own device tokens"
-  ON public.device_tokens FOR INSERT TO authenticated
+DROP POLICY IF EXISTS "Users can register their own device tokens" ON public.device_tokens;
+CREATE POLICY "Users can register their own device tokens" ON public.device_tokens FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own device tokens"
-  ON public.device_tokens FOR UPDATE TO authenticated
+DROP POLICY IF EXISTS "Users can update their own device tokens" ON public.device_tokens;
+CREATE POLICY "Users can update their own device tokens" ON public.device_tokens FOR UPDATE TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own device tokens"
-  ON public.device_tokens FOR DELETE TO authenticated
+DROP POLICY IF EXISTS "Users can delete their own device tokens" ON public.device_tokens;
+CREATE POLICY "Users can delete their own device tokens" ON public.device_tokens FOR DELETE TO authenticated
   USING (auth.uid() = user_id);
 
+DROP TRIGGER IF EXISTS update_device_tokens_updated_at ON public.device_tokens;
 CREATE TRIGGER update_device_tokens_updated_at
   BEFORE UPDATE ON public.device_tokens
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.notifications (
+CREATE TABLE IF NOT EXISTS public.notifications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL,
   body text NOT NULL,
@@ -922,22 +1141,22 @@ CREATE TABLE public.notifications (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX notifications_created_at_idx ON public.notifications (created_at DESC);
+CREATE INDEX IF NOT EXISTS notifications_created_at_idx ON public.notifications (created_at DESC);
 
 GRANT SELECT ON public.notifications TO authenticated;
 GRANT ALL ON public.notifications TO service_role;
 
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins can view notification history"
-  ON public.notifications FOR SELECT TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'));CREATE POLICY "Anyone can view approved active sellers"
-ON public.sellers FOR SELECT
+DROP POLICY IF EXISTS "Admins can view notification history" ON public.notifications;
+CREATE POLICY "Admins can view notification history" ON public.notifications FOR SELECT TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));DROP POLICY IF EXISTS "Anyone can view approved active sellers" ON public.sellers;
+CREATE POLICY "Anyone can view approved active sellers" ON public.sellers FOR SELECT
 USING (application_status = 'approved' AND is_active = true);
 
 GRANT SELECT ON public.sellers TO anon;
 
-CREATE TABLE public.seed_import_runs (
+CREATE TABLE IF NOT EXISTS public.seed_import_runs (
   id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   seed_batch_key text NOT NULL,
   actor_user_id uuid,
@@ -953,8 +1172,8 @@ GRANT ALL ON public.seed_import_runs TO service_role;
 
 ALTER TABLE public.seed_import_runs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins can view seed import runs"
-ON public.seed_import_runs FOR SELECT
+DROP POLICY IF EXISTS "Admins can view seed import runs" ON public.seed_import_runs;
+CREATE POLICY "Admins can view seed import runs" ON public.seed_import_runs FOR SELECT
 TO authenticated
 USING (public.has_role(auth.uid(), 'admin'));REVOKE SELECT ON public.sellers FROM anon, authenticated;
 
@@ -1099,6 +1318,7 @@ $$;
 ALTER TABLE public.seller_orders ENABLE ROW LEVEL SECURITY;
 
 -- Customer can view their suborders via parent order ownership
+DROP POLICY IF EXISTS "Customers can view their suborders" ON public.seller_orders;
 CREATE POLICY "Customers can view their suborders" ON public.seller_orders
 FOR SELECT USING (
   parent_order_id IN (
@@ -1107,6 +1327,7 @@ FOR SELECT USING (
 );
 
 -- Sellers can view and update ONLY their own suborders
+DROP POLICY IF EXISTS "Sellers can view own suborders" ON public.seller_orders;
 CREATE POLICY "Sellers can view own suborders" ON public.seller_orders
 FOR SELECT USING (
   seller_id IN (
@@ -1114,6 +1335,7 @@ FOR SELECT USING (
   )
 );
 
+DROP POLICY IF EXISTS "Sellers can update own suborders" ON public.seller_orders;
 CREATE POLICY "Sellers can update own suborders" ON public.seller_orders
 FOR UPDATE USING (
   seller_id IN (
@@ -1168,6 +1390,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE tablename = 'products' AND policyname = 'Anyone can view active products'
   ) THEN
+    DROP POLICY IF EXISTS "Anyone can view active products" ON public.products;
     CREATE POLICY "Anyone can view active products" ON public.products
       FOR SELECT USING (true);
   END IF;
@@ -1305,6 +1528,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE tablename = 'payment_orders' AND policyname = 'Users can view own payment_orders'
   ) THEN
+    DROP POLICY IF EXISTS "Users can view own payment_orders" ON public.payment_orders;
     CREATE POLICY "Users can view own payment_orders" ON public.payment_orders
       FOR SELECT TO authenticated
       USING (auth.uid() = customer_id);
@@ -1946,126 +2170,21 @@ REVOKE EXECUTE ON FUNCTION public.confirm_checkout_atomic(TEXT, TEXT, JSONB, TEX
 
 -- Grant execution permissions EXCLUSIVELY to service_role (trusted Edge Functions)
 GRANT EXECUTE ON FUNCTION public.confirm_checkout_atomic(TEXT, TEXT, JSONB, TEXT, UUID, TEXT) TO service_role;
--- Tables that were created by hand in the Supabase dashboard and therefore had
--- no migration: orders, order_items, sellers, product_variants, user_roles.
---
--- Without these the schema could not be rebuilt on a new project — checkout,
--- the seller portal and the boutique pages all depend on them. Reconstructed
--- from the generated types, which are derived from the live database.
+-- Storefront-facing policies for the core commerce tables.
+-- The tables themselves are created in 20251029101900_bootstrap_roles.sql,
+-- because foreign keys from discounts/orders require sellers to exist first.
 
--- ---------------------------------------------------------------- app_role
-do $$ begin
-  create type public.app_role as enum ('admin', 'seller', 'customer');
-exception when duplicate_object then null; end $$;
-
--- ---------------------------------------------------------------- sellers
-create table if not exists public.sellers (
-  id                  uuid primary key default gen_random_uuid(),
-  user_id             uuid not null,
-  brand_name          text not null,
-  city                text not null,
-  seller_type         text not null,
-  description         text,
-  profile_image       text,
-  banner_image        text,
-  instagram_handle    text,
-  application_status  text not null default 'submitted',
-  is_verified         boolean default false,
-  is_active           boolean default false,
-  gstin               text,
-  pan_number          text,
-  bank_name           text,
-  bank_account_number text,
-  bank_ifsc           text,
-  created_at          timestamptz default now(),
-  updated_at          timestamptz default now()
-);
-create index if not exists sellers_user_id_idx on public.sellers (user_id);
-
--- ---------------------------------------------------------- product_variants
-create table if not exists public.product_variants (
-  id              uuid primary key default gen_random_uuid(),
-  product_id      uuid not null,
-  size            text not null,
-  color_name      text not null,
-  color_hex       text,
-  sku             text,
-  price_override  numeric,
-  stock_quantity  integer default 0,
-  created_at      timestamptz default now(),
-  updated_at      timestamptz default now()
-);
-create index if not exists product_variants_product_id_idx on public.product_variants (product_id);
-
--- ---------------------------------------------------------------- orders
-create table if not exists public.orders (
-  id               uuid primary key default gen_random_uuid(),
-  order_number     text not null unique,
-  customer_id      uuid not null,
-  seller_id        uuid not null,
-  status           text not null default 'pending',
-  subtotal         numeric not null,
-  discount         numeric default 0,
-  shipping_fee     numeric default 0,
-  total            numeric not null,
-  shipping_address jsonb not null,
-  shipping_carrier text,
-  tracking_id      text,
-  accepted_at      timestamptz,
-  packed_at        timestamptz,
-  shipped_at       timestamptz,
-  delivered_at     timestamptz,
-  cancelled_at     timestamptz,
-  created_at       timestamptz default now()
-);
-create index if not exists orders_customer_id_idx on public.orders (customer_id);
-create index if not exists orders_seller_id_idx   on public.orders (seller_id);
-
--- ------------------------------------------------------------- order_items
-create table if not exists public.order_items (
-  id          uuid primary key default gen_random_uuid(),
-  order_id    uuid not null references public.orders (id) on delete cascade,
-  product_id  uuid not null,
-  variant_id  uuid,
-  quantity    integer not null,
-  unit_price  numeric not null,
-  total_price numeric not null,
-  size        text,
-  color       text,
-  created_at  timestamptz default now()
-);
-create index if not exists order_items_order_id_idx on public.order_items (order_id);
-
--- -------------------------------------------------------------- user_roles
-create table if not exists public.user_roles (
-  id         uuid primary key default gen_random_uuid(),
-  user_id    uuid not null,
-  role       public.app_role not null,
-  created_at timestamptz default now(),
-  unique (user_id, role)
-);
-
--- ------------------------------------------------------------------- RLS
-alter table public.sellers          enable row level security;
-alter table public.product_variants enable row level security;
-alter table public.orders           enable row level security;
-alter table public.order_items      enable row level security;
-alter table public.user_roles       enable row level security;
-
--- Storefront reads. Bank and tax columns are deliberately not exposed: the
--- client only ever selects the public-safe column list.
 drop policy if exists "Public can read active sellers" on public.sellers;
 create policy "Public can read active sellers" on public.sellers
   for select using (is_active is true);
 
-drop policy if exists "Public can read variants" on public.product_variants;
-create policy "Public can read variants" on public.product_variants
-  for select using (true);
-
--- A seller owns their own row and their own orders.
 drop policy if exists "Sellers manage their own row" on public.sellers;
 create policy "Sellers manage their own row" on public.sellers
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Public can read variants" on public.product_variants;
+create policy "Public can read variants" on public.product_variants
+  for select using (true);
 
 drop policy if exists "Customers read their own orders" on public.orders;
 create policy "Customers read their own orders" on public.orders
@@ -2087,7 +2206,3 @@ create policy "Order items follow their order" on public.order_items
              or exists (select 1 from public.sellers s where s.id = o.seller_id and s.user_id = auth.uid()))
     )
   );
-
-drop policy if exists "Users read their own roles" on public.user_roles;
-create policy "Users read their own roles" on public.user_roles
-  for select using (auth.uid() = user_id);

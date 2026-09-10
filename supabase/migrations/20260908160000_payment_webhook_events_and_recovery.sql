@@ -70,6 +70,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE tablename = 'payment_orders' AND policyname = 'Users can view own payment_orders'
   ) THEN
+    DROP POLICY IF EXISTS "Users can view own payment_orders" ON public.payment_orders;
     CREATE POLICY "Users can view own payment_orders" ON public.payment_orders
       FOR SELECT TO authenticated
       USING (auth.uid() = customer_id);

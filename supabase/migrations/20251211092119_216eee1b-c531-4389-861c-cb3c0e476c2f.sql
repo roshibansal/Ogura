@@ -1,5 +1,5 @@
--- Create table for influencer videos
-CREATE TABLE public.influencer_videos (
+-- CREATE TABLE IF NOT EXISTS for influencer videos
+CREATE TABLE IF NOT EXISTS public.influencer_videos (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   video_filename TEXT NOT NULL,
   poster_url TEXT,
@@ -15,28 +15,29 @@ CREATE TABLE public.influencer_videos (
 ALTER TABLE public.influencer_videos ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can view active videos
-CREATE POLICY "Anyone can view active influencer videos"
-ON public.influencer_videos
+DROP POLICY IF EXISTS "Anyone can view active influencer videos" ON public.influencer_videos;
+CREATE POLICY "Anyone can view active influencer videos" ON public.influencer_videos
 FOR SELECT
 USING (is_active = true);
 
 -- Authenticated users can manage videos
-CREATE POLICY "Authenticated users can insert influencer videos"
-ON public.influencer_videos
+DROP POLICY IF EXISTS "Authenticated users can insert influencer videos" ON public.influencer_videos;
+CREATE POLICY "Authenticated users can insert influencer videos" ON public.influencer_videos
 FOR INSERT
 WITH CHECK (auth.role() = 'authenticated');
 
-CREATE POLICY "Authenticated users can update influencer videos"
-ON public.influencer_videos
+DROP POLICY IF EXISTS "Authenticated users can update influencer videos" ON public.influencer_videos;
+CREATE POLICY "Authenticated users can update influencer videos" ON public.influencer_videos
 FOR UPDATE
 USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Authenticated users can delete influencer videos"
-ON public.influencer_videos
+DROP POLICY IF EXISTS "Authenticated users can delete influencer videos" ON public.influencer_videos;
+CREATE POLICY "Authenticated users can delete influencer videos" ON public.influencer_videos
 FOR DELETE
 USING (auth.role() = 'authenticated');
 
 -- Add trigger for updated_at
+DROP TRIGGER IF EXISTS update_influencer_videos_updated_at ON public.influencer_videos;
 CREATE TRIGGER update_influencer_videos_updated_at
 BEFORE UPDATE ON public.influencer_videos
 FOR EACH ROW

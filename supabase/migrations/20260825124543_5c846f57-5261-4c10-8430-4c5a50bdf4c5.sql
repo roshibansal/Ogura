@@ -1,4 +1,4 @@
-CREATE TABLE public.brand_waitlist_applications (
+CREATE TABLE IF NOT EXISTS public.brand_waitlist_applications (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   brand_name TEXT NOT NULL,
   handle_or_website TEXT NOT NULL,
@@ -17,14 +17,14 @@ GRANT ALL ON public.brand_waitlist_applications TO service_role;
 
 ALTER TABLE public.brand_waitlist_applications ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can submit a waitlist application"
-ON public.brand_waitlist_applications
+DROP POLICY IF EXISTS "Anyone can submit a waitlist application" ON public.brand_waitlist_applications;
+CREATE POLICY "Anyone can submit a waitlist application" ON public.brand_waitlist_applications
 FOR INSERT
 TO anon, authenticated
 WITH CHECK (true);
 
-CREATE POLICY "Admins can view waitlist applications"
-ON public.brand_waitlist_applications
+DROP POLICY IF EXISTS "Admins can view waitlist applications" ON public.brand_waitlist_applications;
+CREATE POLICY "Admins can view waitlist applications" ON public.brand_waitlist_applications
 FOR SELECT
 TO authenticated
 USING (public.has_role(auth.uid(), 'admin'));

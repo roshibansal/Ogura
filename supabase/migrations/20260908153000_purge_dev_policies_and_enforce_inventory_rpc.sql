@@ -31,6 +31,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE tablename = 'products' AND policyname = 'Anyone can view active products'
   ) THEN
+    DROP POLICY IF EXISTS "Anyone can view active products" ON public.products;
     CREATE POLICY "Anyone can view active products" ON public.products
       FOR SELECT USING (true);
   END IF;

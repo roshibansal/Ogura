@@ -14,21 +14,21 @@ CREATE TABLE IF NOT EXISTS public.tryon_history (
 ALTER TABLE public.tryon_history ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
-CREATE POLICY "Users can view their own try-on history"
-ON public.tryon_history
+DROP POLICY IF EXISTS "Users can view their own try-on history" ON public.tryon_history;
+CREATE POLICY "Users can view their own try-on history" ON public.tryon_history
 FOR SELECT
 USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert their own try-on history"
-ON public.tryon_history
+DROP POLICY IF EXISTS "Users can insert their own try-on history" ON public.tryon_history;
+CREATE POLICY "Users can insert their own try-on history" ON public.tryon_history
 FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own try-on history"
-ON public.tryon_history
+DROP POLICY IF EXISTS "Users can delete their own try-on history" ON public.tryon_history;
+CREATE POLICY "Users can delete their own try-on history" ON public.tryon_history
 FOR DELETE
 USING (auth.uid() = user_id);
 
 -- Create indexes for performance
-CREATE INDEX idx_tryon_history_user_id ON public.tryon_history(user_id);
-CREATE INDEX idx_tryon_history_created_at ON public.tryon_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tryon_history_user_id ON public.tryon_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_tryon_history_created_at ON public.tryon_history(created_at DESC);

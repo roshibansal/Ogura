@@ -15,6 +15,7 @@ DROP POLICY IF EXISTS "dev_allow_anon_update_sellers" ON public.sellers;
 DROP POLICY IF EXISTS "Authenticated users can insert designers" ON public.designers;
 DROP POLICY IF EXISTS "Authenticated users can update designers" ON public.designers;
 DROP POLICY IF EXISTS "Authenticated users can delete designers" ON public.designers;
+DROP POLICY IF EXISTS "Admins can manage designers" ON public.designers;
 CREATE POLICY "Admins can manage designers" ON public.designers
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
@@ -23,6 +24,7 @@ CREATE POLICY "Admins can manage designers" ON public.designers
 DROP POLICY IF EXISTS "Authenticated users can insert vendors" ON public.vendors;
 DROP POLICY IF EXISTS "Authenticated users can update vendors" ON public.vendors;
 DROP POLICY IF EXISTS "Authenticated users can delete vendors" ON public.vendors;
+DROP POLICY IF EXISTS "Admins can manage vendors" ON public.vendors;
 CREATE POLICY "Admins can manage vendors" ON public.vendors
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
@@ -31,6 +33,7 @@ CREATE POLICY "Admins can manage vendors" ON public.vendors
 DROP POLICY IF EXISTS "Authenticated users can insert influencer videos" ON public.influencer_videos;
 DROP POLICY IF EXISTS "Authenticated users can update influencer videos" ON public.influencer_videos;
 DROP POLICY IF EXISTS "Authenticated users can delete influencer videos" ON public.influencer_videos;
+DROP POLICY IF EXISTS "Admins can manage influencer videos" ON public.influencer_videos;
 CREATE POLICY "Admins can manage influencer videos" ON public.influencer_videos
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))

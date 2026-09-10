@@ -3,7 +3,7 @@ ALTER TABLE public.designers
 ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE,
 ADD COLUMN IF NOT EXISTS banner_image TEXT;
 
--- Create index for fast slug lookups
+-- CREATE INDEX IF NOT EXISTS for fast slug lookups
 CREATE INDEX IF NOT EXISTS idx_designers_slug ON public.designers(slug);
 
 -- Generate slugs for existing designers (lowercase, replace spaces with hyphens)
@@ -15,7 +15,7 @@ WHERE slug IS NULL;
 ALTER TABLE public.designers ALTER COLUMN slug SET NOT NULL;
 
 -- Create products table
-CREATE TABLE public.products (
+CREATE TABLE IF NOT EXISTS public.products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   price INTEGER NOT NULL,
@@ -36,28 +36,33 @@ CREATE TABLE public.products (
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can view products
+DROP POLICY IF EXISTS "Anyone can view products" ON public.products;
 CREATE POLICY "Anyone can view products" ON public.products
 FOR SELECT USING (true);
 
 -- Authenticated users can insert products
+DROP POLICY IF EXISTS "Authenticated users can insert products" ON public.products;
 CREATE POLICY "Authenticated users can insert products" ON public.products
 FOR INSERT WITH CHECK (true);
 
 -- Authenticated users can update products
+DROP POLICY IF EXISTS "Authenticated users can update products" ON public.products;
 CREATE POLICY "Authenticated users can update products" ON public.products
 FOR UPDATE USING (true);
 
 -- Authenticated users can delete products
+DROP POLICY IF EXISTS "Authenticated users can delete products" ON public.products;
 CREATE POLICY "Authenticated users can delete products" ON public.products
 FOR DELETE USING (true);
 
 -- Indexes for fast lookups
-CREATE INDEX idx_products_designer_id ON public.products(designer_id);
-CREATE INDEX idx_products_category ON public.products(category);
-CREATE INDEX idx_products_is_available ON public.products(is_available);
-CREATE INDEX idx_products_price ON public.products(price);
+CREATE INDEX IF NOT EXISTS idx_products_designer_id ON public.products(designer_id);
+CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category);
+CREATE INDEX IF NOT EXISTS idx_products_is_available ON public.products(is_available);
+CREATE INDEX IF NOT EXISTS idx_products_price ON public.products(price);
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS update_products_updated_at ON public.products;
 CREATE TRIGGER update_products_updated_at
 BEFORE UPDATE ON public.products
 FOR EACH ROW

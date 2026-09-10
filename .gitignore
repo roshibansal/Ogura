@@ -82,3 +82,8 @@ Thumbs.db
 
 
 /ogura-handoff
+
+# Local data export — catalogue dump and downloaded product imagery.
+# Never commit: it is 65MB of other brands' photography and a full copy of
+# the production catalogue.
+export/

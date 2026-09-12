@@ -139,12 +139,6 @@ export const Header = () => {
           <span className="shrink-0 h-4 w-px bg-[#EAE3D9]" aria-hidden />
 
           <Link
-            to="/collections?availability=made-to-order"
-            className="shrink-0 whitespace-nowrap text-[13px] font-bold text-[#5A0A26] hover:underline underline-offset-4"
-          >
-            Made to Order
-          </Link>
-          <Link
             to="/designers"
             className="shrink-0 whitespace-nowrap text-[13px] font-bold text-[#5A0A26] hover:text-[#5A0A26] transition"
           >

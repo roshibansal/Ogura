@@ -57,7 +57,7 @@ export default function Designers() {
             Boutiques
           </h1>
           <p className="mt-3 text-base sm:text-lg text-ink-soft leading-relaxed">
-            Small studios across India. Every one of them will get on a call with you before you order, and every one of them will craft a single custom piece.
+            Independent studios, each one verified before it opens a shop here. Chat with any boutique through Ogura, and we stay with the order from the first message to the day it arrives.
           </p>
         </div>
 

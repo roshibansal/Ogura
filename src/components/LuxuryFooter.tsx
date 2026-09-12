@@ -9,7 +9,6 @@ const SHOP_LINKS = [
   { label: "Sarees", to: "/collections/sarees" },
   { label: "Kurta Sets", to: "/collections/indian-coords" },
   { label: "Dresses", to: "/collections/dresses" },
-  { label: "Made to Order", to: "/collections?availability=made-to-order" },
 ];
 
 const OGURA_LINKS = [
